@@ -1,0 +1,3 @@
+feature_suffix: ??? # str | set, the suffix or the set of suffices such that the additional feature files are named {video_id}{feature_suffix} (and placed at the data_path folder)
+default_agent_name: "ind0" # str, the clip (agent) name used as default in case the tracking files don't provide it
+frame_limit: 1 # int, clips shorter than this number of frames will be ignored

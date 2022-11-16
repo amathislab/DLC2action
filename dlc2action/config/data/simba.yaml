@@ -1,0 +1,8 @@
+data_prefix: null # str | set; data prefix or a set of data prefixes (if not null, files are assumed to be named {data_prefix}{video_id}{data_suffix}; use multiple prefixes to pass multiple views as input)
+feature_suffix: null # str; suffix of files with additional features saved as a dictionary (files should be named {video_id}{feature_suffix} and places at data path)
+canvas_shape: ??? # list; [x, y] size of the canvas where the coordinates are defined
+ignored_bodyparts: null # list; a list of nodypart names to ignore
+likelihood_threshold: 0 # float; minimum likelihood to load (bodyparts with lower likelihood will be treated as unknown)
+centered: false # bool; set to true if the coordinates are centered at zero
+data_suffix: ??? # str; the data suffix (the data files should be named {video_id}{data_suffix}, e.g. video1_suffix.pickle, where video1 is the video is and _suffix.pickle is the suffix
+use_features: true # bool; if true, load all columns that do not contain coordinates or behaviors as additional features

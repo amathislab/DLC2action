@@ -1,0 +1,10 @@
+behaviors: null # list; the list of behaviors to put in the annotation (if null, if will be inferred from the data; !!PLEASE SET IT MANUALLY if different files can have different behavior sets!!)
+ignored_classes: null # set, the list of behaviors from the behaviors list to not annotate
+correction: null # dict, optional a dictionary of corrections for the labels (e.g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'}, can be used to correct for variations in naming or to merge several labels in one
+filter_annotated: false # bool; if true, the samples that do not have any labels will be filtered
+filter_background: false # bool, if true, only the unlabeled frames that are close to annotated frames will be labeled as background
+error_class: null # str; the name of the error class (the annotations that intersect with this label will be discarded)
+min_frames_action: 0 # int, the minimum length of an action (shorter actions are not annotated)
+visibility_min_score: 0 # float, the minimum visibility score for visibility filtering (from 0 ro 1)
+visibility_min_frac: 0 # float, the minimum fraction of visible frames for visibility filtering
+annotation_suffix: ??? # str | set, optional the suffix or the set of suffices such that the annotation files are named {video_id}{annotation_suffix}, e.g, video1_suffix.pickle where video1 is the video id and _suffix.pickle is the suffix

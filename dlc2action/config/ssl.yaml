@@ -1,0 +1,67 @@
+contrastive:
+  ssl_features: 32 # int; length of clip feature vectors
+  tau: 1 # float; tau (NT-Xent loss parameter)
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+contrastive_regression:
+  temperature: 1 # float; temperature
+  distance: "cosine" # ["cosine", "euclidean"]; 
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  num_features: 128 # int; number of feature maps
+contrastive_masked:
+  ssl_features: 32 # int; length of clip feature vectors
+  tau: 1 # float; tau (NT-Xent loss parameter)
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  num_masked: 10 # int; number of frames to real_lens
+pairwise:
+  ssl_features: 32 # int; length of clip feature vectors
+  margin: 0 # float; margin
+  distance: 'cosine' # ['cosine', 'euclidean']; either 'cosine' or 'euclidean'
+  loss: 'triplet' # ['triplet', 'circle']; either 'triplet' or 'circle'
+  gamma: 1 # float; gamma
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+pairwise_masked:
+  ssl_features: 32 # int; length of clip feature vectors
+  margin: 0 # float; margin
+  distance: 'cosine' # ['cosine', 'euclidean']; either 'cosine' or 'euclidean'
+  loss: 'triplet' # ['triplet', 'circle']; either 'triplet' or 'circle'
+  gamma: 1 # float; gamma
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  num_masked: 10
+masked_features:
+  frac_masked: 0.1 # float; fraction of features to be masked
+  num_ssl_layers: 5 # int; number of layers in the SSL module
+  num_ssl_f_maps: 16 # int; number of feature maps in the SSL module
+  dims: 'dataset_features' # int; number of features per frame in original input data
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+masked_joints:
+  frac_masked: 0.1 # float; fraction of joints to be masked
+  num_ssl_layers: 5 # int; number of layers in the SSL module
+  num_ssl_f_maps: 16 # int; number of feature maps in the SSL module
+  dims: 'dataset_features' # int; number of features per frame in original input data
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+masked_frames:
+  frac_masked: 0.1 # float; fraction of frames to be masked
+  num_ssl_layers: 5 # int; number of layers in the SSL module
+  num_ssl_f_maps: 16 # int; number of feature maps in the SSL module
+  dims: 'dataset_features' # int; number of features per frame in original input data
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+reverse:
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+order:
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  len_segment: 'dataset_len_segment' # int; length of the segments that enter the SSL module
+  num_segments: 3 # int; the number of segments to permute
+  ssl_features: 32 # int; the number of features per permuted segment
+  skip_frames: 10 # int; the number of frames to cut from each permuted segment
+tcc:
+  num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
+  variance_lambda: 0.001 # float; variance lambda
+  normalize_indices: true # bool; if true, normalize indices before computing regression loss
+  num_cycles: 200 # int; number of comparisons per batch
+  cycle_length: 2 # int; cycle length
+  temperature: 1 # float; temperature

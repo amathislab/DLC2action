@@ -1,0 +1,2 @@
+augmentations: !!set {"horizontal_flip"} # set; a set of augmentations (from 'rotate', 'horizontal_flip', 'vertical_flip')
+rotation_degree_limits: [-90, 90] # list; list of rotation angle limits ([low, high])

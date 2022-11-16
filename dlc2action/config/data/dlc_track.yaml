@@ -1,0 +1,8 @@
+data_suffix: ??? # set; the data files should have the format of {video_id}{data_suffix}, e.g. video1_suffix.pickle, where video1 is the video is and _suffix.pickle is the suffix
+data_prefix: null # set; a set of prefixes used in file names for different views
+feature_suffix: null # str; the feature files should be stored in the data folder and named {video_id}{feature_suffix}
+convert_int_indices: true # bool; if true, convert any integer key i in feature files to 'ind{i}'
+canvas_shape: ??? # list; the size of the canvas where the pose was defined
+ignored_bodyparts: null # set; the set of string names of bodyparts to ignore
+default_agent_name: 'ind0' # str; the default agent name used in pose file generation (most likely 'ind0' or '')
+likelihood_threshold: 0 # float; coordinates with lower likelihood values will be ignored

@@ -1,0 +1,92 @@
+recall:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+precision:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+f1:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+f_beta:
+  beta: 1 # float; the beta parameter
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+# mAP:
+#   main_class: null # int; if not null, recall will only be calculated for main_class
+#   average: 'macro' # ['macro', 'micro', 'none']; averaging method
+#   ignored_classes: None # set; a set of class ids to ignore in calculation
+count:
+  classes: !!set {0, 1, 2, 3, 4, 5} # set; the class to count the occurences of
+segmental_precision:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  iou_threshold: 0.5 # float; if segmental is true, intervals with IoU larger than this hard_threshold are considered correct
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+segmental_recall:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  iou_threshold: 0.5 # float; if segmental is true, intervals with IoU larger than this hard_threshold are considered correct
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+segmental_f1:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  iou_threshold: 0.5 # float; if segmental is true, intervals with IoU larger than this hard_threshold are considered correct
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+segmental_f_beta:
+  beta: 1 # float; the beta parameter
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  iou_threshold: 0.5 # float; if segmental is true, intervals with IoU larger than this hard_threshold are considered correct
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_value: 0.5 # float; the probability threshold for positive samples
+semisegmental_precision:
+  delta: 0 # int; the number of frames to add to each interval
+  smooth_interval: 0 # int; the size of the smoothing interval in frames
+  iou_threshold_long: 0.5 # float; the intersection threshold for longer segments (between 0 and 1)
+  iou_threshold_short: 0.5 # float; the intersection threshold for shorter segments (between 0 and 1)
+  short_length: 100 # int; the number of frames in a short segment
+  long_length: 500 # int; the number of frames in a long segment
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+semisegmental_recall:
+  delta: 0 # int; the number of frames to add to each interval
+  smooth_interval: 0 # int; the size of the smoothing interval in frames
+  iou_threshold_long: 0.5 # float; the intersection threshold for longer segments (between 0 and 1)
+  iou_threshold_short: 0.5 # float; the intersection threshold for shorter segments (between 0 and 1)
+  short_length: 100 # int; the number of frames in a short segment
+  long_length: 500 # int; the number of frames in a long segment
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+semisegmental_f1:
+  delta: 0 # int; the number of frames to add to each interval
+  smooth_interval: 0 # int; the size of the smoothing interval in frames
+  iou_threshold_long: 0.5 # float; the intersection threshold for longer segments (between 0 and 1)
+  iou_threshold_short: 0.5 # float; the intersection threshold for shorter segments (between 0 and 1)
+  short_length: 100 # int; the number of frames in a short segment
+  long_length: 500 # int; the number of frames in a long segment
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+pr-auc:
+  average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  tag_average: 'micro' # ['micro', 'macro', 'none']; averaging method for meta tags (if given)
+  threshold_step: 0.1 # float; the step for the precision-recall graph
+mAP:
+  average: 'micro' # ['macro', 'micro', 'none']; averaging method for classes
+  ignored_classes: null # set; a set of class ids to ignore in calculation
+  iou_threshold: 0.5 # float; if segmental is true, intervals with IoU larger than this hard_threshold are considered correct
+  threshold_value: 0.5 # float; the probability threshold for positive samples

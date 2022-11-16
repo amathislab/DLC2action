@@ -1,0 +1,10 @@
+behaviors: null # set; the set of names of the behaviors to predict (if null, if will be inferred from the data; !!PLEASE SET IT MANUALLY if different files can have different behavior sets!!)
+annotation_suffix: !!set {'.csv'} # set; the annotation file names should have the format of {video_id}{annotation_suffix}, e.g, video1_suffix.pickle where video1 is the video id and _suffix.pickle is the suffix
+correction: null # dict; a dictionary of label corrections (e. g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'}
+error_class: null # str; a class denoting errors in the pose estimation (the intervals annotated with this class will be ignored)
+min_frames_action: 5 # int; the minimum number of frames for an action (shorter actions will be discarded during training)
+filter_annotated: true # bool; discard long unannotated intervals during training
+filter_background: true # bool; only label frames as background if a behavior is annotated somewhere close
+filter_visibility: true # bool; only label behaviors if there is suffucient visibility
+visibility_min_score: 0 # float; the minimum visibility score for visibility filtering
+visibility_min_frac: 0.7 # float; the minimum fraction of visible frames for visibility filtering

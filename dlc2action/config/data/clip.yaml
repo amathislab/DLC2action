@@ -1,0 +1,5 @@
+tracking_suffix: ??? # str; the suffix of the tracking files (they should be named {video_id}{tracking_suffix})
+tracking_path: ??? # str; the path to the folder containing the tracking files
+frame_limit: 1 # int; the minimum length of tracklets (shorter tracklets are discarded)
+clip_model_name: "ViT-B/32" # str; the CLIP model to load
+default_agent_name: "ind0" # str; the clip name to use if it's not provided in the files

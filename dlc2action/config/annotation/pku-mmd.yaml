@@ -1,0 +1,6 @@
+behavior_file: ??? # str; '/home/liza/data/pku_mmd/Actions.xlsx' the path to the Actions.xlsx file
+ignored_classes: !!set {'giving something to other person', 'handshaking', 'hugging other person',
+                  'kicking other person', 'pat on back of other person',
+                  'point finger at the other person', 'punching/slapping other person',
+                  'pushing other person', "cheer up"} # set; the classes excluded from the annotation files
+correction: null # dict; a dictionary of label corrections (e. g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'}

@@ -1,0 +1,5 @@
+ms_tcn:
+  weights: 'dataset_inverse_weights' # list; list of weights for weighted cross-entropy
+  focal: true # bool; if True, focal loss will be used
+  gamma: 2 # float; the gamma parameter of focal loss
+  alpha: 0.001 # float; the weight of consistency loss

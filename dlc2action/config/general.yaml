@@ -1,0 +1,13 @@
+model_name: 'c2f_tcn' # str; model name (run project.help("model") for more info) 
+num_classes: 'dataset_classes' # int; number of classes
+exclusive: ??? # bool; if true, single-label classification is used; otherwise multi-label
+ssl: null # set; a set of SSL names to use
+metric_functions: !!set {'f1', 'recall', 'precision'} # set; set of metric names (run project.help("metrics") for more info) 
+loss_function: 'ms_tcn' # str; name of loss function
+feature_extraction: 'kinematic' # str; the feature extraction method (only 'kinematic' at the moment)
+only_load_annotated: true # bool; if true, the input files that don't have a matching annotation file will be disregarded
+ignored_clips: null # list; a list of string clip ids (agent names) to be ignored
+num_cpus: 5 # int; the number of CPUs to use in data processing (by default all are used)
+len_segment: 512 # int; the length of segments (in frames) to cut the videos into
+overlap: 0.75 # int; the overlap (in frames) between neighboring segments
+interactive: false # bool; if true, annotations are assigned and features are computed for pairs of clips (animals)

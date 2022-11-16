@@ -1,0 +1,46 @@
+lr: 1e-3 # float; learning rate
+device: 'auto' # str; device
+verbose: true # bool; print training process
+augment_train: 1 # [0, 1]; either 1 to use augmentations during training or 0 to not use
+augment_val: 0 # int; number of augmentations to average over at validation
+validation_interval: 1 # int; every time this number of epochs passes, validation metrics are computed
+ssl_weights:
+        {'contrastive': 1,
+         'contrastive_regression': 1,
+        'pairwise': 1,
+        'masked_features': 1,
+        'masked_frames': 1,
+        'masked_joints': 1,
+        'contrastive_masked': 1,
+        'pairwise_masked': 1,
+        'reverse': 1,
+        'order': 1,
+        'tcc': 1} # dict; dictionary of SSL loss function weights
+num_epochs: 50 # int; number of epochs
+to_ram: false # bool; transfer the dataset to RAM for training (preferred if the dataset fits in working memory)
+batch_size: 64 # int; batch size
+freeze_features: false # bool; freeze the feature extractor parameters
+ignore_tags: false # bool; set all meta tags to None (useful for pre-training)
+model_save_epochs: 10 # int; interval for saving training checkpoints (the last epoch is always saved)
+normalize: true # bool; if true, normalization statistics will be computed on the training set and applied to all data
+temporal_subsampling_size: 0.85 # float; this fraction of frames in each segment is randomly sampled at training time
+skip_normalization_keys: {"coord_diff", "speed_direction"} # set; a set of feature keys that normalization is not applied to
+parallel: false # bool; if true, the model will be trained on all gpus visible in the system (use os.environ[“CUDA_VISIBLE_DEVICES”] =“{indices}” to exclude gpus in this mode)
+
+#losses
+main_task_on: true # bool; if false, the classification loss will be ignored
+ssl_on: true # bool; if false, the self-supervised learning loss will be ignored (even if general/ssl is not null)
+
+#partitioning
+use_test: 0 # float; the fraction of the test dataset to use in training without labels (for SSL tasks)
+partition_method: 'random' # str; the train/test/val partitioning method (for more info run project.help("partition_method"))
+val_frac: 0.2 # float; fraction of dataset to use as validation
+test_frac: 0 # float; fraction of dataset to use as test
+split_path: null # str; path to the split file (!! only used when partition_method is 'from_file', otherwise disregarded and filled automatically!!)
+
+##pseudolabeling
+#pseudolabel: false # bool; if true, the pseudolabeling procedure is used
+#pseudolabel_start: 100 # int; pseudolabeling starts after this epoch
+#correction_interval: 1 # int; the model is trained on the labeled subset to update the labels periodically with this interval
+#pseudolabel_alpha_f: 3 # float; the maximum alpha
+#alpha_growth_stop: 600 # int; alpha stops growing after this epoch

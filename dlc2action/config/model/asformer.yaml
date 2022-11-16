@@ -1,0 +1,7 @@
+num_decoders: 3 # int; number of decoders
+num_layers: 10 # int; number of layers
+r1: 2 # int; R1
+r2: 2 # int; R2
+num_f_maps: 64 # int; number of feature maps
+input_dim: 'dataset_features' # int | str; the number of input features (leave as "dataset_features" to compute it automatically)
+channel_masking_rate: 0.4 # float; channel masking rate

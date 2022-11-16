@@ -1,0 +1,4 @@
+keys: !!set {"coords_heatmap", "motion_heatmap"} # set; the keys to include
+channel_policy: "color" # ["color", "black&white", "bp"]; if "black&white" the heatmaps have one channel and all keypoints are equivalent, if "color" each keypoint is assigned a unique color, if "bp" each keypoint has a separate channel
+heatmap_width: 128 # int; the width of the heatmaps in pixels
+sigma: 0.7 # float; the standard deviation of the gaussian kernel (0 for no smoothing)

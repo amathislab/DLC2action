@@ -1,0 +1,8 @@
+augmentations: !!set {"add_noise"} # set; a set of augmentations that can be applied to your data without losing information (choose any number from 'rotate', 'real_lens', 'add_noise', 'shift', 'zoom', 'mirror', 'switch', e.g. {'add_noise'. 'mirror'})
+rotation_limits: [-1.57, 1.57] # list; list of rotation angle limits in radians ([low, high])
+mirror_dim: !!set {0} # set; set of dimensions that can be mirrored (0 for x, 1 for y, 2 for z)
+noise_std: 0.003 # float; standard deviation of noise
+zoom_limits: [0.5, 1.5] # list; list of float zoom limits ([low, high])
+masking_probability: 0.1 # float; the probability of masking a joint
+bodyparts_order: 'dataset_bodyparts' # list; a list of bodypart names
+graph_features: false # bool; if true, the output tensor will be reshaped to fit graph networks

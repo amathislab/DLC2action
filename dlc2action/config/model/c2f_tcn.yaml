@@ -1,0 +1,3 @@
+num_f_maps: 128 # int; number of maps
+feature_dim: null # int; if not null, intermediate features are generated with this dimension and then passed to a 2-layer MLP for classification (useful for SSL)
+input_dims: "dataset_features" # int; number of input features (set to 'dataset_features' to get the number from BehaviorDataset.dataset_features())

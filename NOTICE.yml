@@ -1,0 +1,77 @@
+##
+## DLC2Action Toolbox
+## © A. Mathis Lab
+## https://github.com/amathislab/DLC2Action/
+## Licensed under MIT License
+##
+
+# Main repository license
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+  include:
+    - 'dlc2action/**/*.py'
+    - 'tests/**/*.py'
+    - 'examples/**/*.py'
+  exclude: []
+
+# License for ASFormer code
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+
+    Adapted from ASFormer by ChinaYi
+    Adapted from https://github.com/ChinaYi/ASFormer
+    Licensed under MIT License
+  include:
+    - dlc2action/model/asformer.py
+
+# License for C2F-TCN code
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+
+    Adapted from C2F-TCN by dipika singhania
+    Adapted from https://github.com/dipika-singhania/C2F-TCN
+    Licensed under MIT License
+  include:
+    - dlc2action/model/c2f_tcn.py
+
+# License for EDTCN code
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+
+    Adapted from ASRF by yiskw713
+    Adapted from https://github.com/yiskw713/asrf/blob/main/libs/models/tcn.py
+    Licensed under MIT License
+  include:
+    - dlc2action/model/edtcn.py
+
+# License for TCC code
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+
+    Adapted from Temporal Cycle-Consistency Learning by June01
+    Adapted from https://github.com/June01/tcc_Temporal_Cycle_Consistency_Loss.pytorch
+    Licensed under  Apache License Version 2.0, January 2004
+  include:
+    - dlc2action/loss/tcc.py
+
+# License for MS-TCN code
+- header: |
+    DLC2Action is not open-sourced yet.
+    https://choosealicense.com/no-permission/
+
+
+    Adapted from MS-TCN++ by yabufarha
+    Adapted from https://github.com/sj-li/MS-TCN2
+    Licensed under MIT License
+  include:
+    - dlc2action/loss/ms_tcn.py

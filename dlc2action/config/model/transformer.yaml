@@ -1,0 +1,5 @@
+num_f_maps: 128 # int; number of feature maps
+input_dim: 'dataset_features' # int | str; the number of input features (leave as "dataset_features" to compute it automatically)
+N: 10 # int; number of layers
+heads: 4 # int; number of heads
+num_pool: 3 # int; number of maxpooling layers

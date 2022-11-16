@@ -1,0 +1,2 @@
+treba_files: false, # bool; if true, treba feature files are used instead of the regular ones
+task_n: 1, # [1, 2]; the task index to load
