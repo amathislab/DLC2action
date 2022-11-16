@@ -910,7 +910,6 @@ class Project:
         episode_name: str,
         num_epochs: int = None,
         task: TaskDispatcher = None,
-        result_average_interval: int = 5,
         n_runs: int = 1,
         delete_dataset: bool = False,
         device: str = "cuda",
