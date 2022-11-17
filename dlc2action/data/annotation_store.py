@@ -852,6 +852,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
                 and not x.startswith("negative")
                 and not x.startswith("unknown")
             ]
+        elif self.behaviors is None and times is None:
+            raise ValueError("Cannot generate annotqtion without behavior information!")
         beh_inv = {v: k for k, v in self.behaviors_dict().items()}
         # if there is no annotation file, generate empty annotation
         if self.interactive:
