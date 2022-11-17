@@ -1104,7 +1104,7 @@ class Project:
         self,
         search_name: str,
         search_space: Dict,
-        metric: str,
+        metric: str = "f1",
         n_trials: int = 20,
         best_n: int = 1,
         parameters_update: Dict = None,
@@ -1138,7 +1138,7 @@ class Project:
             'group/param_name': ('categorical', [choices])}, e.g.
             {'data/overlap': ('int', 5, 100), 'training/lr': ('float_log', 1e-4, 1e-2),
             'data/feature_extraction': ('categorical', ['kinematic', 'bones'])};
-        metric : str
+        metric : str, default f1
             the metric to maximize/minimize (see direction)
         n_trials : int, default 20
             the number of optimization trials to run
@@ -1171,6 +1171,7 @@ class Project:
         self.remove_episode(f"_{search_name}")
         if parameters_update is None:
             parameters_update = {}
+        parameters_update = self._update(parameters_update, {"general": {"metric_functions": {metric}}})
         parameters = self._make_parameters(
             f"_{search_name}",
             load_episode,
