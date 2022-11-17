@@ -628,7 +628,7 @@ class Project:
         n_seeds: int = 1,
         force: bool = False,
         suppress_name_check: bool = False,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         mask_name: str = None,
         autostop_metric: str = None,
         autostop_interval: int = 50,
@@ -683,7 +683,7 @@ class Project:
         suppress_name_check : bool, default False
             if `True`, episode names with a double colon are allowed (please don't use this option unless you understand
             why they are usually forbidden)
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset will be deleted after training
         mask_name : str, optional
             the name of the real_lens to apply
@@ -697,10 +697,10 @@ class Project:
 
         if type(n_seeds) is not int or n_seeds < 1:
             raise ValueError(
-                f"The n_runs parameter has to be an integer larger than 0; got {n_seeds}"
+                f"The n_seeds parameter has to be an integer larger than 0; got {n_seeds}"
             )
         if n_seeds > 1 and mask_name is not None:
-            raise ValueError("Cannot apply a real_lens with n_runs > 1")
+            raise ValueError("Cannot apply a real_lens with n_seeds > 1")
         self._check_episode_validity(
             episode_name, allow_doublecolon=suppress_name_check, force=force
         )
@@ -719,9 +719,9 @@ class Project:
                 load_strict=[load_strict for _ in load_runs],
                 suppress_name_check=True,
                 force=force,
-                delete_dataset=False,
+                remove_saved_features=False,
             )
-            if delete_dataset:
+            if remove_saved_features:
                 self._remove_stores(
                     {
                         "general": task.general_parameters,
@@ -731,7 +731,7 @@ class Project:
                 )
             if n_seeds > 1:
                 warnings.warn(
-                    f"The n_runs parameter is disregarded since load_episode={load_episode} has multiple runs"
+                    f"The n_seeds parameter is disregarded since load_episode={load_episode} has multiple runs"
                 )
         elif n_seeds > 1:
             self.run_episodes(
@@ -745,7 +745,7 @@ class Project:
                 load_strict=[load_strict for _ in range(n_seeds)],
                 suppress_name_check=True,
                 force=force,
-                delete_dataset=delete_dataset,
+                remove_saved_features=remove_saved_features,
             )
         else:
             print(f"TRAINING {episode_name}")
@@ -791,7 +791,7 @@ class Project:
                 seconds = int(time_total)
                 training_time = f"{hours}:{minutes:02}:{seconds:02}"
                 self._update_episode_results(episode_name, logs, training_time)
-                if delete_dataset:
+                if remove_saved_features:
                     self._remove_stores(parameters)
                 print("\n")
                 return task
@@ -816,7 +816,7 @@ class Project:
         load_strict: List = None,
         force: bool = False,
         suppress_name_check: bool = False,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> TaskDispatcher:
         """
         Run multiple episodes in sequence (and re-use previously loaded information)
@@ -855,7 +855,7 @@ class Project:
         suppress_name_check : bool, default False
             if `True`, episode names with a double colon are allowed (please don't use this option unless you understand
             why they are usually forbidden)
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset will be deleted after training
         """
 
@@ -901,7 +901,7 @@ class Project:
                 load_strict_value,
                 suppress_name_check=suppress_name_check,
                 force=force,
-                delete_dataset=delete_dataset,
+                remove_saved_features=remove_saved_features,
             )
         return task
 
@@ -910,8 +910,8 @@ class Project:
         episode_name: str,
         num_epochs: int = None,
         task: TaskDispatcher = None,
-        n_runs: int = 1,
-        delete_dataset: bool = False,
+        n_seeds: int = 1,
+        remove_saved_features: bool = False,
         device: str = "cuda",
         num_cpus: int = None,
     ) -> TaskDispatcher:
@@ -932,10 +932,10 @@ class Project:
         result_average_interval : int, default 5
             the metric are averaged over the last result_average_interval to be stored in the episodes meta file
             and displayed by list_episodes() function (the full log is still always available)
-        n_runs : int, default 1
-            the number of runs to perform; if `n_runs > 1`, the episodes will be named `episode_name::run_index`, e.g.
+        n_seeds : int, default 1
+            the number of runs to perform; if `n_seeds > 1`, the episodes will be named `episode_name::run_index`, e.g.
             `test_episode::0` and `test_episode::1`
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, pre-computed features will be deleted after the run
         device : str, default "cuda"
             the torch device to use
@@ -985,23 +985,23 @@ class Project:
             )
             self._update_episode_results(run, logs)
             print("\n")
-        if len(runs) < n_runs:
-            for i in range(len(runs), n_runs):
+        if len(runs) < n_seeds:
+            for i in range(len(runs), n_seeds):
                 self.run_episode(
                     f"{episode_name}::{i}",
                     parameters_update=self._episodes().load_parameters(runs[0]),
                     task=task,
                     suppress_name_check=True,
                 )
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         return task
 
     def run_default_hyperparameter_search(
         self,
         search_name: str,
-        model_name: str,
-        metric: str,
+        model_name: str = None,
+        metric: str = "f1",
         best_n: int = 3,
         direction: str = "maximize",
         load_episode: str = None,
@@ -1009,7 +1009,7 @@ class Project:
         load_strict: bool = True,
         prune: bool = True,
         force: bool = False,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         overlap: float = 0,
         num_epochs: int = 50,
         test_frac: float = 0,
@@ -1033,11 +1033,11 @@ class Project:
         ----------
         search_name : str
             the name of the search to store it in the meta files and load in run_episode
-        model_name : str
-            the name
-        metric : str
+        model_name : str, optional
+            the name of the model (by default loaded from the project settings, see `project.help('models')` for options)
+        metric : str, default f1
             the metric to maximize/minimize (see direction); if the metric has an `"average"` parameter and it is set to
-            `"none"` in the config files, it will be reset to `"macro"` for the search
+            `"none"` in the config files, it will be reset to `"macro"` for the search; see `project.help('metrics')` for options
         n_trials : int, default 20
             the number of optimization trials to run
         best_n : int, default 1
@@ -1055,7 +1055,7 @@ class Project:
             (with optuna HyperBand pruner)
         force : bool, default False
             if `True`, existing searches with the same name will be overwritten
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, pre-computed features will be deleted after each run (if the data parameters change)
         device : str, optional
             cuda:{i} or cpu, if not given it is read from the default parameters
@@ -1066,12 +1066,14 @@ class Project:
             a dictionary of best parameters
         """
 
+        if model_name is None:
+            model_name = self._read_parameters()["general"]["model_name"]
         if model_name not in options.model_hyperparameters:
             raise ValueError(
                 f"There is no default search space for {model_name}! Please choose from {options.model_hyperparameters.keys()} or try project.run_hyperparameter_search()"
             )
         pars = {
-            "general": {"overlap": overlap, "model_name": model_name},
+            "general": {"overlap": overlap, "model_name": model_name, "metric_functions": {metric}},
             "training": {"num_epochs": num_epochs},
         }
         if test_frac is not None:
@@ -1095,7 +1097,7 @@ class Project:
             load_strict=load_strict,
             prune=prune,
             force=force,
-            delete_dataset=delete_dataset,
+            remove_saved_features=remove_saved_features,
         )
 
     def run_hyperparameter_search(
@@ -1112,7 +1114,7 @@ class Project:
         load_strict: bool = True,
         prune: bool = False,
         force: bool = False,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> Dict:
         """
         Run an optuna hyperparameter search
@@ -1152,7 +1154,7 @@ class Project:
             (with optuna HyperBand pruner)
         force : bool, default False
             if `True`, existing searches with the same name will be overwritten
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, pre-computed features will be deleted after each run (if the data parameters change)
 
         Returns
@@ -1188,7 +1190,7 @@ class Project:
             metric=metric,
             average=best_n,
             task=task,
-            delete_dataset=delete_dataset,
+            remove_saved_features=remove_saved_features,
             project=self,
             search_name=search_name,
         )
@@ -1230,7 +1232,7 @@ class Project:
         data_path: str = None,
         mode: str = "all",
         file_paths: Set = None,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         submission: bool = False,
         frame_number_map_file: str = None,
         force: bool = False,
@@ -1264,7 +1266,7 @@ class Project:
         file_paths : set, optional
             a set of string file paths (data with all prefixes + feature files, in any order) to run the prediction
             for
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, pre-computed features will be deleted
         submission : bool, default False
             if `True`, a MABe-22 style submission file is generated
@@ -1353,7 +1355,7 @@ class Project:
                         task.behaviors_dict()[key] for key in behavior_indices
                     ]
                     pickle.dump(prediction, f)
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         self._save_prediction(
             prediction_name,
@@ -1371,7 +1373,7 @@ class Project:
         data_path: str = None,
         file_paths: Set = None,
         mode: str = None,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> Tuple[float, dict]:
 
         with open(
@@ -1396,7 +1398,7 @@ class Project:
             mode=mode,
         )
         results = task.evaluate_prediction(prediction, data=mode)
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         print("\n")
         return results
@@ -1411,7 +1413,7 @@ class Project:
         mode: str = None,
         parameters_update: Dict = None,
         multiple_episode_policy: str = "average",
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         skip_updating_meta: bool = True,
     ) -> Dict:
         """
@@ -1436,7 +1438,7 @@ class Project:
             by default 'test' if test subset is not empty and 'val' otherwise)
         parameters_update : dict, optional
             a dictionary with parameter updates (cannot change model parameters)
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset will be deleted
 
         Returns
@@ -1541,7 +1543,7 @@ class Project:
                 f"The {multiple_episode_policy} multiple episode policy is not recognized; please choose "
                 f"from ['average', 'statistics']"
             )
-        if len(names) > 0 and delete_dataset:
+        if len(names) > 0 and remove_saved_features:
             self._remove_stores(parameters)
         print(f"Inference time: {inference_time}")
         print("\n")
@@ -3286,7 +3288,7 @@ class Project:
         load_parameters: list = None,
         round_to_binary: list = None,
         load_strict: bool = True,
-        n_runs: int = 1,
+        n_seeds: int = 1,
     ) -> TaskDispatcher:
         """
         Create a meta data episode record
@@ -3294,9 +3296,9 @@ class Project:
 
         if episode_name in self._episodes().data.index:
             return
-        if type(n_runs) is not int or n_runs < 1:
+        if type(n_seeds) is not int or n_seeds < 1:
             raise ValueError(
-                f"The n_runs parameter has to be an integer larger than 0; got {n_runs}"
+                f"The n_seeds parameter has to be an integer larger than 0; got {n_seeds}"
             )
         if parameters_update is None:
             parameters_update = {}
@@ -3777,7 +3779,7 @@ class Project:
         self,
         load_episode: str = None,
         parameters_update: Dict = None,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         bouts: bool = True,
     ) -> Dict:
         """
@@ -3789,7 +3791,7 @@ class Project:
             the episode settings to load
         parameters_update : dict, optional
             a dictionary of parameter updates (only for "data" and "general" categories)
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset that is used for computation is then deleted
         bouts : bool, default False
             if `True`, instead of frame counts segment counts are returned
@@ -3817,7 +3819,7 @@ class Project:
             kk: {behaviors.get(k, "unknown"): v for k, v in vv.items()}
             for kk, vv in class_counts.items()
         }
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         return class_counts
 
@@ -3827,7 +3829,7 @@ class Project:
         frame_cutoff: int = 1,
         bout_cutoff: int = 1,
         print_full: bool = False,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> None:
         """
         Make a class distribution plot
@@ -3839,7 +3841,7 @@ class Project:
         ----------
         parameters_update : dict, optional
             a dictionary of parameter updates (only for "data" and "general" categories)
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset that is used for computation is then deleted
         """
 
@@ -3882,7 +3884,7 @@ class Project:
                         plt.ylabel("frames")
                     plt.tight_layout()
                     plt.show()
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
 
     def _generate_mask(
@@ -3890,7 +3892,7 @@ class Project:
         mask_name: str,
         perc_annotated: float = 0.1,
         parameters_update: Dict = None,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> None:
         """
         Generate a real_lens for active learning simulation
@@ -3935,7 +3937,7 @@ class Project:
             "unannotated": unannotated_intervals,
         }
         self._save_mask(file, mask_name)
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         print("\n")
         # print(f'Unmasked: {sum([(vv == 0).sum() for v in real_lens.values() for vv in v.values()])} frames')
@@ -4330,7 +4332,7 @@ class Project:
         parameters_update: Dict = None,
         type: str = "recall",
         mode: str = "val",
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
     ) -> Tuple[ndarray, Iterable]:
         """
         Make a confusion matrix plot and return the data
@@ -4350,7 +4352,7 @@ class Project:
         type : {"recall", "precision"}
             for datasets with non-exclusive annotation, if `type` is `"recall"`, only false positives are taken
             into account, and if `type` is `"precision"`, only false negatives
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset that is used for computation is then deleted
 
         Returns
@@ -4373,7 +4375,7 @@ class Project:
         dataset = task.dataset(mode)
         prediction = task.predict(dataset, raw_output=True)
         confusion_matrix, classes, type = dataset.get_confusion_matrix(prediction, type)
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
         fig, ax = plt.subplots(figsize=(len(classes), len(classes)))
         ax.imshow(confusion_matrix)
@@ -4419,7 +4421,7 @@ class Project:
         drop_classes: Set = None,
         search_classes: Set = None,
         num_plots: int = 1,
-        delete_dataset: bool = False,
+        remove_saved_features: bool = False,
         smooth_interval_prediction: int = 0,
         data_path: str = None,
         file_paths: Set = None,
@@ -4459,7 +4461,7 @@ class Project:
             if given, only intervals where at least one of the classes is in ground truth will be shown
         num_plots : int, default 1
             the number of plots to make
-        delete_dataset : bool, default False
+        remove_saved_features : bool, default False
             if `True`, the dataset will be deleted after computation
         smooth_interval_prediction : int, default 0
             if >0, predictions shorter than this number of frames are removed (filled with prediction for the previous frame)
@@ -4505,7 +4507,7 @@ class Project:
                 smooth_interval_prediction=smooth_interval_prediction,
                 behavior_name=behavior_name,
             )
-        if delete_dataset:
+        if remove_saved_features:
             self._remove_stores(parameters)
 
     def create_metadata_backup(self) -> None:
@@ -4866,7 +4868,7 @@ class _Runner:
         metric: str,
         average: int,
         task: Union[TaskDispatcher, None],
-        delete_dataset: bool,
+        remove_saved_features: bool,
         project: Project,
     ):
         """
@@ -4886,7 +4888,7 @@ class _Runner:
             the metric to maximize/minimize (see direction)
         average : int
             the number of epochs to average the metric; if 0, the last value is taken
-        delete_dataset : bool
+        remove_saved_features : bool
             if `True`, the old datasets will be deleted when data parameters change
         project : Project
             the parent `Project` instance
@@ -4898,7 +4900,7 @@ class _Runner:
         self.metric = metric
         self.average = average
         self.feature_save_path = None
-        self.delete_datasets = delete_dataset
+        self.remove_saved_featuress = remove_saved_features
         self.save_stores = project._save_stores
         self.remove_datasets = project.remove_saved_features
         self.task = task
@@ -4912,7 +4914,7 @@ class _Runner:
         Remove datasets if needed
         """
 
-        if self.delete_datasets:
+        if self.remove_saved_featuress:
             self.remove_datasets([os.path.basename(self.feature_save_path)])
 
     def run(self, trial, parameters):
