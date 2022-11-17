@@ -852,6 +852,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
                 and not x.startswith("negative")
                 and not x.startswith("unknown")
             ]
+        elif self.behaviors is None and times is None:
+            raise ValueError("Cannot generate annotqtion without behavior information!")
         beh_inv = {v: k for k, v in self.behaviors_dict().items()}
         # if there is no annotation file, generate empty annotation
         if self.interactive:
@@ -1361,6 +1363,11 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
                 data = pickle.load(f)
             if isinstance(data, dict):
                 annotation = data
+                for ind in annotation:
+                    for cat, cat_list in annotation[ind].items():
+                        annotation[ind][cat] = [
+                            [start, end, 0] for start, end in cat_list
+                        ]
             else:
                 _, loaded_labels, animals, loaded_times = data
                 annotation = {}

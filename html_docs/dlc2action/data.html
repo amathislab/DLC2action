@@ -109,61 +109,59 @@ of filenames (in <code>base_store.InputStore</code> instances with large amounts
                         <label class="view-source-button" for="data-view-source"><span>View Source</span></label>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="c1">#</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="c1"># DLC2Action Toolbox</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="c1"># © A. Mathis Lab</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1"># https://github.com/amathislab/DLC2Action/</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="c1"># Licensed under GNU Lesser General Public License v3.0</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="c1">#</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">## Dataset and related objects</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="c1"># DLC2Action is not open-sourced yet.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="c1"># https://choosealicense.com/no-permission/</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1">#</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">## Dataset and related objects</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">### Dataset</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">### Dataset</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">The dataset class in `dlc2action` is `dataset.BehaviorDataset`. It defines all high-level interaction between</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">`Task`,</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">input data and annotations (like loading, filtering or adding pseudo-labels). It is a single class that works</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">for all data types and is not meant to be inherited from. All customisation happens in *store* classes instead.</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">Every dataset has an *input store* and an *annotation store* that perform the actual data operations.</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">The dataset class in `dlc2action` is `dataset.BehaviorDataset`. It defines all high-level interaction between</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">`Task`,</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">input data and annotations (like loading, filtering or adding pseudo-labels). It is a single class that works</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">for all data types and is not meant to be inherited from. All customisation happens in *store* classes instead.</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">Every dataset has an *input store* and an *annotation store* that perform the actual data operations.</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">### Store</span>
 </span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">### Store</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">*Stores* are defined by an abstract data handling parent class.</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">It is inherited from by `base_store.InputStore` and `base_store.AnnotationStore` and implementations of</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">these classes (for input and</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">annotation data, respectively, see `input_store` and `annotation_store`) are used by datasets. In other words,</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">adding a new dataset to `dlc2action` means</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">implementing a list of abstract functions for the input and annotation data.</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="sd">That list of functions was created</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="sd">with several **assumptions** about the structure of the data in mind. Specifically, we are assuming that you are</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">working with video-related information that is defined at the frame level. Videos can be separated into *clips*.</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">*Clips* here are elementary parts that are associated with behaviour labels. In the simplest scenario, clips are</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">tracks of pose estimation key points associated with single individuals, for example. Every frame of every clip</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">is associated with a feature vector (like key point coordinates or image pixel values) and at least some of the</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">frames have behaviour labels. Every video has a unique video id and every clip inside a video has a unique clip</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">id (clip ids in different videos don&#39;t have to be different). After this data is loaded and preprocessed,</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">a store can take an integer index and return an input data sample and a tuple of *original coordinates* that</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">can be used to map that sample to a specific place in the original data (meaning video id, clip id and frame</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">indices). The indexing is consistent across time and stores (the features at index 42 an an input frame</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">should correspond to labels at index 42 at an annotation store for the same dataset). That is checked at runtime</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">by comparing the original coordinates arrays of the two stores.</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">*Stores* are defined by an abstract data handling parent class.</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">It is inherited from by `base_store.InputStore` and `base_store.AnnotationStore` and implementations of</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">these classes (for input and</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">annotation data, respectively, see `input_store` and `annotation_store`) are used by datasets. In other words,</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">adding a new dataset to `dlc2action` means</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="sd">implementing a list of abstract functions for the input and annotation data.</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">That list of functions was created</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">with several **assumptions** about the structure of the data in mind. Specifically, we are assuming that you are</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="sd">working with video-related information that is defined at the frame level. Videos can be separated into *clips*.</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="sd">*Clips* here are elementary parts that are associated with behaviour labels. In the simplest scenario, clips are</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">tracks of pose estimation key points associated with single individuals, for example. Every frame of every clip</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="sd">is associated with a feature vector (like key point coordinates or image pixel values) and at least some of the</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">frames have behaviour labels. Every video has a unique video id and every clip inside a video has a unique clip</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">id (clip ids in different videos don&#39;t have to be different). After this data is loaded and preprocessed,</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">a store can take an integer index and return an input data sample and a tuple of *original coordinates* that</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">can be used to map that sample to a specific place in the original data (meaning video id, clip id and frame</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">indices). The indexing is consistent across time and stores (the features at index 42 an an input frame</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">should correspond to labels at index 42 at an annotation store for the same dataset). That is checked at runtime</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">by comparing the original coordinates arrays of the two stores.</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">![image](https://i.ibb.co/Y8zc43H/data.png)</span>
 </span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">![image](https://i.ibb.co/Y8zc43H/data.png)</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="sd">In addition, every store is defined by a tuple of *key objects* (e.g. the input data array, the original</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">coordinates array and a dictionary with lengths of the original videos). When these key objects are saved and a</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">new store is created from them, it behaves identically to the original. Finally, when initialising a dataset,</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">input stores are always created first and annotations stores second, if at all. If there is any information that</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">needs to be passed from an input store to an annotation store, it is packed in a dictionary, termed *annotation</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">objects*. `base_store.AnnotationStore` child classes have a `required_annotation_objects` attribute that contains</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">the keys that</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">need to be passed in any case, but you can add optional fields too.</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">Data is usually stored either as a `torch.Tensor` (in `base_store.AnnotationStore` instances), a</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">`dlc2action.utils.TensorDict` (in `base_store.InputStore` instances where all data fits in RAM) or a `numpy.ndarray`</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">of filenames (in `base_store.InputStore` instances with large amounts of data).</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="sd">In addition, every store is defined by a tuple of *key objects* (e.g. the input data array, the original</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">coordinates array and a dictionary with lengths of the original videos). When these key objects are saved and a</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="sd">new store is created from them, it behaves identically to the original. Finally, when initialising a dataset,</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="sd">input stores are always created first and annotations stores second, if at all. If there is any information that</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">needs to be passed from an input store to an annotation store, it is packed in a dictionary, termed *annotation</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">objects*. `base_store.AnnotationStore` child classes have a `required_annotation_objects` attribute that contains</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">the keys that</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">need to be passed in any case, but you can add optional fields too.</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">Data is usually stored either as a `torch.Tensor` (in `base_store.AnnotationStore` instances), a</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">`dlc2action.utils.TensorDict` (in `base_store.InputStore` instances where all data fits in RAM) or a `numpy.ndarray`</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">of filenames (in `base_store.InputStore` instances with large amounts of data).</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">&quot;&quot;&quot;</span>
 </span></pre></div>
 
 

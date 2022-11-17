@@ -49,70 +49,68 @@
                         <label class="view-source-button" for="parameters-view-source"><span>View Source</span></label>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="c1">#</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="c1"># DLC2Action Toolbox</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="c1"># © A. Mathis Lab</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1"># https://github.com/amathislab/DLC2Action/</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="c1"># Licensed under GNU Lesser General Public License v3.0</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="c1">#</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="c1"># parameters_dict = {</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="c1">#     &quot;annotation&quot;: {</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="c1">#         &quot;boris&quot;: {</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="c1">#             &quot;min_frames_action&quot;: (&quot;int&quot;, 0, 10),</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="c1">#             &quot;visibility_min_score&quot;: (&quot;float&quot;, 0, 0.8),</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1">#             &quot;visibility_min_frac&quot;: (&quot;float&quot;, 0.5, 1),</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="c1">#         },</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="c1">#         &quot;calms21&quot;: {},</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="c1">#         &quot;dlc&quot;: {</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="c1">#             &quot;min_frames_action&quot;: (&quot;int&quot;, 0, 10),</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="c1">#             &quot;visibility_min_score&quot;: (&quot;float&quot;, 0, 0.8),</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="c1">#             &quot;visibility_min_frac&quot;: (&quot;float&quot;, 0.5, 1),</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="c1">#         },</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="c1">#         &quot;pku-mmd&quot;: {},</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="c1">#     },</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="c1">#     &quot;augmentations&quot;: {</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="c1">#         &quot;heatmap&quot;: {},</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="c1">#         &quot;kinematic&quot;: {},</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="c1">#     },</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="c1">#     &quot;data&quot;: {</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="c1">#         &quot;calms21&quot;: {},</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="c1">#         &quot;dlc_track&quot;: {</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="c1">#             &quot;likelihood_threshold&quot;: (&quot;float&quot;, 0, 0.8)</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="c1">#         },</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="c1">#         &quot;dlc_tracklet&quot;: {</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="c1">#             &quot;likelihood_threshold&quot;: (&quot;float&quot;, 0, 0.8),</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="c1">#             &quot;frame_limit&quot;: (&quot;int&quot;, 0, 100),</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="c1">#         },</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="c1">#         &quot;np_3d&quot;: {</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="c1">#             &quot;frame_limit&quot;: (&quot;int&quot;, 0, 100),</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="c1">#         },</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="c1">#         &quot;pku-mmd&quot;: {},</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="c1">#     },</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="c1">#     &quot;features&quot;: {</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="c1">#         &quot;heatmap&quot;: {</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="c1">#             &quot;channel_policy&quot;: (&quot;categorical&quot;, [&quot;color&quot;, &quot;black&amp;white&quot;, &quot;bp&quot;]),</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="c1">#             &quot;heatmap_width&quot;: (&quot;categorical&quot;, [128, 256]),</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="c1">#             &quot;sigma&quot;: (&quot;float&quot;, 0, 1),</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="c1">#         },</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="c1">#         &quot;kinematic&quot;: {}</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="c1">#     },</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="c1">#     &quot;model&quot;: {</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="c1">#         &quot;asformer&quot;: {</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="c1">#             &quot;num_decoders&quot;: (&quot;int&quot;, 1, 4),</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="c1">#             &quot;num_layers&quot;: (&quot;int&quot;, 5, 15),</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="c1">#             &quot;r1&quot;: (&quot;int&quot;, 1, 4),</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="c1">#             &quot;r2&quot;: (&quot;int&quot;, 1, 4),</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="c1">#             &quot;num_f_maps&quot;: (&quot;int_log&quot;, 16, 128),</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="c1">#             &quot;channel_masking_rate&quot;: (&quot;float&quot;)</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="c1"># num_layers: 10</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="c1"># r1: 2</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="c1"># r2: 2</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="c1"># num_f_maps: 64</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="c1"># input_dim: &#39;dataset_features&#39;</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="c1"># channel_masking_rate: 0.4&quot;</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="c1">#         }</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="c1">#     }</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="c1"># }</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="c1"># DLC2Action is not open-sourced yet.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="c1"># https://choosealicense.com/no-permission/</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1">#</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="c1"># parameters_dict = {</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="c1">#     &quot;annotation&quot;: {</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="c1">#         &quot;boris&quot;: {</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="c1">#             &quot;min_frames_action&quot;: (&quot;int&quot;, 0, 10),</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="c1">#             &quot;visibility_min_score&quot;: (&quot;float&quot;, 0, 0.8),</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="c1">#             &quot;visibility_min_frac&quot;: (&quot;float&quot;, 0.5, 1),</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="c1">#         },</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1">#         &quot;calms21&quot;: {},</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="c1">#         &quot;dlc&quot;: {</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="c1">#             &quot;min_frames_action&quot;: (&quot;int&quot;, 0, 10),</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="c1">#             &quot;visibility_min_score&quot;: (&quot;float&quot;, 0, 0.8),</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="c1">#             &quot;visibility_min_frac&quot;: (&quot;float&quot;, 0.5, 1),</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="c1">#         },</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="c1">#         &quot;pku-mmd&quot;: {},</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="c1">#     },</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="c1">#     &quot;augmentations&quot;: {</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="c1">#         &quot;heatmap&quot;: {},</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="c1">#         &quot;kinematic&quot;: {},</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="c1">#     },</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="c1">#     &quot;data&quot;: {</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="c1">#         &quot;calms21&quot;: {},</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="c1">#         &quot;dlc_track&quot;: {</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="c1">#             &quot;likelihood_threshold&quot;: (&quot;float&quot;, 0, 0.8)</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="c1">#         },</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="c1">#         &quot;dlc_tracklet&quot;: {</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="c1">#             &quot;likelihood_threshold&quot;: (&quot;float&quot;, 0, 0.8),</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="c1">#             &quot;frame_limit&quot;: (&quot;int&quot;, 0, 100),</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="c1">#         },</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="c1">#         &quot;np_3d&quot;: {</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="c1">#             &quot;frame_limit&quot;: (&quot;int&quot;, 0, 100),</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="c1">#         },</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="c1">#         &quot;pku-mmd&quot;: {},</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="c1">#     },</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="c1">#     &quot;features&quot;: {</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="c1">#         &quot;heatmap&quot;: {</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="c1">#             &quot;channel_policy&quot;: (&quot;categorical&quot;, [&quot;color&quot;, &quot;black&amp;white&quot;, &quot;bp&quot;]),</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a><span class="c1">#             &quot;heatmap_width&quot;: (&quot;categorical&quot;, [128, 256]),</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="c1">#             &quot;sigma&quot;: (&quot;float&quot;, 0, 1),</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="c1">#         },</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="c1">#         &quot;kinematic&quot;: {}</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="c1">#     },</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="c1">#     &quot;model&quot;: {</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="c1">#         &quot;asformer&quot;: {</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="c1">#             &quot;num_decoders&quot;: (&quot;int&quot;, 1, 4),</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="c1">#             &quot;num_layers&quot;: (&quot;int&quot;, 5, 15),</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="c1">#             &quot;r1&quot;: (&quot;int&quot;, 1, 4),</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="c1">#             &quot;r2&quot;: (&quot;int&quot;, 1, 4),</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="c1">#             &quot;num_f_maps&quot;: (&quot;int_log&quot;, 16, 128),</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="c1">#             &quot;channel_masking_rate&quot;: (&quot;float&quot;)</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="c1"># num_layers: 10</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="c1"># r1: 2</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="c1"># r2: 2</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="c1"># num_f_maps: 64</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="c1"># input_dim: &#39;dataset_features&#39;</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="c1"># channel_masking_rate: 0.4&quot;</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="c1">#         }</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="c1">#     }</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="c1"># }</span>
 </span></pre></div>
 
 

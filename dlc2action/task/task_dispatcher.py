@@ -1433,4 +1433,34 @@ class TaskDispatcher:
         )
 
     def get_normalization_stats(self) -> Dict:
+        """
+        Get the pre-computed normalization stats
+
+        Returns
+        -------
+        normalization_stats : dict
+            a dictionary of means and stds
+        """
+
         return self.task.get_normalization_stats()
+
+    def exists(self, mode) -> bool:
+        """
+        Check whether the task has a train/test/validation subset
+
+        Parameters
+        ----------
+        mode : {"train", "val", "test"}
+            the name of the subset to check for
+
+        Returns
+        -------
+        exists : bool
+            `True` if the subset exists
+        """
+
+        dl = self.task.dataloader(mode)
+        if dl is None:
+            return False
+        else:
+            return True
