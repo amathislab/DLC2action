@@ -52,7 +52,7 @@ def test_delete():
     )
     project.run_episode("first")
     project.run_episode(
-        "second", parameters_update={"general": {"overlap": 50}}, delete_dataset=True
+        "second", parameters_update={"general": {"overlap": 50}}, remove_saved_features=True
     )
     assert len(os.listdir(os.path.join(project.project_path, "saved_datasets"))) == 2
     project.remove_saved_features()
