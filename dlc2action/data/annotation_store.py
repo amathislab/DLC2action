@@ -1365,7 +1365,9 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
                 annotation = data
                 for ind in annotation:
                     for cat, cat_list in annotation[ind].items():
-                        annotation[ind][cat] = [[start, end, 0] for start, end in cat_list] 
+                        annotation[ind][cat] = [
+                            [start, end, 0] for start, end in cat_list
+                        ]
             else:
                 _, loaded_labels, animals, loaded_times = data
                 annotation = {}

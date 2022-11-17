@@ -1073,7 +1073,11 @@ class Project:
                 f"There is no default search space for {model_name}! Please choose from {options.model_hyperparameters.keys()} or try project.run_hyperparameter_search()"
             )
         pars = {
-            "general": {"overlap": overlap, "model_name": model_name, "metric_functions": {metric}},
+            "general": {
+                "overlap": overlap,
+                "model_name": model_name,
+                "metric_functions": {metric},
+            },
             "training": {"num_epochs": num_epochs},
         }
         if test_frac is not None:
@@ -1171,7 +1175,9 @@ class Project:
         self.remove_episode(f"_{search_name}")
         if parameters_update is None:
             parameters_update = {}
-        parameters_update = self._update(parameters_update, {"general": {"metric_functions": {metric}}})
+        parameters_update = self._update(
+            parameters_update, {"general": {"metric_functions": {metric}}}
+        )
         parameters = self._make_parameters(
             f"_{search_name}",
             load_episode,
