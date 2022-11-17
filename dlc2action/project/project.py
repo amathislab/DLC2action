@@ -1121,6 +1121,9 @@ class Project:
 
         For a simpler function that fits most use cases, check out `Project.run_default_hyperparameter_search()`.
 
+        To use a default search space with this method, import `dlc2action.options.model_hyperparameters`. It is
+        a dictionary where keys are model names and values are default search spaces.
+
         The task parameters are read from the config files and updated with the parameters_update dictionary.
         The model can be either initialized from scratch or loaded from a previously run episode.
         For each trial, the objective metric is averaged over a few best epochs.
