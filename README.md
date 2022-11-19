@@ -54,7 +54,7 @@ project.run_prediction('prediction_1', episode_names=['episode_1'], data_path='p
 
 ## How to get more information?
 
-Check out the [examples](/examples) or [read the documentation](html_docs/dlc2action/index.html) for a taste of what else you can do.
+Check out the [examples](/examples) or [read the documentation](html_docs/index.html) for a taste of what else you can do.
 
 Note: For now you'll need to download the repo to look at the docs. They will look like this:
 
