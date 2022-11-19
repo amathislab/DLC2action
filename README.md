@@ -59,3 +59,10 @@ Check out the [examples](/examples) or [read the documentation](html_docs/dlc2ac
 Note: For now you'll need to download the repo to look at the docs. They will look like this:
 
 ![Screenshot](examples/docs_image.png?raw=true "Screenshot of DLC2Action docs.")
+
+
+## Acknowledgments
+
+[Liza Kozlova](https://github.com/elkoz) from the [A. Mathis Group at EPFL](https://www.mathislab.org/) is the main developer of DLC2Action.
+
+We are grateful to many people for feedback, alpha-testing and suggestions, in particular to Andy Bonnetto, Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
