@@ -1,6 +1,7 @@
 #
-# DLC2Action is not open-sourced yet.
-# https://choosealicense.com/no-permission/
+# Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+#
+# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
 from dlc2action.project import Project
 import pytest
@@ -52,7 +53,9 @@ def test_delete():
     )
     project.run_episode("first")
     project.run_episode(
-        "second", parameters_update={"general": {"overlap": 50}}, remove_saved_features=True
+        "second",
+        parameters_update={"general": {"overlap": 50}},
+        remove_saved_features=True,
     )
     assert len(os.listdir(os.path.join(project.project_path, "saved_datasets"))) == 2
     project.remove_saved_features()

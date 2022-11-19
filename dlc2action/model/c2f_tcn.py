@@ -1,7 +1,8 @@
 #
-# DLC2Action Toolbox
-# © A. Mathis Lab
-# https://github.com/amathislab/DLC2Action/
+# Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+#
+# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+#
 #
 # Adapted from C2F-TCN by dipika singhania
 # Adapted from https://github.com/dipika-singhania/C2F-TCN
