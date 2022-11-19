@@ -25,3 +25,11 @@ pdoc --logo https://i.ibb.co/NstG5hz/03.png -o html_docs dlc2action
 ```
 black .
 ```
+
+## Testing
+
+We use pytests for testing. Simply run:
+
+```
+pytest
+```
