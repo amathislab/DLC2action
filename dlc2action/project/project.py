@@ -2837,7 +2837,7 @@ class Project:
         yaml = YAML()
         data_param_path = os.path.join(default_path, "data", f"{data_type}.yaml")
         if os.path.exists(data_param_path):
-            with open(data_param_path) as f:
+            with open(data_param_path, encoding="utf-8") as f:
                 data_params = yaml.load(f)
         if data_params is None:
             data_params = {}
@@ -2863,7 +2863,7 @@ class Project:
         data_params["annotation_path"] = annotation_path
         with open(os.path.join(config_path, "data.yaml"), "w") as f:
             yaml.dump(data_params, f)
-        with open(os.path.join(default_path, "general.yaml")) as f:
+        with open(os.path.join(default_path, "general.yaml"), encoding="utf-8") as f:
             general_params = yaml.load(f)
         general_params["data_type"] = data_type
         general_params["annotation_type"] = annotation_type
@@ -2904,7 +2904,7 @@ class Project:
         Load a parameter dictionary from a .yaml file
         """
 
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = YAML().load(f)
         if data is None:
             data = {}
