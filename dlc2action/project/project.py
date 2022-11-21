@@ -3251,11 +3251,10 @@ class Project:
         print('        "metrics": {')
         for metric in metric_names:
             print(f'            "{metric}": {{')
-            for key in options.basic_parameters["metrics"][metric]:
-                if key in parameters["metrics"][metric]:
-                    print(
-                        f'                "{key}": {self._process_value(parameters["metrics"][metric][key])}, {self._get_comment(parameters["metrics"][metric].ca.items.get(key))}'
-                    )
+            for key in parameters["metrics"][metric]:
+                print(
+                    f'                "{key}": {self._process_value(parameters["metrics"][metric][key])}, {self._get_comment(parameters["metrics"][metric].ca.items.get(key))}'
+                )
             print("            },")
         print("        },")
         print('        "model": {')
