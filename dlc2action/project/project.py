@@ -2146,26 +2146,26 @@ class Project:
             parameters = self._update(parameters, parameters_update)
         for key in keys:
             with open(
-                os.path.join(self.project_path, "config", f"{key}.yaml"), "w"
+                os.path.join(self.project_path, "config", f"{key}.yaml"), "w", encoding="utf-8"
             ) as f:
                 YAML().dump(parameters[key], f)
         model_name = parameters["general"]["model_name"]
         model_path = os.path.join(
             self.project_path, "config", "model", f"{model_name}.yaml"
         )
-        with open(model_path, "w") as f:
+        with open(model_path, "w", encoding="utf-8") as f:
             YAML().dump(parameters["model"], f)
         features_name = parameters["general"]["feature_extraction"]
         features_path = os.path.join(
             self.project_path, "config", "features", f"{features_name}.yaml"
         )
-        with open(features_path, "w") as f:
+        with open(features_path, "w", encoding="utf-8") as f:
             YAML().dump(parameters["features"], f)
         aug_name = options.extractor_to_transformer[features_name]
         aug_path = os.path.join(
             self.project_path, "config", "augmentations", f"{aug_name}.yaml"
         )
-        with open(aug_path, "w") as f:
+        with open(aug_path, "w", encoding="utf-8") as f:
             YAML().dump(parameters["augmentations"], f)
 
     def get_summary(
@@ -2668,7 +2668,7 @@ class Project:
                 for key in to_remove:
                     original_pars.pop(key)
                 project_pars = self._update(project_pars, original_pars)
-                with open(filepath_project, "w") as f:
+                with open(filepath_project, "w", encoding="utf-8") as f:
                     YAML().dump(project_pars, f)
 
     def _update_project(self) -> None:
@@ -2838,7 +2838,7 @@ class Project:
         yaml = YAML()
         data_param_path = os.path.join(default_path, "data", f"{data_type}.yaml")
         if os.path.exists(data_param_path):
-            with open(data_param_path) as f:
+            with open(data_param_path, encoding="utf-8") as f:
                 data_params = yaml.load(f)
         if data_params is None:
             data_params = {}
@@ -2862,13 +2862,13 @@ class Project:
         data_params = self._update(data_params, ann_params)
         data_params["data_path"] = data_path
         data_params["annotation_path"] = annotation_path
-        with open(os.path.join(config_path, "data.yaml"), "w") as f:
+        with open(os.path.join(config_path, "data.yaml"), "w", encoding="utf-8") as f:
             yaml.dump(data_params, f)
-        with open(os.path.join(default_path, "general.yaml")) as f:
+        with open(os.path.join(default_path, "general.yaml"), encoding="utf-8") as f:
             general_params = yaml.load(f)
         general_params["data_type"] = data_type
         general_params["annotation_type"] = annotation_type
-        with open(os.path.join(config_path, "general.yaml"), "w") as f:
+        with open(os.path.join(config_path, "general.yaml"), "w", encoding="utf-8") as f:
             yaml.dump(general_params, f)
 
     def _generate_meta(self) -> None:
@@ -2905,7 +2905,7 @@ class Project:
         Load a parameter dictionary from a .yaml file
         """
 
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = YAML().load(f)
         if data is None:
             data = {}
@@ -3252,11 +3252,10 @@ class Project:
         print('        "metrics": {')
         for metric in metric_names:
             print(f'            "{metric}": {{')
-            for key in options.basic_parameters["metrics"][metric]:
-                if key in parameters["metrics"][metric]:
-                    print(
-                        f'                "{key}": {self._process_value(parameters["metrics"][metric][key])}, {self._get_comment(parameters["metrics"][metric].ca.items.get(key))}'
-                    )
+            for key in parameters["metrics"][metric]:
+                print(
+                    f'                "{key}": {self._process_value(parameters["metrics"][metric][key])}, {self._get_comment(parameters["metrics"][metric].ca.items.get(key))}'
+                )
             print("            },")
         print("        },")
         print('        "model": {')
