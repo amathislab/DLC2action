@@ -17,7 +17,7 @@ You can edit the `NOTICE.yml` to update the header.
 ## Docs
 
 ```
-pdoc --logo https://i.ibb.co/NstG5hz/03.png -o html_docs dlc2action
+pdoc --logo https://i.ibb.co/tKsQMZb/main.png -o html_docs dlc2action
 ```
 
 ## Codeformatting

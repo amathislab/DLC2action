@@ -6,19 +6,21 @@
 import torch
 from dlc2action.data.dataset import BehaviorDataset
 import pytest
+import os
+import shutil
+
+path = os.path.join(os.path.dirname(__file__), "data")
 
 data_parameters = {
     "data_type": "dlc_track",
-    "annotation_type": "boris",
-    "data_path": "/home/liza/data/cricket",
-    "annotation_path": "/home/liza/data/cricket",
-    "behaviors": ["Grooming", "Search", "Pursuit"],
+    "annotation_type": "csv",
+    "data_path": path,
+    "annotation_path": path,
     "annotation_suffix": {".csv"},
     "data_suffix": {
-        "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
+        "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
     },
-    "default_agent_name": "mouse",
-    "ignored_clips": ["single"],
+    "canvas_shape": [1000, 500],
 }
 
 
@@ -29,6 +31,9 @@ def test_full_length_prediction():
     Check the shape of the predictions + make sure all ones stay all ones.
     """
 
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
     dataset = BehaviorDataset(**data_parameters)
     l = len(dataset)
     f = dataset.len_segment()
@@ -40,3 +45,8 @@ def test_full_length_prediction():
             assert fl_prediction[video_id][clip_id].shape[
                 -1
             ] == dataset.input_store.get_clip_length(video_id, clip_id)
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+
+# test_full_length_prediction()

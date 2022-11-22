@@ -6,21 +6,21 @@
 import torch
 from dlc2action.data.dataset import BehaviorDataset
 import pytest
+import os
+import shutil
+
+path = os.path.join(os.path.dirname(__file__), "data")
 
 data_parameters = {
     "data_type": "dlc_track",
-    "annotation_type": "boris",
-    "data_path": "/home/liza/data/cricket",
-    "annotation_path": "/home/liza/data/cricket",
-    "behaviors": ["Grooming", "Search", "Pursuit"],
+    "annotation_type": "csv",
+    "data_path": path,
+    "annotation_path": path,
     "annotation_suffix": {".csv"},
     "data_suffix": {
-        "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
+        "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
     },
-    "canvas_shape": [2250, 1250],
-    "default_agent_name": "mouse+single",
-    "interactive": True,
-    "feature_extraction_pars": {"interactive": True},
+    "canvas_shape": [1000, 500],
 }
 
 
@@ -29,6 +29,9 @@ def test_valleys_intersection():
     Test `dlc2action.data.dataset.BehaviorDataset.valleys_intersection'
     """
 
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
     dataset = BehaviorDataset(**data_parameters)
     l = len(dataset)
     f = dataset.len_segment()
@@ -47,3 +50,8 @@ def test_valleys_intersection():
     valleys2 = dataset.find_valleys(predicted=prediction, threshold=0.5, low=False)
     result = dataset.valleys_intersection([valleys2, valleys1])
     assert len(result[video_id]) == 0
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+
+# test_valleys_intersection()

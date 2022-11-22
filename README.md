@@ -1,7 +1,7 @@
 [![Generic badge](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
-# DLC2Action
+![](logos/title.png)
 
 DLC2Action is an action segmentation package that makes running and tracking of machine learning experiments easy.
 

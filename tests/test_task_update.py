@@ -6,21 +6,19 @@
 from dlc2action.task.task_dispatcher import TaskDispatcher
 from math import floor
 import pytest
+import os
+import shutil
+
+path = os.path.join(os.path.dirname(__file__), "data")
 
 parameters = {
     "data": {
-        "data_path": "/home/liza/data/cricket",
-        "annotation_path": "/home/liza/data/cricket",
-        "behaviors": ["Grooming", "Search", "Pursuit"],
-        "annotation_suffix": {".csv"},
-        "data_suffix": {
-            "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
-        },
-        "default_agent_name": "mouse",
+        "data_path": path,
+        "annotation_path": path,
+        "annotation_suffix": {"2.csv"},
+        "data_suffix": "2DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
     },
     "features": {
-        "interactive": False,  # bool; if true, distances between two agents are included; if false, only the first agent features are computed
-        "pickled_feature_suffix": None,  # str; the feature files should be stored in the data folder and named {video_id}{h5_feature_suffix}
         "keys": ["coords"],
     },
     "model": {
@@ -29,9 +27,8 @@ parameters = {
         "feature_dim": 16,
     },
     "general": {
-        "ignored_clips": ["single"],
         "data_type": "dlc_track",
-        "annotation_type": "boris",
+        "annotation_type": "csv",
         "model_name": "c2f_tcn",  # str; model name
         "num_classes": "dataset_classes",  # int; number of classes
         "exclusive": True,  # bool; if true, single-label classification is used; otherwise multi-label
@@ -77,18 +74,14 @@ parameters = {
 }
 update = {
     "data": {
-        "data_path": "/home/liza/data/cricket",
-        "annotation_path": "/home/liza/data/cricket",
-        "behaviors": ["Grooming", "Search", "Pursuit"],
-        "annotation_suffix": {".csv"},
+        "data_path": path,
+        "annotation_path": path,
+        "annotation_suffix": {"2.csv"},
         "data_suffix": {
-            "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
+            "2DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
         },
-        "default_agent_name": "mouse",
     },
     "features": {
-        "interactive": False,  # bool; if true, distances between two agents are included; if false, only the first agent features are computed
-        "pickled_feature_suffix": None,  # str; the feature files should be stored in the data folder and named {video_id}{h5_feature_suffix}
         "keys": ["coords", "intra_distance"],
     },
     "model": {
@@ -96,9 +89,8 @@ update = {
     },
     "general": {
         "len_segment": 128,
-        "ignored_clips": ["single"],
         "data_type": "dlc_track",
-        "annotation_type": "boris",
+        "annotation_type": "csv",
         "model_name": "c2f_tcn",  # str; model name
         "num_classes": "dataset_classes",  # int; number of classes
         "exclusive": False,  # bool; if true, single-label classification is used; otherwise multi-label
@@ -149,6 +141,9 @@ def test_task_update():
     Update a task with set parameters and check that all parameter groups get to the end destination.
     """
 
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
     task = TaskDispatcher(parameters)
     task.update_task(update)
     # check model parameters
@@ -188,6 +183,9 @@ def test_task_update():
     assert task.task.model_save_epochs == 5
     # check test_frac
     assert task.task.test_dataloader is not None and len(task.task.test_dataloader) != 0
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
 
 
 # test_task_update()

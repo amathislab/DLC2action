@@ -6,21 +6,21 @@
 import torch
 import pytest
 from dlc2action.data.dataset import BehaviorDataset
+import os
+import shutil
+
+path = os.path.join(os.path.dirname(__file__), "data")
 
 data_parameters = {
     "data_type": "dlc_track",
-    "annotation_type": "boris",
-    "data_path": "/home/liza/data/cricket",
-    "annotation_path": "/home/liza/data/cricket",
-    "behaviors": ["Grooming", "Search", "Pursuit"],
+    "annotation_type": "csv",
+    "data_path": path,
+    "annotation_path": path,
     "annotation_suffix": {".csv"},
     "data_suffix": {
-        "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
+        "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
     },
-    "canvas_shape": [2250, 1250],
-    "default_agent_name": "mouse+single",
-    "interactive": True,
-    "feature_extraction_pars": {"interactive": True},
+    "canvas_shape": [1000, 500],
 }
 
 
@@ -40,6 +40,9 @@ def test_find_valleys(
     Test the `dlc2action.data.dataset.BehaviorDataset.find_valleys` function
     """
 
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
     dataset = BehaviorDataset(**data_parameters)
     l = len(dataset)
     f = dataset.len_segment()
@@ -135,6 +138,9 @@ def test_find_valleys(
         for video_id in valleys:
             if video_id not in answer:
                 assert valleys[video_id] == []
+    folder = os.path.join(path, "trimmed")
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
 
 
 # test_find_valleys('hard_threshold', low=True, add_error=True, add_min_frames=False, add_min_frames_error=True)

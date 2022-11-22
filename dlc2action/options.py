@@ -68,7 +68,6 @@ losses = {
 }
 losses_multistage = [
     "ms_tcn",
-    "asrf",
 ]  # losses that expect predictions of shape (#stages, #batch, #classes, #frames)
 
 metrics = {

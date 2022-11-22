@@ -1,0 +1,21 @@
+,Unnamed: 0.1,Unnamed: 0,file,Experimenter,from,to,type,ID,DLCFile
+0,0,4754,OFT_44_OS.csv,Oliver,3.856,4.648,StartEnd,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+1,1,4755,OFT_44_OS.csv,Oliver,4.261,5.261,StartEnd,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+2,2,4756,OFT_44_OS.csv,Oliver,3.815,4.731,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+3,3,4757,OFT_44_OS.csv,Oliver,8.898,9.71,Unsupported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+4,4,4758,OFT_44_OS.csv,Oliver,8.127,8.94,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+5,5,4759,OFT_44_OS.csv,Oliver,12.794,13.586,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+6,6,4760,OFT_44_OS.csv,Oliver,20.69,22.606,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+7,7,4761,OFT_44_OS.csv,Oliver,26.294,27.002,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+8,8,4762,OFT_44_OS.csv,Oliver,27.481,28.981,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+9,9,4763,OFT_44_OS.csv,Oliver,46.273,46.398,Grooming,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+10,10,4764,OFT_44_OS.csv,Oliver,46.877,48.565,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+11,11,4765,OFT_44_OS.csv,Oliver,49.877,51.398,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+12,12,4766,OFT_44_OS.csv,Oliver,73.856,75.877,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+13,13,4767,OFT_44_OS.csv,Oliver,76.336,77.94,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+14,14,4768,OFT_44_OS.csv,Oliver,78.523,79.356,Unsupported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+15,15,4769,OFT_44_OS.csv,Oliver,79.856,81.481,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+16,16,4770,OFT_44_OS.csv,Oliver,87.731,89.419,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+17,17,4771,OFT_44_OS.csv,Oliver,100.815,102.815,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+18,18,4772,OFT_44_OS.csv,Oliver,106.315,107.877,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv
+19,19,4773,OFT_44_OS.csv,Oliver,114.294,115.877,Supported,OFT_44,12_01_A_190507144429DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv

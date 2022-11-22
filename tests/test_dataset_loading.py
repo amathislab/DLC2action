@@ -9,6 +9,7 @@ import pytest
 import os
 import torch
 
+
 test_data = [
     {
         "data_type": "dlc_track",

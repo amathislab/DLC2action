@@ -17,7 +17,7 @@
         <label id="navtoggle" for="togglestate" class="pdoc-button"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke-linecap='round' stroke="currentColor" stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg></label>
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
         <div>
-            <img src="https://i.ibb.co/NstG5hz/03.png" class="logo" alt="project logo"/>
+            <img src="https://i.ibb.co/tKsQMZb/main.png" class="logo" alt="project logo"/>
 
             <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
                    pattern=".+" required>
@@ -39,7 +39,6 @@
                 <li><a href="dlc2action/metric.html">metric</a></li>
                 <li><a href="dlc2action/model.html">model</a></li>
                 <li><a href="dlc2action/options.html">options</a></li>
-                <li><a href="dlc2action/parameters.html">parameters</a></li>
                 <li><a href="dlc2action/project.html">project</a></li>
                 <li><a href="dlc2action/ssl.html">ssl</a></li>
                 <li><a href="dlc2action/task.html">task</a></li>
@@ -434,383 +433,384 @@ we have described how to access it.</p>
                         <label class="view-source-button" for="dlc2action-view-source"><span>View Source</span></label>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="c1">#</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="c1"># DLC2Action is not open-sourced yet.</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="c1"># https://choosealicense.com/no-permission/</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="c1">#</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="sd">`dlc2action` is an action segmentation package that makes running and tracking experiments easy.</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="sd"># Usage</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">`dlc2action` is designed to be modular.</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="sd">You can use the high-level project interface for convenient experiment management or just import a metric</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="sd">or an SSL module if you want more freedom. Here are some tutorials for using the package.</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">## Project</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">Project is the class that can create and maintain configuration files and keep track of your experiments.</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">### Creating</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">[creating]: #creating</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">To start a new project, you can create a new `dlc2action.project.project.Project` instance in python. </span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">Check `dlc2action.project.project.Project.print_data_types` and `dlc2action.project.project.Project.print_annotation_types` to see the implemented data </span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">and annotation types.</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">```python</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">from dlc2action.project import Project</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>
-</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">project = Project(</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">    &#39;project_name&#39;,</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">    data_type=&#39;data_type&#39;,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">    annotation_type=&#39;annotation_type&#39;,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">    data_path=&#39;path/to/data/folder&#39;,</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">    annotation_path=&#39;path/to/annotation/folder&#39;,</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">)</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">```</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">A new folder will be created at `projects_path/project_name` with all the necessary files. The default projects path is</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">a `DLC2Action` folder that will be created in your home directory.</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">The project structure looks like this.</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">```</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">.</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">project_name</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">├── config                                             # Settings files</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">├── meta                                               # Project meta files (experiment records)</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">├── saved_datasets                                     # Pre-computed dataset files</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">└── results</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">    ├── logs                                           # Training logs (human readable)</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">    │   └── episode.txt</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">    ├── models                                         # Model checkpoints</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">    │   └── episode</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">    │       ├── epoch25.pt</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    │       └── epoch50.pt</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    ├── searches                                       # Hyperparameter search results (graphs)</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">    │   └── search</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">    │       ├── search_param_importances.html_docs</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">    │       └── search_contour.html_docs</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">    ├── splits                                         # Split files</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    │       ├── time_25.0%validation_10.0%test.txt</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    │       └── random_20.0%validation_10.0%test.txt</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">    ├── suggestions                                    # Suggestion and active learning files</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">    │       └── active_learning</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">    │           ├── video1_suggestion.pickle</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    │           ├── video2_suggestion.pickle</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">    │           └── al_points.pickle</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">    └── predictions                                    # Prediction files (pickled dictionaries)</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">            ├── episode_epoch25.pickle</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">            └── episode_epoch50_newdata.pickle</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">```</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="sd">You can find a more detailed explanation of the structure at `dlc2action.project`.</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">After the project is created you can modify the parameters with the `dlc2action.project.project.Project.update_parameters` function.</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">Make sure to start by filling out the required parameters. You can get a list of those and a code hint with </span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">`dlc2action.project.project.Project.list_blanks`.</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a><span class="sd">Run `project.help()` to find out more about other parameters you might want to modify.</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">### Training</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">[training]: #training</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">When you want to start your experiments, just create a `dlc2action.project.project.Project` instance again</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">(or use the one you created</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">to initialize the project). This time you don&#39;t have to set any parameters except the project name (and, if</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">you used it when creating the project, `projects_path`).</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">```python</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">from dlc2action.project import Project</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">project = Project(&#39;project_name&#39;)</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">```</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a><span class="sd">The first thing you will want to do is train some models. There are three ways to run a *training episode*</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a><span class="sd">in `dlc2action`.</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="sd">1. **Run a single episode**</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">    ```python</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="sd">    project.run_episode(&#39;episode_1&#39;)</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">    ```</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">    We have now run a training episode with the default project parameters (read from the configuration files)</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">    and saved it in the meta files under the name `episode_1`.</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">2. **Run multiple episodes in a row**</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">    ```python</span>
-</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">    project.run_episodes([&#39;episode_2&#39;, &#39;episode_3&#39;, &#39;episode_4&#39;])</span>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    ```</span>
-</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>
-</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a><span class="sd">    That way the `dlc2action.task.universal_task.Task` instance will not be</span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">    re-created every time, which might save you some time.</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>
-</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">3. **Continue a previously run episode**</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">    ```python</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a><span class="sd">    project.continue_episode(&#39;episode_2&#39;, num_epochs=500)</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">    ```</span>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="sd">    In case you decide you want to continue an older episode, you can load all parameters and state dictionaries</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">    and set a new number of epochs. That way training will go on from where it has stopped and in the end the</span>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    episode will be re-saved under the same name. Note that `num_epochs` denotes the **new total number of epochs**,</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    so if `episode_2` has already been trained for 300 epochs, for example, it will now run for 200 epochs more,</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    not 500.</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">Of course, changing the default parameters every time you want to run a new configuration is not very convenient.</span>
-</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="sd">And, luckily, you don&#39;t have to do that. Instead you can add a `parameters_update` parameter to</span>
-</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">`dlc2action.project.project.Project.run_episode` (or `parameters_updates` to</span>
-</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">`dlc2action.project.project.Project.run_episodes`; all other parameters generalize to multiple episodes</span>
-</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">in a similar way). The third</span>
-</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">function does not take many additional parameters since it aims to continue an experiment from exactly where</span>
-</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">it ended.</span>
-</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a>
-</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">```python</span>
-</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">project.run_episode(</span>
-</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">    &#39;episode_5&#39;,</span>
-</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    parameters_update={</span>
-</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">        &#39;general&#39;: {&#39;ssl&#39;: [&#39;contrastive&#39;]},</span>
-</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a><span class="sd">        &#39;ssl&#39;: {&#39;contrastive&#39;: {&#39;ssl_weight&#39;: 0.01}},</span>
-</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a><span class="sd">    },</span>
-</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a><span class="sd">)</span>
-</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a><span class="sd">```</span>
-</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>
-</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a><span class="sd">In order to find the parameters you can modify, just open the *config* folder of your project and browse through</span>
-</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a><span class="sd">the files or call `dlc2action_fill` in your terminal (see [creating] section). The first-level keys</span>
-</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a><span class="sd">are the filenames without the extension (`&#39;augmentations&#39;`, `&#39;data&#39;`, `&#39;general&#39;`, `&#39;losses&#39;`,</span>
-</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a><span class="sd">`&#39;metrics&#39;`, `&#39;ssl&#39;`, `&#39;training&#39;`). Note that there are no</span>
-</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a><span class="sd">*model.yaml* or *features.yaml* files there for the `&#39;model&#39;` and `&#39;features&#39;` keys in the parameter</span>
-</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a><span class="sd">dictionaries. Those parameters are **read from the files in the *model* and *features* folders** that correspond</span>
-</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a><span class="sd">to the options you set in the `&#39;general&#39;` dictionary. For example, if at *general.yaml* `model_name` is set to</span>
-</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a><span class="sd">`&#39;ms_tcn3&#39;`, the `&#39;model&#39;` dictionary will be read from *model/ms_tcn3.yaml*.</span>
-</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>
-</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a><span class="sd">If you want to create a new episode with modified parameters that loads a previously trained model, you can do that</span>
-</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a><span class="sd">by adding a `load_episode` parameter. By default we will load the last saved epoch, but you can also specify</span>
-</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a><span class="sd">which epoch you want with `load_epoch`. In that case the closest checkpoint will be chosen.</span>
-</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>
-</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="sd">```python</span>
-</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a><span class="sd">project.run_episode(</span>
-</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a><span class="sd">    &#39;episode_6&#39;,</span>
-</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="sd">    parameters_update={&#39;training&#39;: {&#39;batch_size&#39;: 64}},</span>
-</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="sd">    load_episode=&#39;episode_2&#39;,</span>
-</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a><span class="sd">    load_epoch=100,</span>
-</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="sd">)</span>
-</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="sd">```</span>
-</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">### Optimizing</span>
-</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="sd">`dlc2action` also has tools for easy hyperparameter optimization. We use the `optuna` auto-ML package to perform</span>
-</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a><span class="sd">the searches and then save the best parameters and the search graphs (contour and parameter importance).</span>
-</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">The best parameters</span>
-</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">can then be loaded when you are run an episode or saved as the defaults in the configuration files.</span>
-</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>
-</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a><span class="sd">To start a search, you need to run either the `project.project.Project.run_hyperparameter_search` or the </span>
-</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">`project.project.Project.run_default_hyperparameter_search` command. The first one allows you to optimize any hyperparameter you want</span>
-</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a><span class="sd">while the second provides you with a good default search space for a given model name. </span>
-</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>
-</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="sd">To run a default search, you just need to know the name of the model you want to experiment with.</span>
-</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">```python</span>
-</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">project.run_default_hyperparameter_search(</span>
-</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">    &quot;c2f_tcn_search&quot;,</span>
-</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">    model_name=&quot;c2f_tcn&quot;,</span>
-</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">    metric=&quot;f1&quot;,</span>
-</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a><span class="sd">    prune=True,</span>
-</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">)</span>
-</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a><span class="sd">```</span>
-</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>
-</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a><span class="sd">Defining your own search space is a bit more complicated. Let&#39;s</span>
-</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a><span class="sd">say we want to optimize for four parameters: overlap length, SSL task type, learning rate and</span>
-</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a><span class="sd">number of feature maps in the model. Here is the process</span>
-</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a><span class="sd">to figure out what we want to run.</span>
-</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>
-</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a><span class="sd">1. **Find the parameter names**</span>
-</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a>
-</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a><span class="sd">    We check our parameter dictionary with `project.list_basic_parameters()` and find them in `&quot;data&quot;`, `&quot;general&quot;`, </span>
-</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a><span class="sd">    `&quot;training&quot;` and `&quot;model&quot;` categories, respectively.</span>
-</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a><span class="sd">    That means that our parameter names are `&#39;data/overlap&#39;`, `&#39;general/ssl&#39;`, `&#39;training/lr&#39;` and</span>
-</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a><span class="sd">    `&#39;model/num_f_maps&#39;`.</span>
-</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>
-</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a><span class="sd">2. **Define the search space**</span>
-</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a>
-</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a><span class="sd">    There are five types of search spaces in `dlc2action`:</span>
-</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a>
-</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a><span class="sd">    - `int`: integer values (uniform sampling),</span>
-</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a><span class="sd">    - `int_log`: integer values (logarithmic scale sampling),</span>
-</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a><span class="sd">    - `float`: float values (uniform sampling),</span>
-</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">    - `float_log`: float values (logarithmic sampling),</span>
-</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a><span class="sd">    - `categorical`: choice between several values.</span>
-</span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a>
-</span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a><span class="sd">    The first four are defined with their minimum and maximum value while `categorical` requires a list of</span>
-</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a><span class="sd">    possible values. So the search spaces are described with tuples that look either like</span>
-</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">    `(search_space_type, min, max)` or like `(&quot;categorical&quot;, list_of_values)`.</span>
-</span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a>
-</span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a><span class="sd">    We suspect that the optimal overlap is somewhere between 10 and 80 frames, SSL tasks should be either</span>
-</span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a><span class="sd">    only contrastive or contrastive and masked_features together, sensible learning rate is between</span>
-</span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a><span class="sd">    10&lt;sup&gt;-2&lt;/sup&gt; and 10&lt;sup&gt;-4&lt;/sup&gt; and the number of feature maps should be between 8 and 64.</span>
-</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a><span class="sd">    That makes our search spaces `(&quot;int&quot;, 10, 80)` for the overlap,</span>
-</span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a><span class="sd">    `(&quot;categorical&quot;, [[&quot;contrastive&quot;], [&quot;contrastive&quot;, &quot;masked_features&quot;]])` for the SSL tasks,</span>
-</span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a><span class="sd">    `(&quot;float_log&quot;, 1e-4, 1e-2)` for the learning rate and (&quot;int_log&quot;, 8, 64) for the feature maps.</span>
-</span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a>
-</span><span id="L-212"><a href="#L-212"><span class="linenos">212</span></a><span class="sd">3. **Choose the search parameters**</span>
-</span><span id="L-213"><a href="#L-213"><span class="linenos">213</span></a>
-</span><span id="L-214"><a href="#L-214"><span class="linenos">214</span></a><span class="sd">    You need to decide which metric you are optimizing for and for how many trials. Note that it has to be one</span>
-</span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a><span class="sd">    of the metrics you are computing: check `metric_functions` at *general.yaml* and add your</span>
-</span><span id="L-216"><a href="#L-216"><span class="linenos">216</span></a><span class="sd">    metric if it&#39;s not there. The `direction` parameter determines whether this metric is minimized or maximized.</span>
-</span><span id="L-217"><a href="#L-217"><span class="linenos">217</span></a><span class="sd">    The metric can also be averaged over a few of the most successful epochs (`average` parameter). If you want to</span>
-</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a><span class="sd">    use `optuna`&#39;s pruning feature, set `prune` to `True`.</span>
-</span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a>
-</span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a><span class="sd">    You can also use parameter updates and load older experiments, as in the [training] section of this tutorial.</span>
-</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a>
-</span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a><span class="sd">    Here we will maximize the recall averaged over 5 top epochs and run 50 trials with pruning.</span>
-</span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a>
-</span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a><span class="sd">Now we are ready to run!</span>
-</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a>
-</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a><span class="sd">```python</span>
-</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a><span class="sd">project.run_hyperparameter_search(</span>
-</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a><span class="sd">    search_space={</span>
-</span><span id="L-229"><a href="#L-229"><span class="linenos">229</span></a><span class="sd">        &quot;data/overlap&quot;: (&quot;int&quot;, 10, 80),</span>
-</span><span id="L-230"><a href="#L-230"><span class="linenos">230</span></a><span class="sd">        &quot;general/ssl&quot;: (</span>
-</span><span id="L-231"><a href="#L-231"><span class="linenos">231</span></a><span class="sd">            &quot;categorical&quot;,</span>
-</span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a><span class="sd">            [[&quot;contrastive&quot;], [&quot;contrastive&quot;, &quot;masked_features&quot;]]</span>
-</span><span id="L-233"><a href="#L-233"><span class="linenos">233</span></a><span class="sd">        ),</span>
-</span><span id="L-234"><a href="#L-234"><span class="linenos">234</span></a><span class="sd">        &quot;training/lr&quot;: (&quot;float_log&quot;: 1e-4, 1e-2),</span>
-</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a><span class="sd">        &quot;model/num_f_maps&quot;: (&quot;int_log&quot;, 8, 64),</span>
-</span><span id="L-236"><a href="#L-236"><span class="linenos">236</span></a><span class="sd">    },</span>
-</span><span id="L-237"><a href="#L-237"><span class="linenos">237</span></a><span class="sd">    metric=&quot;recall&quot;,</span>
-</span><span id="L-238"><a href="#L-238"><span class="linenos">238</span></a><span class="sd">    n_trials=50,</span>
-</span><span id="L-239"><a href="#L-239"><span class="linenos">239</span></a><span class="sd">    average=5,</span>
-</span><span id="L-240"><a href="#L-240"><span class="linenos">240</span></a><span class="sd">    search_name=&quot;search_1&quot;,</span>
-</span><span id="L-241"><a href="#L-241"><span class="linenos">241</span></a><span class="sd">    direction=&quot;maximize&quot;,</span>
-</span><span id="L-242"><a href="#L-242"><span class="linenos">242</span></a><span class="sd">    prune=True,</span>
-</span><span id="L-243"><a href="#L-243"><span class="linenos">243</span></a><span class="sd">)</span>
-</span><span id="L-244"><a href="#L-244"><span class="linenos">244</span></a><span class="sd">```</span>
-</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a>
-</span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a><span class="sd">After a search is finished, the best parameters are saved in the meta files and search graphs are saved at</span>
-</span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a><span class="sd">*project_name/results/searches/search_1*. You can see the best parameters by running</span>
-</span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a><span class="sd">`project.project.Project.list_best_parameters`:</span>
-</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a>
-</span><span id="L-250"><a href="#L-250"><span class="linenos">250</span></a><span class="sd">```python</span>
-</span><span id="L-251"><a href="#L-251"><span class="linenos">251</span></a><span class="sd">project.list_best_parameters(&#39;search_1&#39;)</span>
-</span><span id="L-252"><a href="#L-252"><span class="linenos">252</span></a><span class="sd">```</span>
-</span><span id="L-253"><a href="#L-253"><span class="linenos">253</span></a><span class="sd">Those results can also be loaded in a training episode or saved in the configuration files directly.</span>
-</span><span id="L-254"><a href="#L-254"><span class="linenos">254</span></a>
-</span><span id="L-255"><a href="#L-255"><span class="linenos">255</span></a><span class="sd">```python</span>
-</span><span id="L-256"><a href="#L-256"><span class="linenos">256</span></a><span class="sd">project.update_parameters(</span>
-</span><span id="L-257"><a href="#L-257"><span class="linenos">257</span></a><span class="sd">    load_search=&#39;search_1&#39;,</span>
-</span><span id="L-258"><a href="#L-258"><span class="linenos">258</span></a><span class="sd">    load_parameters=[&#39;training/lr&#39;, &#39;model/num_f_maps&#39;],</span>
-</span><span id="L-259"><a href="#L-259"><span class="linenos">259</span></a><span class="sd">    round_to_binary=[&#39;model/num_f_maps&#39;],</span>
-</span><span id="L-260"><a href="#L-260"><span class="linenos">260</span></a><span class="sd">)</span>
-</span><span id="L-261"><a href="#L-261"><span class="linenos">261</span></a><span class="sd">project.run_episode(</span>
-</span><span id="L-262"><a href="#L-262"><span class="linenos">262</span></a><span class="sd">    &#39;episode_best_params&#39;,</span>
-</span><span id="L-263"><a href="#L-263"><span class="linenos">263</span></a><span class="sd">    load_search=&#39;search_1&#39;,</span>
-</span><span id="L-264"><a href="#L-264"><span class="linenos">264</span></a><span class="sd">    load_parameters=[&#39;data/overlap&#39;, &#39;general/ssl&#39;],</span>
-</span><span id="L-265"><a href="#L-265"><span class="linenos">265</span></a><span class="sd">)</span>
-</span><span id="L-266"><a href="#L-266"><span class="linenos">266</span></a><span class="sd">```</span>
-</span><span id="L-267"><a href="#L-267"><span class="linenos">267</span></a><span class="sd">In this example we saved the learning rate and the number of feature maps in the configuration files and</span>
-</span><span id="L-268"><a href="#L-268"><span class="linenos">268</span></a><span class="sd">loaded the other parameters to run</span>
-</span><span id="L-269"><a href="#L-269"><span class="linenos">269</span></a><span class="sd">the `episode_best_params` training episode. Note how we used the `round_to_binary` parameter.</span>
-</span><span id="L-270"><a href="#L-270"><span class="linenos">270</span></a><span class="sd">It will round the number of feature maps to the closest power of two (7 to 8, 35 to 32 and so on). This is useful</span>
-</span><span id="L-271"><a href="#L-271"><span class="linenos">271</span></a><span class="sd">for parameters like the number of features or the batch size.</span>
-</span><span id="L-272"><a href="#L-272"><span class="linenos">272</span></a>
-</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a><span class="sd">### Exploring results</span>
-</span><span id="L-274"><a href="#L-274"><span class="linenos">274</span></a><span class="sd">[exploring]: #exploring-results</span>
-</span><span id="L-275"><a href="#L-275"><span class="linenos">275</span></a><span class="sd">After you run a bunch of experiments you will likely want to get an overview.</span>
-</span><span id="L-276"><a href="#L-276"><span class="linenos">276</span></a>
-</span><span id="L-277"><a href="#L-277"><span class="linenos">277</span></a><span class="sd">#### Visualization</span>
-</span><span id="L-278"><a href="#L-278"><span class="linenos">278</span></a><span class="sd">You can get a feeling for the predictions made by a model by running `project.project.Project.plot_predictions`.</span>
-</span><span id="L-279"><a href="#L-279"><span class="linenos">279</span></a>
-</span><span id="L-280"><a href="#L-280"><span class="linenos">280</span></a><span class="sd">```python</span>
-</span><span id="L-281"><a href="#L-281"><span class="linenos">281</span></a><span class="sd">project.plot_predictions(&#39;episode_1&#39;, load_epoch=50)</span>
-</span><span id="L-282"><a href="#L-282"><span class="linenos">282</span></a><span class="sd">```</span>
-</span><span id="L-283"><a href="#L-283"><span class="linenos">283</span></a><span class="sd">This command will generate a prediction for a random sample and visualize it compared to the ground truth.</span>
-</span><span id="L-284"><a href="#L-284"><span class="linenos">284</span></a><span class="sd">There is a lot of parameters you can customize, check them out in the documentation).</span>
-</span><span id="L-285"><a href="#L-285"><span class="linenos">285</span></a>
-</span><span id="L-286"><a href="#L-286"><span class="linenos">286</span></a><span class="sd">You can also analyze the results with `project.project.Project.plot_confusion_matrix`.</span>
-</span><span id="L-287"><a href="#L-287"><span class="linenos">287</span></a>
-</span><span id="L-288"><a href="#L-288"><span class="linenos">288</span></a><span class="sd">Another available visualization type is training curve comparison with `project.project.Project.plot_episodes`.</span>
-</span><span id="L-289"><a href="#L-289"><span class="linenos">289</span></a><span class="sd">You can compare different metrics and modes across several episode or whithin one. For example, this command</span>
-</span><span id="L-290"><a href="#L-290"><span class="linenos">290</span></a><span class="sd">will plot the validation accuracy curves for the two episodes.</span>
-</span><span id="L-291"><a href="#L-291"><span class="linenos">291</span></a>
-</span><span id="L-292"><a href="#L-292"><span class="linenos">292</span></a><span class="sd">```python</span>
-</span><span id="L-293"><a href="#L-293"><span class="linenos">293</span></a><span class="sd">project.plot_episodes([&#39;episode_1&#39;, &#39;episode_2&#39;], metrics=[&#39;accuracy&#39;])</span>
-</span><span id="L-294"><a href="#L-294"><span class="linenos">294</span></a><span class="sd">```</span>
-</span><span id="L-295"><a href="#L-295"><span class="linenos">295</span></a><span class="sd">And this will plot training and validation recall curves for `episode_3`.</span>
-</span><span id="L-296"><a href="#L-296"><span class="linenos">296</span></a>
-</span><span id="L-297"><a href="#L-297"><span class="linenos">297</span></a><span class="sd">```python</span>
-</span><span id="L-298"><a href="#L-298"><span class="linenos">298</span></a><span class="sd">project.plot_episodes([&#39;episode_3&#39;], metrics=[&#39;recall&#39;], modes=[&#39;train&#39;, &#39;val&#39;])</span>
-</span><span id="L-299"><a href="#L-299"><span class="linenos">299</span></a><span class="sd">```</span>
-</span><span id="L-300"><a href="#L-300"><span class="linenos">300</span></a><span class="sd">You can also plot several episodes as one curve. That can be useful, for example, with episodes 2 and 6</span>
-</span><span id="L-301"><a href="#L-301"><span class="linenos">301</span></a><span class="sd">in our tutorial, since `episode_6` loaded the model from `episode_2`.</span>
-</span><span id="L-302"><a href="#L-302"><span class="linenos">302</span></a>
-</span><span id="L-303"><a href="#L-303"><span class="linenos">303</span></a><span class="sd">```python</span>
-</span><span id="L-304"><a href="#L-304"><span class="linenos">304</span></a><span class="sd">project.plot_episodes([[&#39;episode_2&#39;, &#39;episode_6&#39;], &#39;episode_4&#39;], metrics=[&#39;precision&#39;])</span>
-</span><span id="L-305"><a href="#L-305"><span class="linenos">305</span></a><span class="sd">```</span>
-</span><span id="L-306"><a href="#L-306"><span class="linenos">306</span></a>
-</span><span id="L-307"><a href="#L-307"><span class="linenos">307</span></a><span class="sd">#### Tables</span>
-</span><span id="L-308"><a href="#L-308"><span class="linenos">308</span></a><span class="sd">Alternatively, you can start analyzing your experiments by putting them in a table. You can get a summary of</span>
-</span><span id="L-309"><a href="#L-309"><span class="linenos">309</span></a><span class="sd">your training episodes with `project.project.Project.list_episodes`. It provides you with three ways to filter</span>
-</span><span id="L-310"><a href="#L-310"><span class="linenos">310</span></a><span class="sd">the data.</span>
-</span><span id="L-311"><a href="#L-311"><span class="linenos">311</span></a>
-</span><span id="L-312"><a href="#L-312"><span class="linenos">312</span></a><span class="sd">1. **Episode names**</span>
-</span><span id="L-313"><a href="#L-313"><span class="linenos">313</span></a>
-</span><span id="L-314"><a href="#L-314"><span class="linenos">314</span></a><span class="sd">    You can directly say which episodes you want to look at and disregard all others. Let&#39;s say we want to see</span>
-</span><span id="L-315"><a href="#L-315"><span class="linenos">315</span></a><span class="sd">    episodes 1, 2, 3 and 4.</span>
-</span><span id="L-316"><a href="#L-316"><span class="linenos">316</span></a>
-</span><span id="L-317"><a href="#L-317"><span class="linenos">317</span></a><span class="sd">2. **Parameters**</span>
-</span><span id="L-318"><a href="#L-318"><span class="linenos">318</span></a>
-</span><span id="L-319"><a href="#L-319"><span class="linenos">319</span></a><span class="sd">    In a similar fashion, you can choose to only display certain parameters. See all available parameters by</span>
-</span><span id="L-320"><a href="#L-320"><span class="linenos">320</span></a><span class="sd">    running `project.list_episodes().columns`. Here we are only interested in the time of adding the record,</span>
-</span><span id="L-321"><a href="#L-321"><span class="linenos">321</span></a><span class="sd">    the recall results and the learning rate.</span>
-</span><span id="L-322"><a href="#L-322"><span class="linenos">322</span></a>
-</span><span id="L-323"><a href="#L-323"><span class="linenos">323</span></a><span class="sd">3. **Value filter**</span>
-</span><span id="L-324"><a href="#L-324"><span class="linenos">324</span></a>
-</span><span id="L-325"><a href="#L-325"><span class="linenos">325</span></a><span class="sd">    The last option is to filter by parameter values. Filters are defined by strings that look like this:</span>
-</span><span id="L-326"><a href="#L-326"><span class="linenos">326</span></a><span class="sd">    `&#39;{parameter_name}::{sign}{value}&#39;`. You can use as many filters as ypu want and separate them with a comma.</span>
-</span><span id="L-327"><a href="#L-327"><span class="linenos">327</span></a><span class="sd">    The parameter names are the same as in point 2, the sign can be either</span>
-</span><span id="L-328"><a href="#L-328"><span class="linenos">328</span></a><span class="sd">    `&gt;`, `&gt;=`, `&lt;`, `&lt;=` or `=` and you choose the value. Let&#39;s say we want to only get the episodes that took</span>
-</span><span id="L-329"><a href="#L-329"><span class="linenos">329</span></a><span class="sd">    at least 30 minutes to train and got to a recall that is higher than 0.4. That translates to</span>
-</span><span id="L-330"><a href="#L-330"><span class="linenos">330</span></a><span class="sd">    `&#39;results/recall::&gt;0.4,meta/training_time::&gt;=00:30:00&#39;`.</span>
-</span><span id="L-331"><a href="#L-331"><span class="linenos">331</span></a>
-</span><span id="L-332"><a href="#L-332"><span class="linenos">332</span></a><span class="sd">Putting it all together, we get this command.</span>
-</span><span id="L-333"><a href="#L-333"><span class="linenos">333</span></a>
-</span><span id="L-334"><a href="#L-334"><span class="linenos">334</span></a><span class="sd">```python</span>
-</span><span id="L-335"><a href="#L-335"><span class="linenos">335</span></a><span class="sd">project.list_episodes(</span>
-</span><span id="L-336"><a href="#L-336"><span class="linenos">336</span></a><span class="sd">    episodes=[&#39;episode_1&#39;, &#39;episode_2&#39;, &#39;episode_3&#39;, &#39;episode_4&#39;],</span>
-</span><span id="L-337"><a href="#L-337"><span class="linenos">337</span></a><span class="sd">    display_parameters=[&#39;meta/time&#39;, &#39;results/recall&#39;, &#39;training/lr&#39;],</span>
-</span><span id="L-338"><a href="#L-338"><span class="linenos">338</span></a><span class="sd">    episode_filter=&#39;results/recall::&gt;0.4,meta/training_time::&gt;=00:30:00&#39;,</span>
-</span><span id="L-339"><a href="#L-339"><span class="linenos">339</span></a><span class="sd">)</span>
-</span><span id="L-340"><a href="#L-340"><span class="linenos">340</span></a><span class="sd">```</span>
-</span><span id="L-341"><a href="#L-341"><span class="linenos">341</span></a>
-</span><span id="L-342"><a href="#L-342"><span class="linenos">342</span></a><span class="sd">There are similar functions for summarizing other history files: `project.project.Project.list_searches`,</span>
-</span><span id="L-343"><a href="#L-343"><span class="linenos">343</span></a><span class="sd">`project.project.Project.list_predictions`, `project.project.Project.list_suggestions` and they all follow the</span>
-</span><span id="L-344"><a href="#L-344"><span class="linenos">344</span></a><span class="sd">same pattern.</span>
-</span><span id="L-345"><a href="#L-345"><span class="linenos">345</span></a>
-</span><span id="L-346"><a href="#L-346"><span class="linenos">346</span></a><span class="sd">You can also get a summary of your experiment results with `project.project.Project.get_results_table` and</span>
-</span><span id="L-347"><a href="#L-347"><span class="linenos">347</span></a><span class="sd">`project.project.Project.get_summary`. Those methods will aggregate the metrics over all runs of you experiment and allow </span>
-</span><span id="L-348"><a href="#L-348"><span class="linenos">348</span></a><span class="sd">for easy comparison between models or other parameters.</span>
-</span><span id="L-349"><a href="#L-349"><span class="linenos">349</span></a>
-</span><span id="L-350"><a href="#L-350"><span class="linenos">350</span></a><span class="sd">### Making predictions</span>
-</span><span id="L-351"><a href="#L-351"><span class="linenos">351</span></a><span class="sd">When you feel good about one of the models, you can move on to making predictions. There are two ways to do that:</span>
-</span><span id="L-352"><a href="#L-352"><span class="linenos">352</span></a><span class="sd">generate pickled prediction dictionaries with `project.project.Project.run_prediction` or active learning</span>
-</span><span id="L-353"><a href="#L-353"><span class="linenos">353</span></a><span class="sd">and suggestion files for the [GUI] with `project.project.Project.run_suggestion`.</span>
-</span><span id="L-354"><a href="#L-354"><span class="linenos">354</span></a>
-</span><span id="L-355"><a href="#L-355"><span class="linenos">355</span></a><span class="sd">By default the predictions will be made for the entire dataset at the data path of the project. However, you</span>
-</span><span id="L-356"><a href="#L-356"><span class="linenos">356</span></a><span class="sd">can also choose to only make them for the training, validation or test subset (set with `mode` parameter) or</span>
-</span><span id="L-357"><a href="#L-357"><span class="linenos">357</span></a><span class="sd">even for entirely new data (set with `data_path` parameter). Note that if you set the `data_path`</span>
-</span><span id="L-358"><a href="#L-358"><span class="linenos">358</span></a><span class="sd">value, **the split</span>
-</span><span id="L-359"><a href="#L-359"><span class="linenos">359</span></a><span class="sd">parameters will be disregarded** and `mode` will be forced to `&#39;all&#39;`!</span>
-</span><span id="L-360"><a href="#L-360"><span class="linenos">360</span></a>
-</span><span id="L-361"><a href="#L-361"><span class="linenos">361</span></a><span class="sd">Here is an example of running these functions.</span>
-</span><span id="L-362"><a href="#L-362"><span class="linenos">362</span></a>
-</span><span id="L-363"><a href="#L-363"><span class="linenos">363</span></a><span class="sd">```python</span>
-</span><span id="L-364"><a href="#L-364"><span class="linenos">364</span></a><span class="sd">project.run_prediction(&#39;prediction_1&#39;, episode_name=&#39;episode_3&#39;, load_epoch=150, mode=&#39;test&#39;)</span>
-</span><span id="L-365"><a href="#L-365"><span class="linenos">365</span></a><span class="sd">```</span>
-</span><span id="L-366"><a href="#L-366"><span class="linenos">366</span></a><span class="sd">This command will generate a prediction dictionary with the model from epoch 150 of `episode_3` for the test</span>
-</span><span id="L-367"><a href="#L-367"><span class="linenos">367</span></a><span class="sd">subset of the project data (split according to the configuration files) and save it at</span>
-</span><span id="L-368"><a href="#L-368"><span class="linenos">368</span></a><span class="sd">*project_name/results/predictions/prediction_1.pickle*. </span>
-</span><span id="L-369"><a href="#L-369"><span class="linenos">369</span></a>
-</span><span id="L-370"><a href="#L-370"><span class="linenos">370</span></a><span class="sd">The history of prediction runs is recorded and at the [exploring] section</span>
-</span><span id="L-371"><a href="#L-371"><span class="linenos">371</span></a><span class="sd">we have described how to access it.</span>
-</span><span id="L-372"><a href="#L-372"><span class="linenos">372</span></a>
-</span><span id="L-373"><a href="#L-373"><span class="linenos">373</span></a><span class="sd">[GUI]: https://github.com/amathislab/dlc2action_annotation</span>
-</span><span id="L-374"><a href="#L-374"><span class="linenos">374</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-375"><a href="#L-375"><span class="linenos">375</span></a>
-</span><span id="L-376"><a href="#L-376"><span class="linenos">376</span></a><span class="kn">from</span> <span class="nn">dlc2action.version</span> <span class="kn">import</span> <span class="n">__version__</span><span class="p">,</span> <span class="n">VERSION</span>
-</span><span id="L-377"><a href="#L-377"><span class="linenos">377</span></a>
-</span><span id="L-378"><a href="#L-378"><span class="linenos">378</span></a><span class="n">__pdoc__</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;scripts&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="c1"># Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="c1">#</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="c1"># This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="c1">#</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">`dlc2action` is an action segmentation package that makes running and tracking experiments easy.</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd"># Usage</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="sd">`dlc2action` is designed to be modular.</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="sd">You can use the high-level project interface for convenient experiment management or just import a metric</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="sd">or an SSL module if you want more freedom. Here are some tutorials for using the package.</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">## Project</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="sd">Project is the class that can create and maintain configuration files and keep track of your experiments.</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">### Creating</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">[creating]: #creating</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">To start a new project, you can create a new `dlc2action.project.project.Project` instance in python. </span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">Check `dlc2action.project.project.Project.print_data_types` and `dlc2action.project.project.Project.print_annotation_types` to see the implemented data </span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">and annotation types.</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">```python</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">from dlc2action.project import Project</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">project = Project(</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">    &#39;project_name&#39;,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">    data_type=&#39;data_type&#39;,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">    annotation_type=&#39;annotation_type&#39;,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">    data_path=&#39;path/to/data/folder&#39;,</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a><span class="sd">    annotation_path=&#39;path/to/annotation/folder&#39;,</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">)</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">```</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">A new folder will be created at `projects_path/project_name` with all the necessary files. The default projects path is</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">a `DLC2Action` folder that will be created in your home directory.</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">The project structure looks like this.</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">```</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">.</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">project_name</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">├── config                                             # Settings files</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">├── meta                                               # Project meta files (experiment records)</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">├── saved_datasets                                     # Pre-computed dataset files</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">└── results</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">    ├── logs                                           # Training logs (human readable)</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">    │   └── episode.txt</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">    ├── models                                         # Model checkpoints</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">    │   └── episode</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    │       ├── epoch25.pt</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    │       └── epoch50.pt</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">    ├── searches                                       # Hyperparameter search results (graphs)</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">    │   └── search</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">    │       ├── search_param_importances.html_docs</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">    │       └── search_contour.html_docs</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    ├── splits                                         # Split files</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    │       ├── time_25.0%validation_10.0%test.txt</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">    │       └── random_20.0%validation_10.0%test.txt</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">    ├── suggestions                                    # Suggestion and active learning files</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">    │       └── active_learning</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    │           ├── video1_suggestion.pickle</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">    │           ├── video2_suggestion.pickle</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">    │           └── al_points.pickle</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">    └── predictions                                    # Prediction files (pickled dictionaries)</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">            ├── episode_epoch25.pickle</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">            └── episode_epoch50_newdata.pickle</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">```</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="sd">You can find a more detailed explanation of the structure at `dlc2action.project`.</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">After the project is created you can modify the parameters with the `dlc2action.project.project.Project.update_parameters` function.</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">Make sure to start by filling out the required parameters. You can get a list of those and a code hint with </span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">`dlc2action.project.project.Project.list_blanks`.</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="sd">Run `project.help()` to find out more about other parameters you might want to modify.</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">### Training</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">[training]: #training</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">When you want to start your experiments, just create a `dlc2action.project.project.Project` instance again</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">(or use the one you created</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">to initialize the project). This time you don&#39;t have to set any parameters except the project name (and, if</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">you used it when creating the project, `projects_path`).</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">```python</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">from dlc2action.project import Project</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">project = Project(&#39;project_name&#39;)</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="sd">```</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a><span class="sd">The first thing you will want to do is train some models. There are three ways to run a *training episode*</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a><span class="sd">in `dlc2action`.</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a><span class="sd">1. **Run a single episode**</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="sd">    ```python</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">    project.run_episode(&#39;episode_1&#39;)</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">    ```</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">    We have now run a training episode with the default project parameters (read from the configuration files)</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">    and saved it in the meta files under the name `episode_1`.</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">2. **Run multiple episodes in a row**</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">    ```python</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    project.run_episodes([&#39;episode_2&#39;, &#39;episode_3&#39;, &#39;episode_4&#39;])</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">    ```</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">    That way the `dlc2action.task.universal_task.Task` instance will not be</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="sd">    re-created every time, which might save you some time.</span>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">3. **Continue a previously run episode**</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a><span class="sd">    ```python</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">    project.continue_episode(&#39;episode_2&#39;, num_epochs=500)</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">    ```</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">    In case you decide you want to continue an older episode, you can load all parameters and state dictionaries</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    and set a new number of epochs. That way training will go on from where it has stopped and in the end the</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    episode will be re-saved under the same name. Note that `num_epochs` denotes the **new total number of epochs**,</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    so if `episode_2` has already been trained for 300 epochs, for example, it will now run for 200 epochs more,</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">    not 500.</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="sd">Of course, changing the default parameters every time you want to run a new configuration is not very convenient.</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">And, luckily, you don&#39;t have to do that. Instead you can add a `parameters_update` parameter to</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">`dlc2action.project.project.Project.run_episode` (or `parameters_updates` to</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">`dlc2action.project.project.Project.run_episodes`; all other parameters generalize to multiple episodes</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">in a similar way). The third</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">function does not take many additional parameters since it aims to continue an experiment from exactly where</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">it ended.</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">```python</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">project.run_episode(</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">    &#39;episode_5&#39;,</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">    parameters_update={</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a><span class="sd">        &#39;general&#39;: {&#39;ssl&#39;: [&#39;contrastive&#39;]},</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a><span class="sd">        &#39;ssl&#39;: {&#39;contrastive&#39;: {&#39;ssl_weight&#39;: 0.01}},</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a><span class="sd">    },</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a><span class="sd">)</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a><span class="sd">```</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a><span class="sd">In order to find the parameters you can modify, just open the *config* folder of your project and browse through</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a><span class="sd">the files or call `dlc2action_fill` in your terminal (see [creating] section). The first-level keys</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a><span class="sd">are the filenames without the extension (`&#39;augmentations&#39;`, `&#39;data&#39;`, `&#39;general&#39;`, `&#39;losses&#39;`,</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a><span class="sd">`&#39;metrics&#39;`, `&#39;ssl&#39;`, `&#39;training&#39;`). Note that there are no</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a><span class="sd">*model.yaml* or *features.yaml* files there for the `&#39;model&#39;` and `&#39;features&#39;` keys in the parameter</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a><span class="sd">dictionaries. Those parameters are **read from the files in the *model* and *features* folders** that correspond</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a><span class="sd">to the options you set in the `&#39;general&#39;` dictionary. For example, if at *general.yaml* `model_name` is set to</span>
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a><span class="sd">`&#39;ms_tcn3&#39;`, the `&#39;model&#39;` dictionary will be read from *model/ms_tcn3.yaml*.</span>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a><span class="sd">If you want to create a new episode with modified parameters that loads a previously trained model, you can do that</span>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a><span class="sd">by adding a `load_episode` parameter. By default we will load the last saved epoch, but you can also specify</span>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a><span class="sd">which epoch you want with `load_epoch`. In that case the closest checkpoint will be chosen.</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a><span class="sd">```python</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a><span class="sd">project.run_episode(</span>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="sd">    &#39;episode_6&#39;,</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="sd">    parameters_update={&#39;training&#39;: {&#39;batch_size&#39;: 64}},</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a><span class="sd">    load_episode=&#39;episode_2&#39;,</span>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="sd">    load_epoch=100,</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="sd">)</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a><span class="sd">```</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="sd">### Optimizing</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a><span class="sd">`dlc2action` also has tools for easy hyperparameter optimization. We use the `optuna` auto-ML package to perform</span>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">the searches and then save the best parameters and the search graphs (contour and parameter importance).</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">The best parameters</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a><span class="sd">can then be loaded when you are run an episode or saved as the defaults in the configuration files.</span>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">To start a search, you need to run either the `project.project.Project.run_hyperparameter_search` or the </span>
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a><span class="sd">`project.project.Project.run_default_hyperparameter_search` command. The first one allows you to optimize any hyperparameter you want</span>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a><span class="sd">while the second provides you with a good default search space for a given model name. </span>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">To run a default search, you just need to know the name of the model you want to experiment with.</span>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">```python</span>
+</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">project.run_default_hyperparameter_search(</span>
+</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">    &quot;c2f_tcn_search&quot;,</span>
+</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">    model_name=&quot;c2f_tcn&quot;,</span>
+</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a><span class="sd">    metric=&quot;f1&quot;,</span>
+</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">    prune=True,</span>
+</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a><span class="sd">)</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a><span class="sd">```</span>
+</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>
+</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a><span class="sd">Defining your own search space is a bit more complicated. Let&#39;s</span>
+</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a><span class="sd">say we want to optimize for four parameters: overlap length, SSL task type, learning rate and</span>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a><span class="sd">number of feature maps in the model. Here is the process</span>
+</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a><span class="sd">to figure out what we want to run.</span>
+</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>
+</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a><span class="sd">1. **Find the parameter names**</span>
+</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a>
+</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a><span class="sd">    We check our parameter dictionary with `project.list_basic_parameters()` and find them in `&quot;data&quot;`, `&quot;general&quot;`, </span>
+</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a><span class="sd">    `&quot;training&quot;` and `&quot;model&quot;` categories, respectively.</span>
+</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a><span class="sd">    That means that our parameter names are `&#39;data/overlap&#39;`, `&#39;general/ssl&#39;`, `&#39;training/lr&#39;` and</span>
+</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a><span class="sd">    `&#39;model/num_f_maps&#39;`.</span>
+</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a>
+</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a><span class="sd">2. **Define the search space**</span>
+</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>
+</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a><span class="sd">    There are five types of search spaces in `dlc2action`:</span>
+</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a>
+</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a><span class="sd">    - `int`: integer values (uniform sampling),</span>
+</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a><span class="sd">    - `int_log`: integer values (logarithmic scale sampling),</span>
+</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">    - `float`: float values (uniform sampling),</span>
+</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a><span class="sd">    - `float_log`: float values (logarithmic sampling),</span>
+</span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a><span class="sd">    - `categorical`: choice between several values.</span>
+</span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a>
+</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a><span class="sd">    The first four are defined with their minimum and maximum value while `categorical` requires a list of</span>
+</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">    possible values. So the search spaces are described with tuples that look either like</span>
+</span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a><span class="sd">    `(search_space_type, min, max)` or like `(&quot;categorical&quot;, list_of_values)`.</span>
+</span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a>
+</span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a><span class="sd">    We suspect that the optimal overlap is somewhere between 10 and 80 frames, SSL tasks should be either</span>
+</span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a><span class="sd">    only contrastive or contrastive and masked_features together, sensible learning rate is between</span>
+</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a><span class="sd">    10&lt;sup&gt;-2&lt;/sup&gt; and 10&lt;sup&gt;-4&lt;/sup&gt; and the number of feature maps should be between 8 and 64.</span>
+</span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a><span class="sd">    That makes our search spaces `(&quot;int&quot;, 10, 80)` for the overlap,</span>
+</span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a><span class="sd">    `(&quot;categorical&quot;, [[&quot;contrastive&quot;], [&quot;contrastive&quot;, &quot;masked_features&quot;]])` for the SSL tasks,</span>
+</span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a><span class="sd">    `(&quot;float_log&quot;, 1e-4, 1e-2)` for the learning rate and (&quot;int_log&quot;, 8, 64) for the feature maps.</span>
+</span><span id="L-212"><a href="#L-212"><span class="linenos">212</span></a>
+</span><span id="L-213"><a href="#L-213"><span class="linenos">213</span></a><span class="sd">3. **Choose the search parameters**</span>
+</span><span id="L-214"><a href="#L-214"><span class="linenos">214</span></a>
+</span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a><span class="sd">    You need to decide which metric you are optimizing for and for how many trials. Note that it has to be one</span>
+</span><span id="L-216"><a href="#L-216"><span class="linenos">216</span></a><span class="sd">    of the metrics you are computing: check `metric_functions` at *general.yaml* and add your</span>
+</span><span id="L-217"><a href="#L-217"><span class="linenos">217</span></a><span class="sd">    metric if it&#39;s not there. The `direction` parameter determines whether this metric is minimized or maximized.</span>
+</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a><span class="sd">    The metric can also be averaged over a few of the most successful epochs (`average` parameter). If you want to</span>
+</span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a><span class="sd">    use `optuna`&#39;s pruning feature, set `prune` to `True`.</span>
+</span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a>
+</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a><span class="sd">    You can also use parameter updates and load older experiments, as in the [training] section of this tutorial.</span>
+</span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a>
+</span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a><span class="sd">    Here we will maximize the recall averaged over 5 top epochs and run 50 trials with pruning.</span>
+</span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a>
+</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a><span class="sd">Now we are ready to run!</span>
+</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a>
+</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a><span class="sd">```python</span>
+</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a><span class="sd">project.run_hyperparameter_search(</span>
+</span><span id="L-229"><a href="#L-229"><span class="linenos">229</span></a><span class="sd">    search_space={</span>
+</span><span id="L-230"><a href="#L-230"><span class="linenos">230</span></a><span class="sd">        &quot;data/overlap&quot;: (&quot;int&quot;, 10, 80),</span>
+</span><span id="L-231"><a href="#L-231"><span class="linenos">231</span></a><span class="sd">        &quot;general/ssl&quot;: (</span>
+</span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a><span class="sd">            &quot;categorical&quot;,</span>
+</span><span id="L-233"><a href="#L-233"><span class="linenos">233</span></a><span class="sd">            [[&quot;contrastive&quot;], [&quot;contrastive&quot;, &quot;masked_features&quot;]]</span>
+</span><span id="L-234"><a href="#L-234"><span class="linenos">234</span></a><span class="sd">        ),</span>
+</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a><span class="sd">        &quot;training/lr&quot;: (&quot;float_log&quot;: 1e-4, 1e-2),</span>
+</span><span id="L-236"><a href="#L-236"><span class="linenos">236</span></a><span class="sd">        &quot;model/num_f_maps&quot;: (&quot;int_log&quot;, 8, 64),</span>
+</span><span id="L-237"><a href="#L-237"><span class="linenos">237</span></a><span class="sd">    },</span>
+</span><span id="L-238"><a href="#L-238"><span class="linenos">238</span></a><span class="sd">    metric=&quot;recall&quot;,</span>
+</span><span id="L-239"><a href="#L-239"><span class="linenos">239</span></a><span class="sd">    n_trials=50,</span>
+</span><span id="L-240"><a href="#L-240"><span class="linenos">240</span></a><span class="sd">    average=5,</span>
+</span><span id="L-241"><a href="#L-241"><span class="linenos">241</span></a><span class="sd">    search_name=&quot;search_1&quot;,</span>
+</span><span id="L-242"><a href="#L-242"><span class="linenos">242</span></a><span class="sd">    direction=&quot;maximize&quot;,</span>
+</span><span id="L-243"><a href="#L-243"><span class="linenos">243</span></a><span class="sd">    prune=True,</span>
+</span><span id="L-244"><a href="#L-244"><span class="linenos">244</span></a><span class="sd">)</span>
+</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a><span class="sd">```</span>
+</span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a>
+</span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a><span class="sd">After a search is finished, the best parameters are saved in the meta files and search graphs are saved at</span>
+</span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a><span class="sd">*project_name/results/searches/search_1*. You can see the best parameters by running</span>
+</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a><span class="sd">`project.project.Project.list_best_parameters`:</span>
+</span><span id="L-250"><a href="#L-250"><span class="linenos">250</span></a>
+</span><span id="L-251"><a href="#L-251"><span class="linenos">251</span></a><span class="sd">```python</span>
+</span><span id="L-252"><a href="#L-252"><span class="linenos">252</span></a><span class="sd">project.list_best_parameters(&#39;search_1&#39;)</span>
+</span><span id="L-253"><a href="#L-253"><span class="linenos">253</span></a><span class="sd">```</span>
+</span><span id="L-254"><a href="#L-254"><span class="linenos">254</span></a><span class="sd">Those results can also be loaded in a training episode or saved in the configuration files directly.</span>
+</span><span id="L-255"><a href="#L-255"><span class="linenos">255</span></a>
+</span><span id="L-256"><a href="#L-256"><span class="linenos">256</span></a><span class="sd">```python</span>
+</span><span id="L-257"><a href="#L-257"><span class="linenos">257</span></a><span class="sd">project.update_parameters(</span>
+</span><span id="L-258"><a href="#L-258"><span class="linenos">258</span></a><span class="sd">    load_search=&#39;search_1&#39;,</span>
+</span><span id="L-259"><a href="#L-259"><span class="linenos">259</span></a><span class="sd">    load_parameters=[&#39;training/lr&#39;, &#39;model/num_f_maps&#39;],</span>
+</span><span id="L-260"><a href="#L-260"><span class="linenos">260</span></a><span class="sd">    round_to_binary=[&#39;model/num_f_maps&#39;],</span>
+</span><span id="L-261"><a href="#L-261"><span class="linenos">261</span></a><span class="sd">)</span>
+</span><span id="L-262"><a href="#L-262"><span class="linenos">262</span></a><span class="sd">project.run_episode(</span>
+</span><span id="L-263"><a href="#L-263"><span class="linenos">263</span></a><span class="sd">    &#39;episode_best_params&#39;,</span>
+</span><span id="L-264"><a href="#L-264"><span class="linenos">264</span></a><span class="sd">    load_search=&#39;search_1&#39;,</span>
+</span><span id="L-265"><a href="#L-265"><span class="linenos">265</span></a><span class="sd">    load_parameters=[&#39;data/overlap&#39;, &#39;general/ssl&#39;],</span>
+</span><span id="L-266"><a href="#L-266"><span class="linenos">266</span></a><span class="sd">)</span>
+</span><span id="L-267"><a href="#L-267"><span class="linenos">267</span></a><span class="sd">```</span>
+</span><span id="L-268"><a href="#L-268"><span class="linenos">268</span></a><span class="sd">In this example we saved the learning rate and the number of feature maps in the configuration files and</span>
+</span><span id="L-269"><a href="#L-269"><span class="linenos">269</span></a><span class="sd">loaded the other parameters to run</span>
+</span><span id="L-270"><a href="#L-270"><span class="linenos">270</span></a><span class="sd">the `episode_best_params` training episode. Note how we used the `round_to_binary` parameter.</span>
+</span><span id="L-271"><a href="#L-271"><span class="linenos">271</span></a><span class="sd">It will round the number of feature maps to the closest power of two (7 to 8, 35 to 32 and so on). This is useful</span>
+</span><span id="L-272"><a href="#L-272"><span class="linenos">272</span></a><span class="sd">for parameters like the number of features or the batch size.</span>
+</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a>
+</span><span id="L-274"><a href="#L-274"><span class="linenos">274</span></a><span class="sd">### Exploring results</span>
+</span><span id="L-275"><a href="#L-275"><span class="linenos">275</span></a><span class="sd">[exploring]: #exploring-results</span>
+</span><span id="L-276"><a href="#L-276"><span class="linenos">276</span></a><span class="sd">After you run a bunch of experiments you will likely want to get an overview.</span>
+</span><span id="L-277"><a href="#L-277"><span class="linenos">277</span></a>
+</span><span id="L-278"><a href="#L-278"><span class="linenos">278</span></a><span class="sd">#### Visualization</span>
+</span><span id="L-279"><a href="#L-279"><span class="linenos">279</span></a><span class="sd">You can get a feeling for the predictions made by a model by running `project.project.Project.plot_predictions`.</span>
+</span><span id="L-280"><a href="#L-280"><span class="linenos">280</span></a>
+</span><span id="L-281"><a href="#L-281"><span class="linenos">281</span></a><span class="sd">```python</span>
+</span><span id="L-282"><a href="#L-282"><span class="linenos">282</span></a><span class="sd">project.plot_predictions(&#39;episode_1&#39;, load_epoch=50)</span>
+</span><span id="L-283"><a href="#L-283"><span class="linenos">283</span></a><span class="sd">```</span>
+</span><span id="L-284"><a href="#L-284"><span class="linenos">284</span></a><span class="sd">This command will generate a prediction for a random sample and visualize it compared to the ground truth.</span>
+</span><span id="L-285"><a href="#L-285"><span class="linenos">285</span></a><span class="sd">There is a lot of parameters you can customize, check them out in the documentation).</span>
+</span><span id="L-286"><a href="#L-286"><span class="linenos">286</span></a>
+</span><span id="L-287"><a href="#L-287"><span class="linenos">287</span></a><span class="sd">You can also analyze the results with `project.project.Project.plot_confusion_matrix`.</span>
+</span><span id="L-288"><a href="#L-288"><span class="linenos">288</span></a>
+</span><span id="L-289"><a href="#L-289"><span class="linenos">289</span></a><span class="sd">Another available visualization type is training curve comparison with `project.project.Project.plot_episodes`.</span>
+</span><span id="L-290"><a href="#L-290"><span class="linenos">290</span></a><span class="sd">You can compare different metrics and modes across several episode or whithin one. For example, this command</span>
+</span><span id="L-291"><a href="#L-291"><span class="linenos">291</span></a><span class="sd">will plot the validation accuracy curves for the two episodes.</span>
+</span><span id="L-292"><a href="#L-292"><span class="linenos">292</span></a>
+</span><span id="L-293"><a href="#L-293"><span class="linenos">293</span></a><span class="sd">```python</span>
+</span><span id="L-294"><a href="#L-294"><span class="linenos">294</span></a><span class="sd">project.plot_episodes([&#39;episode_1&#39;, &#39;episode_2&#39;], metrics=[&#39;accuracy&#39;])</span>
+</span><span id="L-295"><a href="#L-295"><span class="linenos">295</span></a><span class="sd">```</span>
+</span><span id="L-296"><a href="#L-296"><span class="linenos">296</span></a><span class="sd">And this will plot training and validation recall curves for `episode_3`.</span>
+</span><span id="L-297"><a href="#L-297"><span class="linenos">297</span></a>
+</span><span id="L-298"><a href="#L-298"><span class="linenos">298</span></a><span class="sd">```python</span>
+</span><span id="L-299"><a href="#L-299"><span class="linenos">299</span></a><span class="sd">project.plot_episodes([&#39;episode_3&#39;], metrics=[&#39;recall&#39;], modes=[&#39;train&#39;, &#39;val&#39;])</span>
+</span><span id="L-300"><a href="#L-300"><span class="linenos">300</span></a><span class="sd">```</span>
+</span><span id="L-301"><a href="#L-301"><span class="linenos">301</span></a><span class="sd">You can also plot several episodes as one curve. That can be useful, for example, with episodes 2 and 6</span>
+</span><span id="L-302"><a href="#L-302"><span class="linenos">302</span></a><span class="sd">in our tutorial, since `episode_6` loaded the model from `episode_2`.</span>
+</span><span id="L-303"><a href="#L-303"><span class="linenos">303</span></a>
+</span><span id="L-304"><a href="#L-304"><span class="linenos">304</span></a><span class="sd">```python</span>
+</span><span id="L-305"><a href="#L-305"><span class="linenos">305</span></a><span class="sd">project.plot_episodes([[&#39;episode_2&#39;, &#39;episode_6&#39;], &#39;episode_4&#39;], metrics=[&#39;precision&#39;])</span>
+</span><span id="L-306"><a href="#L-306"><span class="linenos">306</span></a><span class="sd">```</span>
+</span><span id="L-307"><a href="#L-307"><span class="linenos">307</span></a>
+</span><span id="L-308"><a href="#L-308"><span class="linenos">308</span></a><span class="sd">#### Tables</span>
+</span><span id="L-309"><a href="#L-309"><span class="linenos">309</span></a><span class="sd">Alternatively, you can start analyzing your experiments by putting them in a table. You can get a summary of</span>
+</span><span id="L-310"><a href="#L-310"><span class="linenos">310</span></a><span class="sd">your training episodes with `project.project.Project.list_episodes`. It provides you with three ways to filter</span>
+</span><span id="L-311"><a href="#L-311"><span class="linenos">311</span></a><span class="sd">the data.</span>
+</span><span id="L-312"><a href="#L-312"><span class="linenos">312</span></a>
+</span><span id="L-313"><a href="#L-313"><span class="linenos">313</span></a><span class="sd">1. **Episode names**</span>
+</span><span id="L-314"><a href="#L-314"><span class="linenos">314</span></a>
+</span><span id="L-315"><a href="#L-315"><span class="linenos">315</span></a><span class="sd">    You can directly say which episodes you want to look at and disregard all others. Let&#39;s say we want to see</span>
+</span><span id="L-316"><a href="#L-316"><span class="linenos">316</span></a><span class="sd">    episodes 1, 2, 3 and 4.</span>
+</span><span id="L-317"><a href="#L-317"><span class="linenos">317</span></a>
+</span><span id="L-318"><a href="#L-318"><span class="linenos">318</span></a><span class="sd">2. **Parameters**</span>
+</span><span id="L-319"><a href="#L-319"><span class="linenos">319</span></a>
+</span><span id="L-320"><a href="#L-320"><span class="linenos">320</span></a><span class="sd">    In a similar fashion, you can choose to only display certain parameters. See all available parameters by</span>
+</span><span id="L-321"><a href="#L-321"><span class="linenos">321</span></a><span class="sd">    running `project.list_episodes().columns`. Here we are only interested in the time of adding the record,</span>
+</span><span id="L-322"><a href="#L-322"><span class="linenos">322</span></a><span class="sd">    the recall results and the learning rate.</span>
+</span><span id="L-323"><a href="#L-323"><span class="linenos">323</span></a>
+</span><span id="L-324"><a href="#L-324"><span class="linenos">324</span></a><span class="sd">3. **Value filter**</span>
+</span><span id="L-325"><a href="#L-325"><span class="linenos">325</span></a>
+</span><span id="L-326"><a href="#L-326"><span class="linenos">326</span></a><span class="sd">    The last option is to filter by parameter values. Filters are defined by strings that look like this:</span>
+</span><span id="L-327"><a href="#L-327"><span class="linenos">327</span></a><span class="sd">    `&#39;{parameter_name}::{sign}{value}&#39;`. You can use as many filters as ypu want and separate them with a comma.</span>
+</span><span id="L-328"><a href="#L-328"><span class="linenos">328</span></a><span class="sd">    The parameter names are the same as in point 2, the sign can be either</span>
+</span><span id="L-329"><a href="#L-329"><span class="linenos">329</span></a><span class="sd">    `&gt;`, `&gt;=`, `&lt;`, `&lt;=` or `=` and you choose the value. Let&#39;s say we want to only get the episodes that took</span>
+</span><span id="L-330"><a href="#L-330"><span class="linenos">330</span></a><span class="sd">    at least 30 minutes to train and got to a recall that is higher than 0.4. That translates to</span>
+</span><span id="L-331"><a href="#L-331"><span class="linenos">331</span></a><span class="sd">    `&#39;results/recall::&gt;0.4,meta/training_time::&gt;=00:30:00&#39;`.</span>
+</span><span id="L-332"><a href="#L-332"><span class="linenos">332</span></a>
+</span><span id="L-333"><a href="#L-333"><span class="linenos">333</span></a><span class="sd">Putting it all together, we get this command.</span>
+</span><span id="L-334"><a href="#L-334"><span class="linenos">334</span></a>
+</span><span id="L-335"><a href="#L-335"><span class="linenos">335</span></a><span class="sd">```python</span>
+</span><span id="L-336"><a href="#L-336"><span class="linenos">336</span></a><span class="sd">project.list_episodes(</span>
+</span><span id="L-337"><a href="#L-337"><span class="linenos">337</span></a><span class="sd">    episodes=[&#39;episode_1&#39;, &#39;episode_2&#39;, &#39;episode_3&#39;, &#39;episode_4&#39;],</span>
+</span><span id="L-338"><a href="#L-338"><span class="linenos">338</span></a><span class="sd">    display_parameters=[&#39;meta/time&#39;, &#39;results/recall&#39;, &#39;training/lr&#39;],</span>
+</span><span id="L-339"><a href="#L-339"><span class="linenos">339</span></a><span class="sd">    episode_filter=&#39;results/recall::&gt;0.4,meta/training_time::&gt;=00:30:00&#39;,</span>
+</span><span id="L-340"><a href="#L-340"><span class="linenos">340</span></a><span class="sd">)</span>
+</span><span id="L-341"><a href="#L-341"><span class="linenos">341</span></a><span class="sd">```</span>
+</span><span id="L-342"><a href="#L-342"><span class="linenos">342</span></a>
+</span><span id="L-343"><a href="#L-343"><span class="linenos">343</span></a><span class="sd">There are similar functions for summarizing other history files: `project.project.Project.list_searches`,</span>
+</span><span id="L-344"><a href="#L-344"><span class="linenos">344</span></a><span class="sd">`project.project.Project.list_predictions`, `project.project.Project.list_suggestions` and they all follow the</span>
+</span><span id="L-345"><a href="#L-345"><span class="linenos">345</span></a><span class="sd">same pattern.</span>
+</span><span id="L-346"><a href="#L-346"><span class="linenos">346</span></a>
+</span><span id="L-347"><a href="#L-347"><span class="linenos">347</span></a><span class="sd">You can also get a summary of your experiment results with `project.project.Project.get_results_table` and</span>
+</span><span id="L-348"><a href="#L-348"><span class="linenos">348</span></a><span class="sd">`project.project.Project.get_summary`. Those methods will aggregate the metrics over all runs of you experiment and allow </span>
+</span><span id="L-349"><a href="#L-349"><span class="linenos">349</span></a><span class="sd">for easy comparison between models or other parameters.</span>
+</span><span id="L-350"><a href="#L-350"><span class="linenos">350</span></a>
+</span><span id="L-351"><a href="#L-351"><span class="linenos">351</span></a><span class="sd">### Making predictions</span>
+</span><span id="L-352"><a href="#L-352"><span class="linenos">352</span></a><span class="sd">When you feel good about one of the models, you can move on to making predictions. There are two ways to do that:</span>
+</span><span id="L-353"><a href="#L-353"><span class="linenos">353</span></a><span class="sd">generate pickled prediction dictionaries with `project.project.Project.run_prediction` or active learning</span>
+</span><span id="L-354"><a href="#L-354"><span class="linenos">354</span></a><span class="sd">and suggestion files for the [GUI] with `project.project.Project.run_suggestion`.</span>
+</span><span id="L-355"><a href="#L-355"><span class="linenos">355</span></a>
+</span><span id="L-356"><a href="#L-356"><span class="linenos">356</span></a><span class="sd">By default the predictions will be made for the entire dataset at the data path of the project. However, you</span>
+</span><span id="L-357"><a href="#L-357"><span class="linenos">357</span></a><span class="sd">can also choose to only make them for the training, validation or test subset (set with `mode` parameter) or</span>
+</span><span id="L-358"><a href="#L-358"><span class="linenos">358</span></a><span class="sd">even for entirely new data (set with `data_path` parameter). Note that if you set the `data_path`</span>
+</span><span id="L-359"><a href="#L-359"><span class="linenos">359</span></a><span class="sd">value, **the split</span>
+</span><span id="L-360"><a href="#L-360"><span class="linenos">360</span></a><span class="sd">parameters will be disregarded** and `mode` will be forced to `&#39;all&#39;`!</span>
+</span><span id="L-361"><a href="#L-361"><span class="linenos">361</span></a>
+</span><span id="L-362"><a href="#L-362"><span class="linenos">362</span></a><span class="sd">Here is an example of running these functions.</span>
+</span><span id="L-363"><a href="#L-363"><span class="linenos">363</span></a>
+</span><span id="L-364"><a href="#L-364"><span class="linenos">364</span></a><span class="sd">```python</span>
+</span><span id="L-365"><a href="#L-365"><span class="linenos">365</span></a><span class="sd">project.run_prediction(&#39;prediction_1&#39;, episode_name=&#39;episode_3&#39;, load_epoch=150, mode=&#39;test&#39;)</span>
+</span><span id="L-366"><a href="#L-366"><span class="linenos">366</span></a><span class="sd">```</span>
+</span><span id="L-367"><a href="#L-367"><span class="linenos">367</span></a><span class="sd">This command will generate a prediction dictionary with the model from epoch 150 of `episode_3` for the test</span>
+</span><span id="L-368"><a href="#L-368"><span class="linenos">368</span></a><span class="sd">subset of the project data (split according to the configuration files) and save it at</span>
+</span><span id="L-369"><a href="#L-369"><span class="linenos">369</span></a><span class="sd">*project_name/results/predictions/prediction_1.pickle*. </span>
+</span><span id="L-370"><a href="#L-370"><span class="linenos">370</span></a>
+</span><span id="L-371"><a href="#L-371"><span class="linenos">371</span></a><span class="sd">The history of prediction runs is recorded and at the [exploring] section</span>
+</span><span id="L-372"><a href="#L-372"><span class="linenos">372</span></a><span class="sd">we have described how to access it.</span>
+</span><span id="L-373"><a href="#L-373"><span class="linenos">373</span></a>
+</span><span id="L-374"><a href="#L-374"><span class="linenos">374</span></a><span class="sd">[GUI]: https://github.com/amathislab/dlc2action_annotation</span>
+</span><span id="L-375"><a href="#L-375"><span class="linenos">375</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-376"><a href="#L-376"><span class="linenos">376</span></a>
+</span><span id="L-377"><a href="#L-377"><span class="linenos">377</span></a><span class="kn">from</span> <span class="nn">dlc2action.version</span> <span class="kn">import</span> <span class="n">__version__</span><span class="p">,</span> <span class="n">VERSION</span>
+</span><span id="L-378"><a href="#L-378"><span class="linenos">378</span></a>
+</span><span id="L-379"><a href="#L-379"><span class="linenos">379</span></a><span class="n">__pdoc__</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;scripts&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 </span></pre></div>
 
 

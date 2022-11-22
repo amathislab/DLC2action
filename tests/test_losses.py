@@ -46,7 +46,7 @@ def generate_sample_multilabel(frac_wrong: float):
 losses = options.losses
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 @pytest.mark.parametrize("loss_name", losses)
 @pytest.mark.parametrize("exclusive", [True, False])
 def test_loss(loss_name: str, exclusive: bool):
@@ -77,4 +77,4 @@ def test_loss(loss_name: str, exclusive: bool):
     assert np.sum(np.array(results[1:]) - np.array(results[:-1]) > 0) >= 3
 
 
-# test_loss("clip", True)
+# test_loss("ms_tcn", True)
