@@ -7,6 +7,16 @@ DLC2Action is an action segmentation package that makes running and tracking of 
 
 ## Installation
 
+### Via the Python Package Index
+
+You can simply install DLC2Action by typing:
+
+```
+pip install "dlc2action==0.2b1
+```
+
+### From Github
+
 You can install DLC2Action for development by running this in your terminal.
 ```
 git clone https://github.com/AlexEMG/DLC2Action
@@ -66,3 +76,11 @@ Note: For now you'll need to download the repo to look at the docs. They will lo
 [Liza Kozlova](https://github.com/elkoz) from the [A. Mathis Group at EPFL](https://www.mathislab.org/) is the main developer of DLC2Action.
 
 We are grateful to many people for feedback, alpha-testing and suggestions, in particular to Andy Bonnetto, Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
+
+## License:
+
+Note that the software is provided "as is", without warranty of any kind, express or implied. If you use the code or data, please cite us!
+
+## Reference:
+
+Stay tuned for our first publication -- Any feedback on this beta release is welcome at this time. Thanks for using DLC2Action.
