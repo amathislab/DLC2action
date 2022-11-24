@@ -33,3 +33,15 @@ We use pytests for testing. Simply run:
 ```
 pytest
 ```
+
+## Releasing
+
+```
+rm -r dist dlc2action.egg-info build
+pip install --upgrade setuptools
+pip install --upgrade pip
+
+python3 setup.py sdist bdist_wheel
+twine check dist/*
+twine upload dist/*
+```
