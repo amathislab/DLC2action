@@ -12,7 +12,7 @@ DLC2Action is an action segmentation package that makes running and tracking of 
 You can simply install DLC2Action by typing:
 
 ```
-pip install "dlc2action==0.2b1
+pip install "dlc2action==0.2b1"
 ```
 
 ### From Github
