@@ -22,7 +22,7 @@ from dlc2action import options
 from PIL import Image
 from tqdm import tqdm
 import mimetypes
-from pims import PyAVReaderIndexed
+
 
 
 class GeneralInputStore(PoseInputStore):

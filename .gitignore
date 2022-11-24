@@ -59,4 +59,5 @@ coverage.xml
 #Projects
 ./projects/*
 examples/*/
+examples/*zip
 

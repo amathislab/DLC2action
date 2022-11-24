@@ -40,7 +40,7 @@ setuptools.setup(
         "regex>=2022.8.17",
         "scikit-learn>=1.1.2",
         "jupyter",  # added for demo
-        "pims",
+    
     ],
     include_package_data=True,
     classifiers=[
