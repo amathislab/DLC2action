@@ -14,6 +14,7 @@ def test_evaluation():
 
     Check that everything runs successfully.
     """
+    PROJECTS_PATH = os.path.join(os.path.expanduser('~'), "Projects")
 
     path = os.path.join(os.path.dirname(__file__), "data")
     Project.remove_project("test_average_evaluation")

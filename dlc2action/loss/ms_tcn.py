@@ -123,6 +123,7 @@ class MS_TCN_Loss(nn.Module):
         """
 
         if self.exclusive:
+            t = t.long()
             p = p.transpose(2, 1).contiguous().view(-1, self.num_classes)
             t = t.view(-1)
             mask = t != self.ignore_index
@@ -130,7 +131,9 @@ class MS_TCN_Loss(nn.Module):
                 return 0
             if self.focal:
                 pr = F.softmax(p[mask], dim=1)
-                f = (1 - pr[range(torch.sum(mask)), t[mask]]) ** self.gamma
+                # print(f'{pr[range(torch.sum(mask)), t[mask]].shape=}')
+                # print(f'{pr_c[range(torch.sum(mask)), t[mask].cpu()].shape=}')
+                f = (1 - pr[range(torch.sum(mask)), t[mask].long()]) ** self.gamma
                 loss = (f * self.ce(p, t)[mask]).mean()
                 return loss
             else:
