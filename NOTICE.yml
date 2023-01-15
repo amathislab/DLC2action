@@ -1,6 +1,6 @@
 # Main repository license
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 
@@ -12,7 +12,7 @@
 
 # License for ASFormer code
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 
@@ -25,7 +25,7 @@
 
 # License for C2F-TCN code
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 
@@ -38,7 +38,7 @@
 
 # License for EDTCN code
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 
@@ -51,7 +51,7 @@
 
 # License for TCC code
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 
@@ -64,7 +64,7 @@
 
 # License for MS-TCN code
 - header: |
-    Copyright 2020-2022 by A. Mathis Group and contributors. All rights reserved.
+    Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 
     This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 

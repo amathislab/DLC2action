@@ -69,9 +69,7 @@ Check out the [examples](/examples) or [read the documentation](https://alexemg.
 
 ## Acknowledgments
 
-[Liza Kozlova](https://github.com/elkoz) from the [A. Mathis Group at EPFL](https://www.mathislab.org/) is the main developer of DLC2Action.
-
-We are grateful to many people for feedback, alpha-testing and suggestions, in particular to Andy Bonnetto, Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
+DLC2Action is developed by members of the [A. Mathis Group at EPFL](https://www.mathislab.org/). We are grateful to many people for feedback, alpha-testing, suggestions and contributions, in particular to Liza Kozlova, Andy Bonnetto, Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
 
 ## License:
 
@@ -79,4 +77,4 @@ Note that the software is provided "as is", without warranty of any kind, expres
 
 ## Reference:
 
-Stay tuned for our first publication -- Any feedback on this beta release is welcome at this time. Thanks for using DLC2Action.
+Stay tuned for our first publication -- any feedback on this beta release is welcome at this time. Thanks for using DLC2Action. Please reach out if you want to collaborate!
