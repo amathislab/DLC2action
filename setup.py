@@ -18,7 +18,7 @@ setuptools.setup(
     description="tba",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/amathislab/DLC2Action",
+    url="https://github.com/AlexEMG/DLC2action",
     install_requires=[
         "tqdm>=4.62.3",
         "torch>=1.9",
@@ -40,7 +40,7 @@ setuptools.setup(
         "regex>=2022.8.17",
         "scikit-learn>=1.1.2",
         "jupyter",  # added for demo
-    
+
     ],
     include_package_data=True,
     classifiers=[
