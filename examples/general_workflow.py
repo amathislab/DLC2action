@@ -90,5 +90,5 @@ project.list_episodes(  # get the experiment history
         "meta/training_time",
         "general/model_name",
     ],
-    value_filter=f"results/f1::>0.3,general/model_name::{BEST_MODELS[0]}",
+    value_filter=f"results/f1::>0.3,general/model_name#{BEST_MODELS[0]}",
 )
