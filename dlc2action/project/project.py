@@ -677,7 +677,7 @@ class Project:
             weight shapes will be ignored; otherwise mismatches will prompt a `RuntimeError`
         n_seeds : int, default 1
             the number of runs to perform with different random seeds; if `n_seeds > 1`, the episodes will be named
-            `episode_name::seed_index`, e.g. `test_episode::0` and `test_episode::1`
+            `episode_name#seed_index`, e.g. `test_episode#0` and `test_episode#1`
         force : bool, default False
             if `True` and an episode with name `episode_name` already exists, it will be overwritten (use with caution!)
         suppress_name_check : bool, default False
@@ -708,7 +708,7 @@ class Project:
         if len(load_runs) > 1:
             task = self.run_episodes(
                 episode_names=[
-                    f'{episode_name}::{run.split("::")[-1]}' for run in load_runs
+                    f'{episode_name}#{run.split("#")[-1]}' for run in load_runs
                 ],
                 load_episodes=load_runs,
                 parameters_updates=[parameters_update for _ in load_runs],
@@ -735,7 +735,7 @@ class Project:
                 )
         elif n_seeds > 1:
             self.run_episodes(
-                episode_names=[f"{episode_name}::{i}" for i in range(n_seeds)],
+                episode_names=[f"{episode_name}#{i}" for i in range(n_seeds)],
                 load_episodes=[load_episode for _ in range(n_seeds)],
                 parameters_updates=[parameters_update for _ in range(n_seeds)],
                 load_epochs=[load_epoch for _ in range(n_seeds)],
@@ -933,8 +933,8 @@ class Project:
             the metric are averaged over the last result_average_interval to be stored in the episodes meta file
             and displayed by list_episodes() function (the full log is still always available)
         n_seeds : int, default 1
-            the number of runs to perform; if `n_seeds > 1`, the episodes will be named `episode_name::run_index`, e.g.
-            `test_episode::0` and `test_episode::1`
+            the number of runs to perform; if `n_seeds > 1`, the episodes will be named `episode_name#run_index`, e.g.
+            `test_episode#0` and `test_episode#1`
         remove_saved_features : bool, default False
             if `True`, pre-computed features will be deleted after the run
         device : str, default "cuda"
@@ -988,7 +988,7 @@ class Project:
         if len(runs) < n_seeds:
             for i in range(len(runs), n_seeds):
                 self.run_episode(
-                    f"{episode_name}::{i}",
+                    f"{episode_name}#{i}",
                     parameters_update=self._episodes().load_parameters(runs[0]),
                     task=task,
                     suppress_name_check=True,
@@ -1854,7 +1854,7 @@ class Project:
                         runs = self._episodes().get_runs(n)
                         if len(runs) > 1:
                             for run in runs:
-                                index = run.split("::")[-1]
+                                index = run.split("#")[-1]
                                 if multi_logs[index] == []:
                                     if multi_logs["null"] is None:
                                         raise RuntimeError(
@@ -3462,9 +3462,9 @@ class Project:
             )
         elif "." in episode_name:
             raise ValueError("Names containing '.' cannot be used!")
-        if not allow_doublecolon and "::" in episode_name:
+        if not allow_doublecolon and "#" in episode_name:
             raise ValueError(
-                "Names containing '::' are reserved by dlc2action and cannot be used!"
+                "Names containing '#' are reserved by dlc2action and cannot be used!"
             )
         if force:
             self.remove_episode(episode_name)
@@ -3673,8 +3673,7 @@ class Project:
         split_info["len_segment"] = pars["general"]["len_segment"]
         split_info["overlap"] = pars["general"]["overlap"]
         pars["training"]["log_file"] = log
-        if not os.path.exists(model_save_path):
-            os.mkdir(model_save_path)
+        os.makedirs(model_save_path, exist_ok=True)
         pars["training"]["model_save_path"] = model_save_path
         if load_experiment is not None:
             if load_experiment not in self._episodes().data.index:

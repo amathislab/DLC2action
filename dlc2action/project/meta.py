@@ -893,7 +893,7 @@ class SavedRuns:
 
     def get_runs(self, episode_name: str) -> List:
         """
-        Get a list of runs with this episode name (episodes like `episode_name::0`)
+        Get a list of runs with this episode name (episodes like `episode_name#0`)
 
         Parameters
         ----------
@@ -912,7 +912,7 @@ class SavedRuns:
         runs_list = []
         for name in index:
             if name.startswith(episode_name):
-                split = name.split("::")
+                split = name.split("#")
                 if split[0] == episode_name:
                     if len(split) > 1 and split[-1].isnumeric() or len(split) == 1:
                         runs_list.append(name)
