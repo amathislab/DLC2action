@@ -8,5 +8,5 @@ DLC2Action Toolbox
 © A. Mathis Lab
 """
 
-__version__ = "0.2b2"
+__version__ = "0.2b3"
 VERSION = __version__
