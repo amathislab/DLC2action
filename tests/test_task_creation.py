@@ -123,4 +123,5 @@ def test_task_creation():
         shutil.rmtree(folder)
 
 
-# test_task_creation()
+if __name__ == "__main__":
+    test_task_creation()

@@ -889,7 +889,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
                         else:
                             labels = -100 * np.ones(v_len, dtype=np.compat.long)
                     else:
-                        labels = np.zeros((len(self.behaviors), v_len), dtype=np.float)
+                        labels = np.zeros((len(self.behaviors), v_len), dtype=float)
                     cat_new = []
                     for cat in times[ind].keys():
                         if cat.startswith("unknown"):
@@ -985,7 +985,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
                 else:
                     annotation[
                         os.path.basename(name) + "---" + str(ind)
-                    ] = -100 * np.ones((len(self.behaviors), v_len), dtype=np.float)
+                    ] = -100 * np.ones((len(self.behaviors), v_len), dtype=float)
         return annotation
 
     def _make_trimmed_annotations(self, annotations_dict: Dict) -> torch.Tensor:
