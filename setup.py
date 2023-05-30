@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dlc2action",
-    version="0.2b2",
+    version="0.2b3",
     author="A. Mathis Lab",
     author_email="alexander@deeplabcut.org",
     description="tba",
