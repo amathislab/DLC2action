@@ -65,7 +65,7 @@ project.run_prediction('prediction_1', episode_names=['episode_1'], data_path='p
 
 ## How to get more information?
 
-Check out the [examples](/examples) or [read the documentation](https://alexemg.github.io/DLC2action/html_docs/dlc2action.html) for a taste of what else you can do.
+Check out the [examples](/examples) or [read the documentation](https://amathislab.github.io/DLC2action/html_docs/dlc2action.html) for a taste of what else you can do.
 
 
 ## Acknowledgments
