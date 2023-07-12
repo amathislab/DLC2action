@@ -17,9 +17,10 @@ pip install "dlc2action==0.2b3"
 
 ### From Github
 
-You can install DLC2Action for development by running this in your terminal.
+You can also install DLC2Action for development (or based on the bleeding edge) by running in your terminal:
+
 ```
-git clone https://github.com/AlexEMG/DLC2Action
+git clone https://github.com/amathislab/DLC2Action
 cd DLC2Action
 conda create --name DLC2Action python=3.9
 conda activate DLC2Action
