@@ -1,5 +1,11 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 behaviors: null # set; the set of names of the behaviors to predict (if null, if will be inferred from the data; !!PLEASE SET IT MANUALLY if different files can have different behavior sets!!)
-annotation_suffix: !!set {'.csv'} # set; the annotation file names should have the format of {video_id}{annotation_suffix}, e.g, video1_suffix.pickle where video1 is the video id and _suffix.pickle is the suffix
+annotation_suffix: '.csv' # set; the annotation file names should have the format of {video_id}{annotation_suffix}, e.g, video1_suffix.pickle where video1 is the video id and _suffix.pickle is the suffix
 correction: null # dict; a dictionary of label corrections (e. g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'}
 error_class: null # str; a class denoting errors in the pose estimation (the intervals annotated with this class will be ignored)
 min_frames_action: 5 # int; the minimum number of frames for an action (shorter actions will be discarded during training)

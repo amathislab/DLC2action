@@ -1,16 +1,17 @@
 # custom
 /datasets
+/examples/OFT
+/examples/DLC2Action
+/fly_analysis-2021-07-15
 .vscode
 .DS_Store
 *.pkl
 *.pkl.json
 *.log.json
 work_dirs/
-experiments
-
+test.ipynb
 # Byte-compiled / optimized / DLL files for python
 __pycache__/
-*/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -55,9 +56,9 @@ coverage.xml
 
 #PyCharm
 .idea
-
+._idea/*
+.circleci/*
 #Projects
-./projects/*
-examples/*/
-examples/*zip
-
+projects/*
+experiments
+test.ipynb

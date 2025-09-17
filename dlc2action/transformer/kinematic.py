@@ -1,7 +1,8 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
 """
 Kinematic transformer
@@ -72,6 +73,8 @@ class KinematicTransformer(Transformer):
         self.dim = int(dim)
 
         self.offset = [0 for _ in range(self.dim)]
+        if isinstance(canvas_shape, str):
+            canvas_shape = eval(canvas_shape)
         self.scale = canvas_shape[1] / canvas_shape[0]
         self.image_center = move_around_image_center
         # if canvas_shape is None:
@@ -205,7 +208,7 @@ class KinematicTransformer(Transformer):
 
     def _rotate(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Rotate the "coords" and "speed_joints" features of the input to a random degree
         """
@@ -274,7 +277,7 @@ class KinematicTransformer(Transformer):
 
     def _mirror(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Mirror the "coords" and "speed_joints" features of the input randomly
         """
@@ -322,7 +325,7 @@ class KinematicTransformer(Transformer):
 
     def _shift(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Shift the "coords" features of the input randomly
         """
@@ -366,7 +369,7 @@ class KinematicTransformer(Transformer):
 
     def _add_noise(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Add normal noise to all features of the input
         """
@@ -401,7 +404,7 @@ class KinematicTransformer(Transformer):
 
     def _zoom(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Add random zoom to all features of the input
         """
@@ -454,7 +457,7 @@ class KinematicTransformer(Transformer):
 
     def _mask_joints(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         """
         Mask joints randomly
         """
@@ -518,7 +521,7 @@ class KinematicTransformer(Transformer):
 
     def _switch(
         self, main_input: Dict, ssl_inputs: List, ssl_targets: List
-    ) -> Tuple[Dict, List, List]:
+    ) -> (Dict, List, List):
         if bool(getrandbits(1)):
             return main_input, ssl_inputs, ssl_targets
         individuals = set()

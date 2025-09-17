@@ -1,28 +1,26 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Implementations of `dlc2action.metric.base_metric.Metric`
-"""
+"""Implementations of `dlc2action.metric.base_metric.Metric`."""
 
-from typing import Union, Dict, Tuple, List, Set, Any
-import torch
-from collections import defaultdict
-from dlc2action.metric.base_metric import Metric
+import warnings
 from abc import abstractmethod
+from collections import defaultdict
+from copy import copy, deepcopy
+from typing import Any, Dict, List, Set, Tuple, Union
+
 import editdistance
 import numpy as np
-from copy import copy, deepcopy
-import warnings
+import torch
+from dlc2action.metric.base_metric import Metric
 from sklearn import metrics
 
 
 class _ClassificationMetric(Metric):
-    """
-    The base class for all metric that are calculated from true and false negative and positive rates
-    """
+    """The base class for all metric that are calculated from true and false negative and positive rates."""
 
     needs_raw_data = True
     segmental = False
@@ -42,8 +40,7 @@ class _ClassificationMetric(Metric):
         threshold_values: List = None,
         integration_interval: int = 0,
     ):
-        """
-        Initialize the metric
+        """Initialize the metric.
 
         Parameters
         ----------
@@ -63,8 +60,10 @@ class _ClassificationMetric(Metric):
             method for averaging across meta tags (if given)
         threshold_values : List, optional
             a list of float values between 0 and 1 that will be used as decision thresholds
-        """
+        integration_interval : int, default 0
+            if not 0, the metric will be calculated over a window of this size (in frames) around the current frame
 
+        """
         super().__init__()
         self.ignore_index = ignore_index
         self.average = average
@@ -94,10 +93,7 @@ class _ClassificationMetric(Metric):
             warnings.warn("No classes are followed!")
 
     def reset(self) -> None:
-        """
-        Reset the intrinsic parameters (at the beginning of an epoch)
-        """
-
+        """Reset the internal state (at the beginning of an epoch)."""
         self.tags = set()
         self.tp = defaultdict(lambda: defaultdict(lambda: 0))
         self.fp = defaultdict(lambda: defaultdict(lambda: 0))
@@ -110,8 +106,7 @@ class _ClassificationMetric(Metric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch)
+        """Update the internal state (with a batch).
 
         Parameters
         ----------
@@ -125,18 +120,15 @@ class _ClassificationMetric(Metric):
             the corresponding SSL target tensor
         tags : torch.Tensor
             the tensor of meta tags (or `None`, if tags are not given)
-        """
 
+        """
         if self.segmental:
             self._update_segmental(predicted, target, tags)
         else:
             self._update_normal(predicted, target, tags)
 
     def _key(self, tag: torch.Tensor, c: int) -> str:
-        """
-        Get a key for the intermediate value dictionaries from tag and class indices
-        """
-
+        """Get a key for the intermediate value dictionaries from tag and class indices."""
         if tag is None or self.tag_average == "micro":
             return c
         else:
@@ -148,10 +140,7 @@ class _ClassificationMetric(Metric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch), calculating over frames
-        """
-
+        """Update the internal state (with a batch), calculating over frames."""
         if self.integration_interval != 0:
             pr = 0
             denom = torch.ones((1, 1, predicted.shape[-1])) * (
@@ -222,10 +211,7 @@ class _ClassificationMetric(Metric):
                         ).sum()
 
     def _get_intervals(self, tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Get a list of True group beginning and end indices from a boolean tensor
-        """
-
+        """Get a list of `True` group beginning and end indices from a boolean tensor."""
         output, indices = torch.unique_consecutive(tensor, return_inverse=True)
         true_indices = torch.where(output)[0]
         starts = torch.tensor(
@@ -237,13 +223,12 @@ class _ClassificationMetric(Metric):
         return torch.stack([starts, ends]).T
 
     def _smooth(self, tensor: torch.Tensor, smooth_interval: int = 1) -> torch.Tensor:
-        """
-        Get rid of jittering in a non-exclusive classification tensor
+        """Get rid of jittering in a non-exclusive classification tensor.
 
         First, remove intervals of 0 shorter than `smooth_interval`. Then, remove intervals of 1 shorter than
         `smooth_interval`.
-        """
 
+        """
         for c in self.classes:
             intervals = self._get_intervals(tensor[:, c] == 0)
             interval_lengths = torch.tensor(
@@ -268,12 +253,11 @@ class _ClassificationMetric(Metric):
         low_length: int,
         high_length: int,
     ):
-        """
-        Generate a sigmoid threshold function
+        """Generate a sigmoid threshold function.
 
         The resulting function outputs an intersection threshold given the length of the interval.
-        """
 
+        """
         a = 2 / (high_length - low_length)
         b = 1 - a * high_length
         return lambda x: low_threshold + torch.sigmoid(4 * (a * x + b)) * (
@@ -286,10 +270,7 @@ class _ClassificationMetric(Metric):
         target: torch.tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch), calculating over segments
-        """
-
+        """Update the internal state (with a batch), calculating over segments."""
         if self.exclusive:
             predicted = torch.max(predicted, 1)[1]
         predicted = torch.cat(
@@ -372,16 +353,15 @@ class _ClassificationMetric(Metric):
                     )
 
     def calculate(self) -> Union[float, Dict]:
-        """
-        Calculate the metric (at the end of an epoch)
+        """Calculate the metric (at the end of an epoch).
 
         Returns
         -------
         result : float | dict
             either the single value of the metric or a dictionary where the keys are class indices and the values
             are class metric values
-        """
 
+        """
         if self.tag_average == "micro" or self.tags == {None}:
             self.tags = {None}
         result = {}
@@ -402,13 +382,27 @@ class _ClassificationMetric(Metric):
                     tag = int(tag)
                 result[f"tag{tag}"] = sum(metric_list) / len(metric_list)
             elif self.average == "micro":
-                tp = sum([self.tp[self._key(tag, c)] for c in self.classes])
-                fn = sum([self.fn[self._key(tag, c)] for c in self.classes])
-                fp = sum([self.fp[self._key(tag, c)] for c in self.classes])
-                tn = sum([self.tn[self._key(tag, c)] for c in self.classes])
+                # tp = sum([self.tp[self._key(tag, c)] for c in self.classes])
+                # fn = sum([self.fn[self._key(tag, c)] for c in self.classes])
+                # fp = sum([self.fp[self._key(tag, c)] for c in self.classes])
+                # tn = sum([self.tn[self._key(tag, c)] for c in self.classes])
+                # if tag is not None:
+                #     tag = int(tag)
+                # result[f"tag{tag}"] = self._calculate_metric(tp, fp, fn, tn)
+                metric_list = []
+                for c in self.classes:
+                    metric_list.append(
+                        self._calculate_metric(
+                            self.tp[self._key(tag, c)],
+                            self.fp[self._key(tag, c)],
+                            self.fn[self._key(tag, c)],
+                            self.tn[self._key(tag, c)],
+                        )
+                    )
+
                 if tag is not None:
                     tag = int(tag)
-                result[f"tag{tag}"] = self._calculate_metric(tp, fp, fn, tn)
+                result[f"tag{tag}"] = metric_list
             elif self.average == "none":
                 metric_dict = {}
                 for c in self.classes:
@@ -445,8 +439,7 @@ class _ClassificationMetric(Metric):
 
     @abstractmethod
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
+        """Calculate the metric value from true and false positive and negative rates.
 
         Parameters
         ----------
@@ -463,13 +456,12 @@ class _ClassificationMetric(Metric):
         -------
         metric : float
             metric value
+
         """
 
 
 class PR_AUC(_ClassificationMetric):
-    """
-    Area under precision-recall curve (not advised for training)
-    """
+    """Area under precision-recall curve (not advised for training)."""
 
     def __init__(
         self,
@@ -481,8 +473,7 @@ class PR_AUC(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_step: float = 0.1,
     ):
-        """
-        Initialize the metric
+        """Initialize the metric.
 
         Parameters
         ----------
@@ -500,8 +491,8 @@ class PR_AUC(_ClassificationMetric):
             method for averaging across meta tags (if given)
         threshold_step : float, default 0.1
             the decision threshold step
-        """
 
+        """
         if exclusive:
             raise ValueError(
                 "The PR-AUC metric is not implemented for exclusive classification!"
@@ -517,10 +508,7 @@ class PR_AUC(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         precisions = []
         recalls = []
         for k in sorted(self.threshold_values):
@@ -530,9 +518,7 @@ class PR_AUC(_ClassificationMetric):
 
 
 class Precision(_ClassificationMetric):
-    """
-    Precision
-    """
+    """Precision."""
 
     def __init__(
         self,
@@ -544,7 +530,8 @@ class Precision(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_value: Union[float, List] = None,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -563,8 +550,8 @@ class Precision(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -578,10 +565,7 @@ class Precision(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -589,9 +573,7 @@ class Precision(_ClassificationMetric):
 
 
 class SegmentalPrecision(_ClassificationMetric):
-    """
-    Segmental precision (not advised for training)
-    """
+    """Segmental precision (not advised for training)."""
 
     segmental = True
 
@@ -606,7 +588,8 @@ class SegmentalPrecision(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_value: Union[float, List] = None,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -627,8 +610,8 @@ class SegmentalPrecision(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -643,10 +626,7 @@ class SegmentalPrecision(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -654,9 +634,7 @@ class SegmentalPrecision(_ClassificationMetric):
 
 
 class Recall(_ClassificationMetric):
-    """
-    Recall
-    """
+    """Recall."""
 
     def __init__(
         self,
@@ -668,7 +646,8 @@ class Recall(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_value: Union[float, List] = None,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -687,8 +666,8 @@ class Recall(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -702,10 +681,7 @@ class Recall(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -713,9 +689,7 @@ class Recall(_ClassificationMetric):
 
 
 class SegmentalRecall(_ClassificationMetric):
-    """
-    Segmental recall (not advised for training)
-    """
+    """Segmental recall (not advised for training)."""
 
     segmental = True
 
@@ -730,7 +704,8 @@ class SegmentalRecall(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_value: Union[float, List] = None,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -751,8 +726,8 @@ class SegmentalRecall(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -767,10 +742,7 @@ class SegmentalRecall(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -778,9 +750,7 @@ class SegmentalRecall(_ClassificationMetric):
 
 
 class F1(_ClassificationMetric):
-    """
-    F1 score
-    """
+    """F1 score."""
 
     def __init__(
         self,
@@ -793,7 +763,8 @@ class F1(_ClassificationMetric):
         threshold_value: Union[float, List] = None,
         integration_interval: int = 0,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -812,8 +783,10 @@ class F1(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
+        integration_interval : int, default 0
+            the number of frames to integrate over (0 means no integration)
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -828,10 +801,7 @@ class F1(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         if self.optimize:
             scores = []
             for k in self.threshold_values:
@@ -850,9 +820,7 @@ class F1(_ClassificationMetric):
 
 
 class SegmentalF1(_ClassificationMetric):
-    """
-    Segmental F1 score (not advised for training)
-    """
+    """Segmental F1 score (not advised for training)."""
 
     segmental = True
 
@@ -867,7 +835,8 @@ class SegmentalF1(_ClassificationMetric):
         tag_average: str = "micro",
         threshold_value: Union[float, List] = None,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
@@ -888,8 +857,8 @@ class SegmentalF1(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         super().__init__(
@@ -904,10 +873,7 @@ class SegmentalF1(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         if self.optimize:
             scores = []
             for k in self.threshold_values:
@@ -926,9 +892,7 @@ class SegmentalF1(_ClassificationMetric):
 
 
 class Fbeta(_ClassificationMetric):
-    """
-    F-beta score
-    """
+    """F-beta score."""
 
     def __init__(
         self,
@@ -941,7 +905,8 @@ class Fbeta(_ClassificationMetric):
         exclusive: bool = True,
         threshold_value: float = 0.5,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         beta : float, default 1
@@ -962,8 +927,8 @@ class Fbeta(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         self.beta2 = beta**2
@@ -978,10 +943,7 @@ class Fbeta(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         if self.optimize:
             scores = []
             for k in self.threshold_values:
@@ -1012,9 +974,7 @@ class Fbeta(_ClassificationMetric):
 
 
 class SegmentalFbeta(_ClassificationMetric):
-    """
-    Segmental F-beta score (not advised for training)
-    """
+    """Segmental F-beta score (not advised for training)."""
 
     segmental = True
 
@@ -1030,7 +990,8 @@ class SegmentalFbeta(_ClassificationMetric):
         exclusive: bool = True,
         threshold_value: float = 0.5,
     ):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         beta : float, default 1
@@ -1053,8 +1014,8 @@ class SegmentalFbeta(_ClassificationMetric):
             the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default
             for non-exclusive); if `threshold_value` is a list, every value should correspond to the class
             under the same index
-        """
 
+        """
         if threshold_value is None:
             threshold_value = 0.5
         self.beta2 = beta**2
@@ -1070,10 +1031,7 @@ class SegmentalFbeta(_ClassificationMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         if self.optimize:
             scores = []
             for k in self.threshold_values:
@@ -1120,7 +1078,8 @@ class _SemiSegmentalMetric(_ClassificationMetric):
         long_length: int = 300,
         threshold_values: List = None,
     ) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         num_classes : int
@@ -1153,8 +1112,10 @@ class _SemiSegmentalMetric(_ClassificationMetric):
         long_length : int, default 300
             the threshold number of frames for long intervals that will have an intersection threshold of
             `iou_threshold_long`, see description of the class for details
-        """
+        threshold_values : list, optional
+            the decision threshold values (cannot be defined for exclusive classification, and 0.5 be default)
 
+        """
         if smooth_interval > 0 and exclusive:
             warnings.warn(
                 "Smoothing is not implemented for datasets with exclusive classification! Setting smooth_interval to 0..."
@@ -1186,8 +1147,7 @@ class _SemiSegmentalMetric(_ClassificationMetric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch)
+        """Update the internal state (with a batch).
 
         Parameters
         ----------
@@ -1201,8 +1161,8 @@ class _SemiSegmentalMetric(_ClassificationMetric):
             the corresponding SSL target tensor
         tags : torch.Tensor
             the tensor of meta tags (or `None`, if tags are not given)
-        """
 
+        """
         if self.exclusive:
             predicted = torch.max(predicted, 1)[1]
         predicted = torch.cat(
@@ -1354,8 +1314,7 @@ class _SemiSegmentalMetric(_ClassificationMetric):
 
 
 class SemiSegmentalRecall(_SemiSegmentalMetric):
-    """
-    Semi-segmental recall (not advised for training)
+    """Semi-segmental recall (not advised for training).
 
     A metric in-between segmental and frame-wise recall.
 
@@ -1389,7 +1348,8 @@ class SemiSegmentalRecall(_SemiSegmentalMetric):
         long_length: int = 300,
         threshold_value: Union[float, List] = None,
     ) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         num_classes : int
@@ -1422,8 +1382,10 @@ class SemiSegmentalRecall(_SemiSegmentalMetric):
         long_length : int, default 300
             the threshold number of frames for long intervals that will have an intersection threshold of
             `iou_threshold_long`, see description of the class for details
-        """
+        threshold_value : float | list, optional
+            the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default)
 
+        """
         super().__init__(
             num_classes,
             ignore_index,
@@ -1441,10 +1403,7 @@ class SemiSegmentalRecall(_SemiSegmentalMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -1452,8 +1411,7 @@ class SemiSegmentalRecall(_SemiSegmentalMetric):
 
 
 class SemiSegmentalPrecision(_SemiSegmentalMetric):
-    """
-    Semi-segmental precision (not advised for training)
+    """Semi-segmental precision (not advised for training).
 
     A metric in-between segmental and frame-wise precision.
 
@@ -1469,8 +1427,8 @@ class SemiSegmentalPrecision(_SemiSegmentalMetric):
     4) for each interval, if intersection is higher than `t * x`, the interval is labeled as true positive (`TP`),
         and otherwise as false positive (`FP`),
     5) the final metric value is computed as `TP / (TP + FP)`.
-    """
 
+    """
     def __init__(
         self,
         num_classes: int,
@@ -1487,7 +1445,8 @@ class SemiSegmentalPrecision(_SemiSegmentalMetric):
         long_length: int = 300,
         threshold_value: Union[float, List] = None,
     ) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         num_classes : int
@@ -1520,8 +1479,10 @@ class SemiSegmentalPrecision(_SemiSegmentalMetric):
         long_length : int, default 300
             the threshold number of frames for long intervals that will have an intersection threshold of
             `iou_threshold_long`, see description of the class for details
-        """
+        threshold_value : float | list, optional
+            the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default)
 
+        """
         super().__init__(
             num_classes,
             ignore_index,
@@ -1539,10 +1500,7 @@ class SemiSegmentalPrecision(_SemiSegmentalMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         k = self.threshold_values[0]
         if isinstance(k, list):
             k = ", ".join(map(str, k))
@@ -1550,9 +1508,7 @@ class SemiSegmentalPrecision(_SemiSegmentalMetric):
 
 
 class SemiSegmentalF1(_SemiSegmentalMetric):
-    """
-    The F1 score for semi-segmental recall and precision (not advised for training)
-    """
+    """The F1 score for semi-segmental recall and precision (not advised for training)."""
 
     def __init__(
         self,
@@ -1570,7 +1526,8 @@ class SemiSegmentalF1(_SemiSegmentalMetric):
         long_length: int = 300,
         threshold_value: Union[float, List] = None,
     ) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         num_classes : int
@@ -1603,8 +1560,10 @@ class SemiSegmentalF1(_SemiSegmentalMetric):
         long_length : int, default 300
             the threshold number of frames for long intervals that will have an intersection threshold of
             `iou_threshold_long`, see description of the class for details
-        """
+        threshold_value : float | list, optional
+            the decision threshold value (cannot be defined for exclusive classification, and 0.5 be default)
 
+        """
         super().__init__(
             num_classes,
             ignore_index,
@@ -1622,10 +1581,7 @@ class SemiSegmentalF1(_SemiSegmentalMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         if self.optimize:
             scores = []
             for k in self.threshold_values:
@@ -1644,9 +1600,7 @@ class SemiSegmentalF1(_SemiSegmentalMetric):
 
 
 class SemiSegmentalPR_AUC(_SemiSegmentalMetric):
-    """
-    The area under the precision-recall curve for semi-segmental metrics (not advised for training)
-    """
+    """The area under the precision-recall curve for semi-segmental metrics (not advised for training)."""
 
     def __init__(
         self,
@@ -1681,10 +1635,7 @@ class SemiSegmentalPR_AUC(_SemiSegmentalMetric):
         )
 
     def _calculate_metric(self, tp: Dict, fp: Dict, fn: Dict, tn: Dict) -> float:
-        """
-        Calculate the metric value from true and false positive and negative rates
-        """
-
+        """Calculate the metric value from true and false positive and negative rates."""
         precisions = []
         recalls = []
         for k in sorted(self.threshold_values):
@@ -1694,39 +1645,34 @@ class SemiSegmentalPR_AUC(_SemiSegmentalMetric):
 
 
 class Accuracy(Metric):
-    """
-    Accuracy
-    """
+    """Accuracy."""
 
     def __init__(self, ignore_index=-100):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index: int
             the class index that indicates ignored sample
-        """
 
+        """
         super().__init__()
         self.ignore_index = ignore_index
 
     def reset(self) -> None:
-        """
-        Reset the intrinsic parameters (at the beginning of an epoch)
-        """
-
+        """Reset the internal state (at the beginning of an epoch)."""
         self.total = 0
         self.correct = 0
 
     def calculate(self) -> float:
-        """
-        Calculate the metric value
+        """Calculate the metric value.
 
         Returns
         -------
         metric : float
             metric value
-        """
 
+        """
         return self.correct / (self.total + 1e-7)
 
     def update(
@@ -1735,8 +1681,7 @@ class Accuracy(Metric):
         target: torch.Tensor,
         tags: torch.Tensor = None,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch)
+        """Update the internal state (with a batch).
 
         Parameters
         ----------
@@ -1750,37 +1695,33 @@ class Accuracy(Metric):
             the corresponding SSL target tensor
         tags : torch.Tensor
             the tensor of meta tags (or `None`, if tags are not given)
-        """
 
+        """
         mask = target != self.ignore_index
         self.total += torch.sum(mask)
         self.correct += torch.sum((target == predicted)[mask])
 
 
 class Count(Metric):
-    """
-    Fraction of samples labeled by the model as a class
-    """
+    """Fraction of samples labeled by the model as a class."""
 
     def __init__(self, classes: Set, exclusive: bool = True):
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         classes : set
             the set of classes to count
         exclusive: bool, default True
             set to False for multi-label classification tasks
-        """
 
+        """
         super().__init__()
         self.classes = classes
         self.exclusive = exclusive
 
     def reset(self) -> None:
-        """
-        Reset the intrinsic parameters (at the beginning of an epoch)
-        """
-
+        """Reset the internal state (at the beginning of an epoch)."""
         self.count = defaultdict(lambda: 0)
         self.total = 0
 
@@ -1790,8 +1731,7 @@ class Count(Metric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch)
+        """Update the internal state (with a batch).
 
         Parameters
         ----------
@@ -1805,8 +1745,8 @@ class Count(Metric):
             the corresponding SSL target tensor
         tags : torch.Tensor
             the tensor of meta tags (or `None`, if tags are not given)
-        """
 
+        """
         if self.exclusive:
             for c in self.classes:
                 self.count[c] += torch.sum(predicted == c)
@@ -1817,46 +1757,42 @@ class Count(Metric):
             self.total += torch.numel(predicted[:, 0, :])
 
     def calculate(self) -> Dict:
-        """
-        Calculate the metric (at the end of an epoch)
+        """Calculate the metric (at the end of an epoch).
 
         Returns
         -------
         result : dict
             a dictionary where the keys are class indices and the values are class metric values
-        """
 
+        """
         for c in self.classes:
             self.count[c] = self.count[c] / (self.total + 1e-7)
         return dict(self.count)
 
 
 class EditDistance(Metric):
-    """
-    Edit distance (not advised for training)
+    """Edit distance (not advised for training).
 
-    Normalized by the length of the sequences
+    Normalized by the length of the sequences.
     """
 
     def __init__(self, ignore_index: int = -100, exclusive: bool = True) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         ignore_index : int, default -100
             the class index that indicates samples that should be ignored
         exclusive : bool, default True
             set to False for multi-label classification tasks
-        """
 
+        """
         super().__init__()
         self.ignore_index = ignore_index
         self.exclusive = exclusive
 
     def reset(self) -> None:
-        """
-        Reset the intrinsic parameters (at the beginning of an epoch)
-        """
-
+        """Reset the internal state (at the beginning of an epoch)."""
         self.edit_distance = 0
         self.total = 0
 
@@ -1866,8 +1802,7 @@ class EditDistance(Metric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
-        """
-        Update the intrinsic parameters (with a batch)
+        """Update the internal state (with a batch).
 
         Parameters
         ----------
@@ -1881,8 +1816,8 @@ class EditDistance(Metric):
             the corresponding SSL target tensor
         tags : torch.Tensor
             the tensor of meta tags (or `None`, if tags are not given)
-        """
 
+        """
         mask = target != self.ignore_index
         self.total += torch.sum(mask)
         if self.exclusive:
@@ -1901,44 +1836,56 @@ class EditDistance(Metric):
                 )
 
     def _is_equal(self, a, b):
-        """
-        Compare while ignoring samples marked with ignore_index
-        """
-
+        """Compare while ignoring samples marked with ignore_index."""
         if self.ignore_index in [a, b] or a == b:
             return True
         else:
             return False
 
     def calculate(self) -> float:
-        """
-        Calculate the metric (at the end of an epoch)
+        """Calculate the metric (at the end of an epoch).
 
         Returns
         -------
         result : float
             the metric value
-        """
 
+        """
         return self.edit_distance / (self.total + 1e-7)
 
 
-class PKU_mAP(Metric):
-    """
-    Mean average precision (segmental) (not advised for training)
-    """
+class mAP(Metric):
+    """Mean average precision (segmental) (not advised for training)."""
 
     needs_raw_data = True
 
     def __init__(
         self,
-        average,
         exclusive,
         num_classes,
+        average="macro",
         iou_threshold=0.5,
         threshold_value=0.5,
         ignored_classes=None,
     ):
+        """Initialize the class.
+
+        Parameters
+        ----------
+        exclusive : bool
+            set to False for multi-label classification tasks
+        num_classes : int
+            the number of classes
+        average : {"macro", "micro", "none"}
+            the type of averaging to perform
+        iou_threshold : float, default 0.5
+            the IoU threshold for matching
+        threshold_value : float, default 0.5
+            the threshold value for binarization
+        ignored_classes : list, default None
+            the list of classes to ignore
+
+        """
         if ignored_classes is None:
             ignored_classes = []
         self.average = average
@@ -1949,6 +1896,7 @@ class PKU_mAP(Metric):
         super().__init__()
 
     def match(self, lst, ratio, ground):
+        """Given a list of proposals, match them to the ground truth boxes."""
         lst = sorted(lst, key=lambda x: x[2])
 
         def overlap(prop, ground):
@@ -1972,12 +1920,14 @@ class PKU_mAP(Metric):
         return cos_map, count_map, positive, [x[2] for x in lst]
 
     def reset(self) -> None:
+        """Reset the internal state (at the beginning of an epoch)."""
         self.count_map = defaultdict(lambda: [])
         self.positive = defaultdict(lambda: 0)
         self.cos_map = defaultdict(lambda: [])
         self.confidence = defaultdict(lambda: [])
 
     def calc_pr(self, positive, proposal, ground):
+        """Get precision."""
         if proposal == 0:
             return 0, 0
         if ground == 0:
@@ -1985,6 +1935,7 @@ class PKU_mAP(Metric):
         return (1.0 * positive) / proposal, (1.0 * positive) / ground
 
     def calculate(self) -> Union[float, Dict]:
+        """Calculate the metric (at the end of an epoch)."""
         if self.average == "micro":
             confidence = []
             count_map = []
@@ -2010,6 +1961,7 @@ class PKU_mAP(Metric):
             return float(np.mean(list(results.values())))
 
     def ap(self, cos_map, count_map, positive, confidence):
+        """Compute average precision."""
         indices = np.argsort(confidence)
         cos_map = list(np.array(cos_map)[indices])
         score = 0
@@ -2037,10 +1989,7 @@ class PKU_mAP(Metric):
     def _get_intervals(
         self, tensor: torch.Tensor, probability: torch.Tensor = None
     ) -> Union[Tuple, torch.Tensor]:
-        """
-        Get True group beginning and end indices from a boolean tensor and average probability over these intervals
-        """
-
+        """Get `True` group beginning and end indices from a boolean tensor and average probability over these intervals."""
         output, indices = torch.unique_consecutive(tensor, return_inverse=True)
         true_indices = torch.where(output)[0]
         starts = torch.tensor(
@@ -2060,6 +2009,7 @@ class PKU_mAP(Metric):
         target: torch.Tensor,
         tags: torch.Tensor,
     ) -> None:
+        """Update the state (at the end of each batch)."""
         predicted = torch.cat(
             [
                 copy(predicted),

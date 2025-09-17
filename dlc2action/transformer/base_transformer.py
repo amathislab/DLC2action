@@ -1,7 +1,8 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
 """
 Abstract parent class for transformers
@@ -96,7 +97,7 @@ class Transformer(ABC):
         subsample: List = None,
     ) -> Tuple:
         """
-        Apply augmentations and generate tensors from feature dictionaries
+        Apply augmentations and generate tensors from feature dictionaries.
 
         The same augmentations are applied to all the inputs (if they have the features known to the transformer).
 
@@ -115,6 +116,9 @@ class Transformer(ABC):
         ssl_targets : list, optional
             a list of feature dictionaries of SSL targets (some or all can be None)
         augment : bool, default True
+            if True, augmentations are applied
+        subsample : list, optional
+            a list of indices to subsample the input tensors (if not provided, no subsampling is applied)
 
         Returns
         -------
@@ -124,8 +128,8 @@ class Transformer(ABC):
             a list of augmented tensors of SSL inputs (some or all can be None)
         ssl_targets : list, optional
             a list of augmented tensors of SSL targets (some or all can be None)
-        """
 
+        """
         if subsample is not None:
             original_len = list(main_input.values())[0].shape[-1]
             for key in main_input:

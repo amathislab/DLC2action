@@ -1,26 +1,31 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-import torch
 import pytest
+import torch
 from dlc2action.data.dataset import BehaviorDataset
 import os
 import shutil
+import yaml
 
-path = os.path.join(os.path.dirname(__file__), "data")
+with open("tests/config_test.yaml", "r") as f:
+    config = yaml.safe_load(f)
+oft_data_path = config["oft_data_path"]
 
 data_parameters = {
     "data_type": "dlc_track",
     "annotation_type": "csv",
-    "data_path": path,
-    "annotation_path": path,
-    "annotation_suffix": {".csv"},
-    "data_suffix": {
-        "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
-    },
-    "canvas_shape": [1000, 500],
+    "data_path": oft_data_path,
+    "annotation_path": oft_data_path,
+    "behaviors": [
+        "Grooming",
+        "Supported",
+        "Unsupported",],
+    "annotation_suffix": ".csv",
+    "data_suffix": "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
 }
 
 
@@ -40,7 +45,7 @@ def test_find_valleys(
     Test the `dlc2action.data.dataset.BehaviorDataset.find_valleys` function
     """
 
-    folder = os.path.join(path, "trimmed")
+    folder = os.path.join(oft_data_path, "trimmed")
     if os.path.exists(folder):
         shutil.rmtree(folder)
     dataset = BehaviorDataset(**data_parameters)
@@ -138,7 +143,7 @@ def test_find_valleys(
         for video_id in valleys:
             if video_id not in answer:
                 assert valleys[video_id] == []
-    folder = os.path.join(path, "trimmed")
+    folder = os.path.join(oft_data_path, "trimmed")
     if os.path.exists(folder):
         shutil.rmtree(folder)
 

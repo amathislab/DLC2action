@@ -1,0 +1,11 @@
+##
+## Copyright 2025-present by A. Mathis Group and contributors. All rights reserved.
+##
+##   This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+
+## We are grateful to the authors of crim & oft for their data, 
+## a subset of which we use in the unit tests
+{
+  oft_data_path: "tests/data/oft_sample",
+  crim_data_path: "tests/data/crim_sample",
+}

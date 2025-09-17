@@ -1,10 +1,10 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-## Losses
+"""Losses.
 
 There is no dedicated loss class in `dlc2action`. Instead we use regular `torch.nn.Module` instances that take
 prediction

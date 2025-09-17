@@ -1,48 +1,44 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Class that provides an interface for `dlc2action.task.universal_task.Task`
-"""
+"""Class that provides an interface for `dlc2action.task.universal_task.Task`."""
 
 import inspect
-from typing import Dict, Union, Tuple, List, Callable, Set
-from torch.utils.data import DataLoader
-from torch.optim import Optimizer
-from collections.abc import Iterable, Mapping
-import torch
-from copy import deepcopy
-import numpy as np
-from optuna.trial import Trial
 import warnings
+from collections.abc import Iterable, Mapping
+from copy import deepcopy
+from typing import Callable, Dict, List, Set, Tuple, Union
 
+import numpy as np
+import torch
+from dlc2action import options
 from dlc2action.data.dataset import BehaviorDataset
+from dlc2action.metric.base_metric import Metric
+from dlc2action.model.base_model import LoadedModel, Model
+from dlc2action.ssl.base_ssl import EmptySSL, SSLConstructor
 from dlc2action.task.universal_task import Task
 from dlc2action.transformer.base_transformer import Transformer
-from dlc2action.ssl.base_ssl import SSLConstructor
-from dlc2action.ssl.base_ssl import EmptySSL
-from dlc2action.model.base_model import LoadedModel, Model
-from dlc2action.metric.base_metric import Metric
 from dlc2action.utils import PostProcessor
-
-from dlc2action import options
+from optuna.trial import Trial
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
 
 class TaskDispatcher:
-    """
-    A class that manages the interactions between config dictionaries and a Task
-    """
+    """A class that manages the interactions between config dictionaries and a Task."""
 
     def __init__(self, parameters: Dict) -> None:
-        """
+        """Initialize the `TaskDispatcher`.
+
         Parameters
         ----------
         parameters : dict
             a dictionary of task parameters
-        """
 
+        """
         pars = deepcopy(parameters)
         self.class_weights = None
         self.general_parameters = pars.get("general", {})
@@ -62,8 +58,7 @@ class TaskDispatcher:
 
     @staticmethod
     def complete_function_parameters(parameters, function, general_dicts: List) -> Dict:
-        """
-        Complete a parameter dictionary with values from other dictionaries if required by a function
+        """Complete a parameter dictionary with values from other dictionaries if required by a function.
 
         Parameters
         ----------
@@ -73,8 +68,13 @@ class TaskDispatcher:
             the function to be inspected
         general_dicts : list
             a list of dictionaries where the missing values will be pulled from
-        """
 
+        Returns
+        -------
+        parameters : dict
+            the updated parameter dictionary
+
+        """
         parameter_names = inspect.getfullargspec(function).args
         for param in parameter_names:
             for dic in general_dicts:
@@ -89,8 +89,7 @@ class TaskDispatcher:
         data_type: str,
         annotation_type: str,
     ) -> Dict:
-        """
-        Complete a parameter dictionary with values from other dictionaries if required by a dataset
+        """Complete a parameter dictionary with values from other dictionaries if required by a dataset.
 
         Parameters
         ----------
@@ -107,8 +106,8 @@ class TaskDispatcher:
         -------
         parameters : dict
             the updated parameter dictionary
-        """
 
+        """
         params = deepcopy(parameters)
         parameter_names = BehaviorDataset.get_parameters(data_type, annotation_type)
         for param in parameter_names:
@@ -118,8 +117,7 @@ class TaskDispatcher:
 
     @staticmethod
     def check(parameters: Dict, name: str) -> bool:
-        """
-        Check whether there is a non-`None` value under the name key in the parameters dictionary
+        """Check whether there is a non-`None` value under the name key in the parameters dictionary.
 
         Parameters
         ----------
@@ -132,8 +130,8 @@ class TaskDispatcher:
         -------
         result : bool
             True if a non-`None` value exists
-        """
 
+        """
         if name in parameters and parameters[name] is not None:
             return True
         else:
@@ -141,8 +139,7 @@ class TaskDispatcher:
 
     @staticmethod
     def get(parameters: Dict, name: str, default):
-        """
-        Get the value under the name key or the default if it is `None` or does not exist
+        """Get the value under the name key or the default if it is `None` or does not exist.
 
         Parameters
         ----------
@@ -157,8 +154,8 @@ class TaskDispatcher:
         -------
         value
             the resulting value
-        """
 
+        """
         if TaskDispatcher.check(parameters, name):
             return parameters[name]
         else:
@@ -168,8 +165,7 @@ class TaskDispatcher:
     def make_dataloader(
         dataset: BehaviorDataset, batch_size: int = 32, shuffle: bool = False
     ) -> DataLoader:
-        """
-        Make a torch dataloader from a dataset
+        """Make a torch dataloader from a dataset.
 
         Parameters
         ----------
@@ -177,43 +173,45 @@ class TaskDispatcher:
             the dataset
         batch_size : int
             the batch size
+        shuffle : bool
+            whether to shuffle the dataset
 
         Returns
         -------
         dataloader : DataLoader
             the dataloader (or `None` if the length of the dataset is 0)
-        """
 
+        """
         if dataset is None or len(dataset) == 0:
             return None
         else:
             return DataLoader(dataset, batch_size=int(batch_size), shuffle=shuffle)
 
     def _construct_ssl(self) -> List:
-        """
-        Generate SSL constructors
-        """
-
+        """Generate SSL constructors."""
         ssl_list = deepcopy(self.general_parameters.get("ssl", None))
+        model_name = self.general_parameters.get("model_name", "")
+        # ssl_constructors = options.ssl_constructors if not "tcn" in model_name else options.ssl_constructors_tcn
+        ssl_constructors = options.ssl_constructors
         if not isinstance(ssl_list, Iterable):
             ssl_list = [ssl_list]
         for i, ssl in enumerate(ssl_list):
             if type(ssl) is str:
-                if ssl in options.ssl_constructors:
+                if ssl in ssl_constructors:
                     pars = self.get(self.ssl_parameters, ssl, default={})
                     pars = self.complete_function_parameters(
                         parameters=pars,
-                        function=options.ssl_constructors[ssl],
+                        function=ssl_constructors[ssl],
                         general_dicts=[
                             self.model_parameters,
                             self.data_parameters,
                             self.general_parameters,
                         ],
                     )
-                    ssl_list[i] = options.ssl_constructors[ssl](**pars)
+                    ssl_list[i] = ssl_constructors[ssl](**pars)
                 else:
                     raise ValueError(
-                        f"The {ssl} SSL is not available, please choose from {list(options.ssl_constructors.keys())}"
+                        f"The {ssl} SSL is not available, please choose from {list(ssl_constructors.keys())}"
                     )
             elif ssl is None:
                 ssl_list[i] = EmptySSL()
@@ -224,10 +222,7 @@ class TaskDispatcher:
         return ssl_list
 
     def _construct_model(self) -> Model:
-        """
-        Generate a model
-        """
-
+        """Generate a model."""
         if self.check(self.general_parameters, "model"):
             pars = self.complete_function_parameters(
                 function=LoadedModel,
@@ -261,7 +256,6 @@ class TaskDispatcher:
         """
         Generate a dataset
         """
-
         data_type = self.general_parameters.get("data_type", None)
         if data_type is None:
             raise ValueError(
@@ -295,10 +289,7 @@ class TaskDispatcher:
         return dataset
 
     def _construct_transformer(self) -> Transformer:
-        """
-        Generate a transformer
-        """
-
+        """Generate a transformer."""
         features = self.general_parameters["feature_extraction"]
         name = options.extractor_to_transformer[features]
         if name in options.transformers:
@@ -314,10 +305,7 @@ class TaskDispatcher:
         return transformer
 
     def _construct_loss(self) -> torch.nn.Module:
-        """
-        Generate a loss function
-        """
-
+        """Generate a loss function."""
         if "loss_function" not in self.general_parameters:
             raise ValueError(
                 'Please add a "loss_function" key to the parameters["general"] dictionary (either a name '
@@ -344,10 +332,7 @@ class TaskDispatcher:
         return loss
 
     def _construct_metrics(self) -> List:
-        """
-        Generate the metric
-        """
-
+        """Generate the metric."""
         metric_functions = self.get(
             self.general_parameters, "metric_functions", default={}
         )
@@ -389,10 +374,7 @@ class TaskDispatcher:
         return metrics
 
     def _construct_optimizer(self) -> Optimizer:
-        """
-        Generate an optimizer
-        """
-
+        """Generate an optimizer."""
         if "optimizer" in self.training_parameters:
             name = self.training_parameters["optimizer"]
             if name in options.optimizers:
@@ -406,10 +388,7 @@ class TaskDispatcher:
         return optimizer
 
     def _construct_predict_functions(self) -> Tuple[Callable, Callable]:
-        """
-        Construct predict functions
-        """
-
+        """Construct predict functions."""
         predict_function = self.training_parameters.get("predict_function", None)
         primary_predict_function = self.training_parameters.get(
             "primary_predict_function", None
@@ -424,15 +403,18 @@ class TaskDispatcher:
                     func = lambda x: torch.sigmoid(x)
 
                 def primary_predict_function(x):
-                    if len(x.shape) != 4:
-                        x = x.reshape((4, -1, x.shape[-2], x.shape[-1]))
-                    weights = [1, 1, 1, 1]
-                    ensemble_prob = func(x[0]) * weights[0] / sum(weights)
-                    for i, outp_ele in enumerate(x[1:]):
-                        ensemble_prob = ensemble_prob + func(outp_ele) * weights[
-                            i + 1
-                        ] / sum(weights)
-                    return ensemble_prob
+                    if len(x) == 1:
+                        return func(x)
+                    else:
+                        if len(x.shape) != 4:
+                            x = x.reshape((4, -1, x.shape[-2], x.shape[-1]))
+                        weights = [1, 1, 1, 1]
+                        ensemble_prob = func(x[0]) * weights[0] / sum(weights)
+                        for i, outp_ele in enumerate(x[1:]):
+                            ensemble_prob = ensemble_prob + func(outp_ele) * weights[
+                                i + 1
+                            ] / sum(weights)
+                        return ensemble_prob
 
             else:
                 if model_name.startswith("ms_tcn") or model_name in [
@@ -453,24 +435,6 @@ class TaskDispatcher:
                         # x = torch.tensor(x).to(device)
                         return cls
 
-                elif model_name == "actionclip":
-
-                    def f(x):
-                        video_embedding, text_embedding, logit_scale = (
-                            x["video"],
-                            x["text"],
-                            x["logit_scale"],
-                        )
-                        B, Ff, T = video_embedding.shape
-                        video_embedding = video_embedding.permute(0, 2, 1).reshape(
-                            (B * T, -1)
-                        )
-                        video_embedding /= video_embedding.norm(dim=-1, keepdim=True)
-                        text_embedding /= text_embedding.norm(dim=-1, keepdim=True)
-                        similarity = logit_scale * video_embedding @ text_embedding.T
-                        similarity = similarity.reshape((B, T, -1)).permute(0, 2, 1)
-                        return similarity
-
                 else:
                     f = lambda x: x
                 if self.general_parameters["exclusive"]:
@@ -484,10 +448,7 @@ class TaskDispatcher:
         return primary_predict_function, predict_function
 
     def _get_parameters_from_training(self) -> Dict:
-        """
-        Get the training parameters that need to be passed to the Task
-        """
-
+        """Get the training parameters that need to be passed to the Task."""
         task_training_par_names = [
             "lr",
             "parallel",
@@ -524,10 +485,7 @@ class TaskDispatcher:
         return task_training_pars
 
     def _update_parameters_from_ssl(self, ssl_list: list) -> None:
-        """
-        Update the necessary parameters given the list of SSL constructors
-        """
-
+        """Update the necessary parameters given the list of SSL constructors."""
         if self.task is not None:
             self.task.set_ssl_transformations([ssl.transformation for ssl in ssl_list])
             self.task.set_ssl_losses([ssl.loss for ssl in ssl_list])
@@ -553,10 +511,7 @@ class TaskDispatcher:
         ]
 
     def _set_loss_weights(self, parameters):
-        """
-        Replace the `"dataset_inverse_weights"` blank in loss parameters with class weight values
-        """
-
+        """Replace the `"dataset_inverse_weights"` blank in loss parameters with class weight values."""
         for k in list(parameters.keys()):
             if parameters[k] in [
                 "dataset_inverse_weights",
@@ -586,10 +541,7 @@ class TaskDispatcher:
     def _partition_dataset(
         self, dataset: BehaviorDataset
     ) -> Tuple[BehaviorDataset, BehaviorDataset, BehaviorDataset]:
-        """
-        Partition the dataset into train, validation and test subsamples
-        """
-
+        """Partition the dataset into train, validation and test subsamples."""
         use_test = self.get(self.training_parameters, "use_test", 0)
         split_path = self.training_parameters.get("split_path", None)
         partition_method = self.training_parameters.get("partition_method", "random")
@@ -621,10 +573,7 @@ class TaskDispatcher:
         return train_dataloader, test_dataloader, val_dataloader
 
     def _initialize_task(self):
-        """
-        Create a `dlc2action.task.universal_task.Task` instance
-        """
-
+        """Create a `dlc2action.task.universal_task.Task` instance."""
         dataset = self._construct_dataset()
         self._update_data_blanks(dataset)
         model = self._construct_model()
@@ -643,6 +592,7 @@ class TaskDispatcher:
             dataset
         )
         self.class_weights = train_dataloader.dataset.class_weights()
+        self._update_num_classes_parameter(dataset)
         self.proportional_class_weights = train_dataloader.dataset.class_weights(True)
         loss = self._construct_loss()
         exclusive = self.general_parameters["exclusive"]
@@ -661,7 +611,6 @@ class TaskDispatcher:
             "primary_predict_function": primary_predict_function,
         }
         task_pars.update(task_training_pars)
-
         self.task = Task(**task_pars)
         checkpoint_path = self.training_parameters.get("checkpoint_path", None)
         if checkpoint_path is not None:
@@ -680,10 +629,7 @@ class TaskDispatcher:
     def _update_data_blanks(
         self, dataset: BehaviorDataset = None, remember: bool = False
     ) -> None:
-        """
-        Update all blanks from a dataset
-        """
-
+        """Update all blanks from a dataset."""
         if dataset is None:
             dataset = self.dataset()
         self._update_dim_parameter(dataset, remember)
@@ -693,9 +639,11 @@ class TaskDispatcher:
         self._update_boundary_parameter(dataset, remember)
 
     def _update_model_blanks(self, model: Model, remember: bool = False) -> None:
+        """Update blanks related to model parameters."""
         self._update_features_parameter(model, remember)
 
     def _update_parameter(self, blank_name: str, value, remember: bool = False):
+        """Update a single blank parameter."""
         parameters = [
             self.model_parameters,
             self.ssl_parameters,
@@ -742,60 +690,42 @@ class TaskDispatcher:
                                 self.blanks[blank_name].append([name, k, kk])
 
     def _update_features_parameter(self, model: Model, remember: bool = False) -> None:
-        """
-        Fill the `"model_features"` blank
-        """
-
+        """Fill the `"model_features"` blank."""
         value = model.features_shape()
         self._update_parameter("model_features", value, remember)
 
     def _update_bodyparts_parameter(
         self, dataset: BehaviorDataset, remember: bool = False
     ) -> None:
-        """
-        Fill the `"dataset_bodyparts"` blank
-        """
-
+        """Fill the `"dataset_bodyparts"` blank."""
         value = dataset.bodyparts_order()
         self._update_parameter("dataset_bodyparts", value, remember)
 
     def _update_dim_parameter(
         self, dataset: BehaviorDataset, remember: bool = False
     ) -> None:
-        """
-        Fill the `"dataset_features"` blank
-        """
-
+        """Fill the `"dataset_features"` blank."""
         value = dataset.features_shape()
         self._update_parameter("dataset_features", value, remember)
 
     def _update_boundary_parameter(
         self, dataset: BehaviorDataset, remember: bool = False
     ) -> None:
-        """
-        Fill the `"dataset_features"` blank
-        """
-
-        value = dataset.boundary_class_weight()
+        """Fill the `"dataset_features"` blank."""
+        value = dataset._boundary_class_weight()
         self._update_parameter("dataset_boundary_weight", value, remember)
 
     def _update_num_classes_parameter(
         self, dataset: BehaviorDataset, remember: bool = False
     ) -> None:
-        """
-        Fill in the `"dataset_classes"` blank
-        """
-
+        """Fill in the `"dataset_classes"` blank."""
         value = dataset.num_classes()
         self._update_parameter("dataset_classes", value, remember)
 
     def _update_len_segment_parameter(
         self, dataset: BehaviorDataset, remember: bool = False
     ) -> None:
-        """
-        Fill in the `"dataset_len_segment"` blank
-        """
-
+        """Fill in the `"dataset_len_segment"` blank."""
         value = dataset.len_segment()
         self._update_parameter("dataset_len_segment", value, remember)
 
@@ -806,15 +736,14 @@ class TaskDispatcher:
             print(f"    {key}: {value}")
 
     def update_task(self, parameters: Dict) -> None:
-        """
-        Update the `dlc2action.task.universal_task.Task` instance given the parameter updates
+        """Update the `dlc2action.task.universal_task.Task` instance given the parameter updates.
 
         Parameters
         ----------
         parameters : dict
             the dictionary of parameter updates
-        """
 
+        """
         pars = deepcopy(parameters)
         # for blank_name in self.blanks:
         #     for names in self.blanks[blank_name]:
@@ -993,8 +922,7 @@ class TaskDispatcher:
         autostop_threshold: float = 0.001,
         loading_bar: bool = False,
     ) -> Tuple:
-        """
-        Train the task and return a log of epoch-average loss and metric
+        """Train the task and return a log of epoch-average loss and metric.
 
         You can use the autostop parameters to finish training when the parameters are not improving. It will be
         stopped if the average value of `autostop_metric` over the last `autostop_interval` epochs is smaller than
@@ -1007,19 +935,14 @@ class TaskDispatcher:
             an `optuna` trial (for hyperparameter searches)
         optimized_metric : str
             the name of the metric being optimized (for hyperparameter searches)
-        to_ram : bool, default False
-            if `True`, the dataset will be loaded in RAM (this speeds up the calculations but can lead to crashes
-            if the dataset is too large)
+        autostop_metric : str, optional
+            the autostop metric (can be any one of the tracked metrics of `'loss'`)
         autostop_interval : int, default 50
             the number of epochs to average the autostop metric over
         autostop_threshold : float, default 0.001
             the autostop difference threshold
-        autostop_metric : str, optional
-            the autostop metric (can be any one of the tracked metrics of `'loss'`)
-        main_task_on : bool, default True
-            if `False`, the main task (action segmentation) will not be used in training
-        ssl_on : bool, default True
-            if `False`, the SSL task will not be used in training
+        loading_bar : bool, default False
+            whether to show a loading bar
 
         Returns
         -------
@@ -1028,8 +951,8 @@ class TaskDispatcher:
         metrics_log: dict
             a dictionary of metric value logs (first-level keys are 'train' and 'val', second-level keys are metric
             names, values are lists of function values)
-        """
 
+        """
         to_ram = self.training_parameters.get("to_ram", False)
         logs = self.task.train(
             trial,
@@ -1048,15 +971,14 @@ class TaskDispatcher:
         return logs
 
     def save_model(self, save_path: str) -> None:
-        """
-        Save the model of the `dlc2action.task.universal_task.Task` instance
+        """Save the model of the `dlc2action.task.universal_task.Task` instance.
 
         Parameters
         ----------
         save_path : str
             the path to the saved file
-        """
 
+        """
         self.task.save_model(save_path)
 
     def evaluate(
@@ -1065,8 +987,7 @@ class TaskDispatcher:
         augment_n: int = 0,
         verbose: bool = True,
     ) -> Tuple:
-        """
-        Evaluate the Task model
+        """Evaluate the Task model.
 
         Parameters
         ----------
@@ -1085,8 +1006,8 @@ class TaskDispatcher:
             the average value of the SSL loss function
         metric : dict
             a dictionary of average values of metric functions
-        """
 
+        """
         res = self.task.evaluate(
             data,
             augment_n,
@@ -1099,9 +1020,9 @@ class TaskDispatcher:
         self,
         prediction: torch.Tensor,
         data: Union[DataLoader, BehaviorDataset, str] = None,
+        indices: Union[List[int], None] = None,
     ) -> Tuple:
-        """
-        Compute metrics for a prediction
+        """Compute metrics for a prediction.
 
         Parameters
         ----------
@@ -1117,9 +1038,8 @@ class TaskDispatcher:
         metric : dict
             a dictionary of average values of metric functions
         """
-
         return self.task.evaluate_prediction(
-            prediction, data, int(self.training_parameters.get("batch_size", 32))
+            prediction, data, int(self.training_parameters.get("batch_size", 32)), indices
         )
 
     def predict(
@@ -1130,8 +1050,7 @@ class TaskDispatcher:
         augment_n: int = 0,
         embedding: bool = False,
     ) -> torch.Tensor:
-        """
-        Make a prediction with the Task model
+        """Make a prediction with the Task model.
 
         Parameters
         ----------
@@ -1144,13 +1063,15 @@ class TaskDispatcher:
             the input)
         augment_n : int, default 0
             the number of augmentations to average results over
+        embedding : bool, default False
+            if `True`, the embedding is returned instead of the prediction
 
         Returns
         -------
         prediction : torch.Tensor
             a prediction for the input data
-        """
 
+        """
         to_ram = self.training_parameters.get("to_ram", False)
         return self.task.predict(
             data,
@@ -1163,8 +1084,7 @@ class TaskDispatcher:
         )
 
     def dataset(self, mode: str = "train") -> BehaviorDataset:
-        """
-        Get a dataset
+        """Get a dataset.
 
         Parameters
         ----------
@@ -1175,8 +1095,8 @@ class TaskDispatcher:
         -------
         dataset : dlc2action.data.dataset.BehaviorDataset
             the dataset
-        """
 
+        """
         return self.task.dataset(mode)
 
     def generate_full_length_prediction(
@@ -1184,8 +1104,7 @@ class TaskDispatcher:
         dataset: Union[BehaviorDataset, str] = None,
         augment_n: int = 10,
     ) -> Dict:
-        """
-        Compile a prediction for the original input sequences
+        """Compile a prediction for the original input sequences.
 
         Parameters
         ----------
@@ -1200,8 +1119,8 @@ class TaskDispatcher:
         prediction : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are prediction tensors
-        """
 
+        """
         return self.task.generate_full_length_prediction(
             dataset, int(self.training_parameters.get("batch_size", 32)), augment_n
         )
@@ -1212,8 +1131,7 @@ class TaskDispatcher:
         dataset: Union[BehaviorDataset, str] = None,
         augment_n: int = 10,
     ) -> Dict:
-        """
-        Generate a MABe-22 style submission dictionary
+        """Generate a MABe-22 style submission dictionary.
 
         Parameters
         ----------
@@ -1228,8 +1146,8 @@ class TaskDispatcher:
         -------
         submission : dict
             a dictionary with frame number mapping and embeddings
-        """
 
+        """
         return self.task.generate_submission(
             frame_number_map_file,
             dataset,
@@ -1238,8 +1156,7 @@ class TaskDispatcher:
         )
 
     def behaviors_dict(self):
-        """
-        Get a behavior dictionary
+        """Get a behavior dictionary.
 
         Keys are label indices and values are label names.
 
@@ -1247,13 +1164,12 @@ class TaskDispatcher:
         -------
         behaviors_dict : dict
             behavior dictionary
-        """
 
+        """
         return self.task.behaviors_dict()
 
     def count_classes(self, bouts: bool = False) -> Dict:
-        """
-        Get a dictionary of class counts in different modes
+        """Get a dictionary of class counts in different modes.
 
         Parameters
         ----------
@@ -1265,8 +1181,8 @@ class TaskDispatcher:
         class_counts : dict
             a dictionary where first-level keys are "train", "val" and "test", second-level keys are
             class names and values are class counts (in frames)
-        """
 
+        """
         return self.task.count_classes(bouts)
 
     def _visualize_results_label(
@@ -1283,7 +1199,7 @@ class TaskDispatcher:
         smooth_interval: int = 0,
         title: str = None,
     ):
-        return self.task._visualize_results_label(
+        return self.task._visualize_results_single(
             label,
             save_path,
             add_legend,
@@ -1312,9 +1228,11 @@ class TaskDispatcher:
         drop_classes: Set = None,
         search_classes: Set = None,
         smooth_interval_prediction: int = None,
+        font_size: float = None,
+        num_plots:int = 1,
+        window_size:int=400,
     ) -> None:
-        """
-        Visualize random predictions
+        """Visualize random predictions.
 
         Parameters
         ----------
@@ -1342,8 +1260,10 @@ class TaskDispatcher:
             a set of class names to not be displayed
         search_classes : set, optional
             if given, only intervals where at least one of the classes is in ground truth will be shown
-        """
+        smooth_interval_prediction : int, optional
+            if given, the prediction will be smoothed over the given number of frames
 
+        """
         return self.task.visualize_results(
             save_path,
             add_legend,
@@ -1357,7 +1277,10 @@ class TaskDispatcher:
             dataset,
             drop_classes,
             search_classes,
+            font_size=font_size,
             smooth_interval_prediction=smooth_interval_prediction,
+            num_plots=num_plots,
+            window_size=window_size
         )
 
     def generate_uncertainty_score(
@@ -1368,8 +1291,7 @@ class TaskDispatcher:
         predicted: torch.Tensor = None,
         behaviors_dict: Dict = None,
     ) -> Dict:
-        """
-        Generate frame-wise scores for active learning
+        """Generate frame-wise scores for active learning.
 
         Parameters
         ----------
@@ -1380,14 +1302,18 @@ class TaskDispatcher:
         method : {"least_confidence", "entropy"}
             the method used to calculate the scores from the probability predictions (`"least_confidence"`: `1 - p_i` if
             `p_i > 0.5` or `p_i` if `p_i < 0.5`; `"entropy"`: `- p_i * log(p_i) - (1 - p_i) * log(1 - p_i)`)
+        predicted : torch.Tensor, optional
+            if given, the predictions will be used instead of the model's predictions
+        behaviors_dict : dict, optional
+            if given, the behaviors dictionary will be used instead of the model's behaviors dictionary
 
         Returns
         -------
         score_dicts : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are score tensors
-        """
 
+        """
         return self.task.generate_uncertainty_score(
             classes,
             augment_n,
@@ -1404,8 +1330,7 @@ class TaskDispatcher:
         num_models: int = 10,
         kernel_size: int = 11,
     ) -> Dict:
-        """
-        Generate frame-wise Bayesian Active Learning by Disagreement scores for active learning
+        """Generate frame-wise Bayesian Active Learning by Disagreement scores for active learning.
 
         Parameters
         ----------
@@ -1423,8 +1348,8 @@ class TaskDispatcher:
         score_dicts : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are score tensors
-        """
 
+        """
         return self.task.generate_bald_score(
             classes,
             augment_n,
@@ -1433,35 +1358,32 @@ class TaskDispatcher:
             kernel_size,
         )
 
-    def get_normalization_stats(self) -> Dict:
-        """
-        Get the pre-computed normalization stats
-
-        Returns
-        -------
-        normalization_stats : dict
-            a dictionary of means and stds
-        """
-
-        return self.task.get_normalization_stats()
-
     def exists(self, mode) -> bool:
-        """
-        Check whether the task has a train/test/validation subset
+        """Check whether the task has a train/test/validation subset.
 
         Parameters
         ----------
         mode : {"train", "val", "test"}
             the name of the subset to check for
-
         Returns
         -------
         exists : bool
             `True` if the subset exists
-        """
 
+        """
         dl = self.task.dataloader(mode)
         if dl is None:
             return False
         else:
             return True
+
+    def get_normalization_stats(self) -> Dict:
+        """Get the pre-computed normalization stats.
+
+        Returns
+        -------
+        normalization_stats : dict
+            a dictionary of means and stds
+
+        """
+        return self.task.get_normalization_stats()

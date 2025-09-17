@@ -1,2 +1,8 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 augmentations: !!set {"horizontal_flip"} # set; a set of augmentations (from 'rotate', 'horizontal_flip', 'vertical_flip')
 rotation_degree_limits: [-90, 90] # list; list of rotation angle limits ([low, high])

@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 behaviors: null # list; the list of behaviors to put in the annotation (if null, if will be inferred from the data; !!PLEASE SET IT MANUALLY if different files can have different behavior sets!!)
 ignored_classes: null # set, the list of behaviors from the behaviors list to not annotate
 correction: null # dict, optional a dictionary of corrections for the labels (e.g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'}, can be used to correct for variations in naming or to merge several labels in one

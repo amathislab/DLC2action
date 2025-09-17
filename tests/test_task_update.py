@@ -1,22 +1,43 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-from dlc2action.task.task_dispatcher import TaskDispatcher
 from math import floor
+
 import pytest
+from dlc2action.task.task_dispatcher import TaskDispatcher
+import yaml
 import os
 import shutil
 
-path = os.path.join(os.path.dirname(__file__), "data")
+with open("tests/config_test.yaml", "r") as f:
+    config = yaml.safe_load(f)
+crim_data_path = config["crim_data_path"]
+
 
 parameters = {
     "data": {
-        "data_path": path,
-        "annotation_path": path,
-        "annotation_suffix": {"2.csv"},
-        "data_suffix": "2DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
+        "data_path": crim_data_path,
+        "annotation_path": crim_data_path,
+        "behaviors": [
+            "approach",
+            "attack",
+            "copulation",
+            "chase",
+            "circle",
+            "drink",
+            "eat",
+            "clean",
+            "sniff",
+            "up",
+            "walk_away",
+        ],
+        "annotation_suffix": {".csv"},
+        "data_suffix": {
+            ".csv",
+        },
     },
     "features": {
         "keys": ["coords"],
@@ -27,8 +48,8 @@ parameters = {
         "feature_dim": 16,
     },
     "general": {
-        "data_type": "dlc_track",
-        "annotation_type": "csv",
+        "data_type": "simba",
+        "annotation_type": "simba",
         "model_name": "c2f_tcn",  # str; model name
         "num_classes": "dataset_classes",  # int; number of classes
         "exclusive": True,  # bool; if true, single-label classification is used; otherwise multi-label
@@ -70,16 +91,31 @@ parameters = {
         "batch_size": 32,  # int; batch size
         "model_save_epochs": 50,  # int; interval for saving training checkpoints (the last epoch is always saved)
         "test_frac": 0,
+        "partition_method": "time:strict",  # str; method to partition the dataset into train/val/test sets
     },  # float; fraction of dataset to use as test
 }
 update = {
     "data": {
-        "data_path": path,
-        "annotation_path": path,
-        "annotation_suffix": {"2.csv"},
+        "data_path": crim_data_path,
+        "annotation_path": crim_data_path,
+        "behaviors": [
+            "approach",
+            "attack",
+            "copulation",
+            "chase",
+            "circle",
+            "drink",
+            "eat",
+            "clean",
+            "sniff",
+            "up",
+            "walk_away",
+        ],
+        "annotation_suffix": {".csv"},
         "data_suffix": {
-            "2DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
+            ".csv",
         },
+        "use_features": False
     },
     "features": {
         "keys": ["coords", "intra_distance"],
@@ -89,8 +125,8 @@ update = {
     },
     "general": {
         "len_segment": 128,
-        "data_type": "dlc_track",
-        "annotation_type": "csv",
+        "data_type": "simba",
+        "annotation_type": "simba",
         "model_name": "c2f_tcn",  # str; model name
         "num_classes": "dataset_classes",  # int; number of classes
         "exclusive": False,  # bool; if true, single-label classification is used; otherwise multi-label
@@ -130,6 +166,7 @@ update = {
         "batch_size": 16,  # int; batch size
         "model_save_epochs": 5,  # int; interval for saving training checkpoints (the last epoch is always saved)
         "test_frac": 0.2,
+        "partition_method": "time:strict",  # str; method to partition the dataset into train/val/test sets
     },  # float; fraction of dataset to use as test
 }
 
@@ -141,7 +178,7 @@ def test_task_update():
     Update a task with set parameters and check that all parameter groups get to the end destination.
     """
 
-    folder = os.path.join(path, "trimmed")
+    folder = os.path.join(crim_data_path, "trimmed")
     if os.path.exists(folder):
         shutil.rmtree(folder)
     task = TaskDispatcher(parameters)
@@ -149,14 +186,14 @@ def test_task_update():
     # check model parameters
     model = task.task.model
     # check dataset parameters
-    assert task.task.train_dataloader.dataset[0]["input"]["coords"].shape[-1] == 128
+    assert task.task.train_dataloader.dataset[0]["input"]["coords---1"].shape[-1] == 128
     length = int(floor((128 - 5) / 2 + 1))
     length = floor((length - 5) / 2 + 1)
     features = length * (16 // 4)
     assert model.ssl[0].conv_1x1_out.in_channels == features
     # check feature extraction parameters
     sample = task.task.train_dataloader.dataset[0]["input"]
-    assert len(sample.keys()) == 2
+    assert len(sample.keys()) == 4 # number of features x number of individuals
     # check exclusive
     assert task.task.loss.exclusive == False
     # check ssl
@@ -183,9 +220,6 @@ def test_task_update():
     assert task.task.model_save_epochs == 5
     # check test_frac
     assert task.task.test_dataloader is not None and len(task.task.test_dataloader) != 0
-    folder = os.path.join(path, "trimmed")
+    folder = os.path.join(crim_data_path, "trimmed")
     if os.path.exists(folder):
         shutil.rmtree(folder)
-
-
-# test_task_update()

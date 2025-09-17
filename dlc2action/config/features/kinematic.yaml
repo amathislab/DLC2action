@@ -1,4 +1,12 @@
-keys: null # set; a list of names of the features to extract (a subset of available keys; run project.help("features") for more info)
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
+
+# set; a list of names of the features to extract (a subset of available keys; run project.help("features") for more info)
+keys: !!set {"coord_diff", "center", "intra_distance", "speed_direction", "speed_value", "angle_speeds", "acc_joints", "inter_distance",}
 averaging_window: 1 # int; if >1, features are averaged with a moving window of this size (in frames)
 distance_pairs: null # list; a list of bodypart name tuples (e.g. `[("tail", "nose")]`) to compute distances for when `"intra_distance"` is in `keys` (by default all distances are computed)
 angle_pairs: null # list; a list of bodypart name tuples (e.g. `[("ear1", "nose", "ear2")]`) for the angle between `"ear1"--"nose"` and `"nose"--"ear2"` lines) to compute angle cosines for when `"angles"` is in `keys` (by default no angles are computed)

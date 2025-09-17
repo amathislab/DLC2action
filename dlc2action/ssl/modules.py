@@ -1,11 +1,10 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Network modules used by implementations of `dlc2action.ssl.base_ssl.SSLConstructor`
-"""
+"""Network modules used by implementations of `dlc2action.ssl.base_ssl.SSLConstructor`."""
 
 import torch
 from torch import nn
@@ -14,11 +13,8 @@ from math import floor
 import torch.nn.functional as F
 from torch.nn import Linear
 
-
-class _FeatureExtractorTCN(nn.Module):
-    """
-    A module that extracts clip-level features with a TCN
-    """
+class FeatureExtractorTCN(nn.Module):
+    """A module that extracts clip-level features with a TCN."""
 
     def __init__(
         self,
@@ -30,7 +26,8 @@ class _FeatureExtractorTCN(nn.Module):
         stride: int,
         decrease_f_maps: bool = False,
     ) -> None:
-        """
+        """Initialize the module.
+
         Parameters
         ----------
         num_f_maps : int
@@ -47,8 +44,8 @@ class _FeatureExtractorTCN(nn.Module):
             stride
         decrease_f_maps : bool, default False
             if `True`, number of feature maps is halved at each new layer
-        """
 
+        """
         super().__init__()
         num_f_maps = int(num_f_maps)
         output_dim = int(output_dim)
@@ -71,6 +68,7 @@ class _FeatureExtractorTCN(nn.Module):
         self.dropout = nn.Dropout()
 
     def forward(self, f):
+        """Forward pass."""
         for conv in self.conv:
             f = conv(f)
             f = F.relu(f)
@@ -80,10 +78,8 @@ class _FeatureExtractorTCN(nn.Module):
         return f
 
 
-class _MFeatureExtractorTCN(nn.Module):
-    """
-    A module that extracts segment-level features with a TCN
-    """
+class MFeatureExtractorTCN(nn.Module):
+    """A module that extracts segment-level features with a TCN."""
 
     def __init__(
         self,
@@ -97,7 +93,8 @@ class _MFeatureExtractorTCN(nn.Module):
         end: int,
         num_layers: int = 3,
     ):
-        """
+        """Initialize the module.
+
         Parameters
         ----------
         num_f_maps : int
@@ -118,11 +115,11 @@ class _MFeatureExtractorTCN(nn.Module):
             the end index of the segment to extract
         num_layers : int
             number of layers
-        """
 
-        super(_MFeatureExtractorTCN, self).__init__()
-        self.main_module = _DilatedTCN(num_layers, num_f_maps, num_f_maps)
-        self.extractor = _FeatureExtractorTCN(
+        """
+        super(MFeatureExtractorTCN, self).__init__()
+        self.main_module = DilatedTCN(num_layers, num_f_maps, num_f_maps)
+        self.extractor = FeatureExtractorTCN(
             num_f_maps, output_dim, len_segment, kernel_1, kernel_2, stride
         )
         in_features = int(len_segment * num_f_maps)
@@ -132,6 +129,7 @@ class _MFeatureExtractorTCN(nn.Module):
         self.end = int(end)
 
     def forward(self, f, extract_features=True):
+        """Forward pass."""
         if extract_features:
             f = self.main_module(f)
             f = F.relu(f)
@@ -143,15 +141,14 @@ class _MFeatureExtractorTCN(nn.Module):
         return f
 
 
-class _FC(nn.Module):
-    """
-    Fully connected module that predicts input data given features
-    """
+class FC(nn.Module):
+    """Fully connected module that predicts input data given features."""
 
     def __init__(
-        self, dim: int, num_f_maps: int, num_ssl_layers: int, num_ssl_f_maps: int
+        self, dim: int, num_f_maps: int, num_ssl_layers: int, num_ssl_f_maps: int, ssl_input:bool = False
     ) -> None:
-        """
+        """Initialize the module.
+
         Parameters
         ----------
         dim : int
@@ -162,15 +159,16 @@ class _FC(nn.Module):
             number of layers in the module
         num_ssl_f_maps : int
             number of feature maps in the module
-        """
 
+        """
         super().__init__()
         dim = int(dim)
+        in_features = dim if ssl_input else num_f_maps
         num_f_maps = int(num_f_maps)
         num_ssl_layers = int(num_ssl_layers)
         num_ssl_f_maps = int(num_ssl_f_maps)
         self.layers = nn.ModuleList(
-            [nn.Linear(in_features=num_f_maps, out_features=num_ssl_f_maps)]
+            [nn.Linear(in_features=in_features, out_features=num_ssl_f_maps)]
         )
         for _ in range(num_ssl_layers - 2):
             self.layers.append(
@@ -179,6 +177,7 @@ class _FC(nn.Module):
         self.layers.append(nn.Linear(in_features=num_ssl_f_maps, out_features=dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         N, C, F = x.shape
         x = x.transpose(1, 2).reshape(-1, C)
         for layer in self.layers:
@@ -187,13 +186,12 @@ class _FC(nn.Module):
         return x
 
 
-class _DilatedTCN(nn.Module):
-    """
-    TCN module that predicts input data given features
-    """
+class DilatedTCN(nn.Module):
+    """TCN module that predicts input data given features."""
 
     def __init__(self, num_layers, input_dim, output_dim):
-        """
+        """Initialize the module.
+
         Parameters
         ----------
         output_dim : int
@@ -202,8 +200,8 @@ class _DilatedTCN(nn.Module):
             number of features in input
         num_layers : int
             number of layers in the module
-        """
 
+        """
         super().__init__()
         num_layers = int(num_layers)
         input_dim = int(input_dim)
@@ -238,6 +236,7 @@ class _DilatedTCN(nn.Module):
         self.dropout = nn.Dropout()
 
     def forward(self, f):
+        """Forward pass."""
         for i in range(self.num_layers):
             f_in = copy.copy(f)
             f = self.conv_fusion[i](

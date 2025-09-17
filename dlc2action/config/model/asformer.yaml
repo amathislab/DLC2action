@@ -1,7 +1,13 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 num_decoders: 3 # int; number of decoders
 num_layers: 10 # int; number of layers
 r1: 2 # int; R1
 r2: 2 # int; R2
 num_f_maps: 64 # int; number of feature maps
 input_dim: 'dataset_features' # int | str; the number of input features (leave as "dataset_features" to compute it automatically)
-channel_masking_rate: 0.4 # float; channel masking rate
+channel_masking_rate: 0.3 # float; channel masking rate

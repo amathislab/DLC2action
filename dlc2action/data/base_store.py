@@ -1,23 +1,22 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Abstract parent classes for the store objects
-"""
+"""Abstract parent classes for the data store objects."""
 
-import os.path
-from typing import Dict, Union, List, Tuple, Set, Optional
-from abc import ABC, abstractmethod
-import numpy as np
 import inspect
+import os.path
+from abc import ABC, abstractmethod
+from typing import Dict, List, Set, Tuple, Union
+
+import numpy as np
 import torch
 
 
 class Store(ABC):  # +
-    """
-    A general parent class for `AnnotationStore` and `InputStore`
+    """A general parent class for `BehaviorStore` and `InputStore`.
 
     Processes input video information and generates ordered arrays of data samples and corresponding unique
     original coordinates, as well as some meta objects.
@@ -32,70 +31,67 @@ class Store(ABC):  # +
 
     @abstractmethod
     def __len__(self) -> int:
-        """
-        Get the number of available samples
+        """Get the number of available samples.
 
         Returns
         -------
         length : int
             the number of available samples
+
         """
 
     @abstractmethod
     def remove(self, indices: List) -> None:
-        """
-        Remove the samples corresponding to indices
+        """Remove the samples corresponding to indices.
 
         Parameters
         ----------
         indices : int
             a list of integer indices to remove
+
         """
 
     @abstractmethod
     def key_objects(self) -> Tuple:
-        """
-        Return a tuple of the key objects necessary to re-create the Store
+        """Return a tuple of the key objects necessary to re-create the Store.
 
         Returns
         -------
         key_objects : tuple
             a tuple of key objects
+
         """
 
     @abstractmethod
     def load_from_key_objects(self, key_objects: Tuple) -> None:
-        """
-        Load the information from a tuple of key objects
+        """Load the information from a tuple of key objects.
 
         Parameters
         ----------
         key_objects : tuple
             a tuple of key objects
+
         """
 
     @abstractmethod
     def to_ram(self) -> None:
-        """
-        Transfer the data samples to RAM if they were previously stored as file paths
-        """
+        """Transfer the data samples to RAM if they were previously stored as file paths."""
 
     @abstractmethod
     def get_original_coordinates(self) -> np.ndarray:
-        """
-        Return the original coordinates array
+        """Return the original coordinates array.
 
         Returns
         -------
         np.ndarray
             an array that contains the coordinates of the data samples in original input data (video id, clip id,
             start frame)
+
         """
 
     @abstractmethod
     def create_subsample(self, indices: List, ssl_indices: List = None):
-        """
-        Create a new store that contains a subsample of the data
+        """Create a new store that contains a subsample of the data.
 
         Parameters
         ----------
@@ -103,51 +99,58 @@ class Store(ABC):  # +
             the indices to be included in the subsample
         ssl_indices : list, optional
             the indices to be included in the subsample without the annotation data
+
         """
 
     @classmethod
     @abstractmethod
     def get_file_ids(cls, *args, **kwargs) -> List:
-        """
-        Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        """Get a list of ids.
+
+        Process data parameters and return a list of ids of the videos that should
+        be processed by the `__init__` function.
+
+        Parameters
+        ----------
+        *args
+            positional arguments
+        **kwargs
+            keyword arguments
 
         Returns
         -------
         video_ids : list
             a list of video file ids
+
         """
 
     @classmethod
     def get_parameters(cls) -> List:
-        """
-        Generate a list of parameter names for the __init__ function
+        """Generate a list of parameter names for the `__init__` function.
 
         Returns
         -------
         parameter_names: list
             a list of necessary parameter names
-        """
 
+        """
         return inspect.getfullargspec(cls.__init__).args
 
     @classmethod
     def new(cls):
-        """
-        Create a new instance of the same class
+        """Create a new instance of the same class.
 
         Returns
         -------
         new_instance : Store
             a new instance of the same class
-        """
 
+        """
         return cls()
 
 
 class InputStore(Store):  # +
-    """
-    A class that generates model input data from video information and stores it
+    """A class that generates model input data from video information and stores it.
 
     Processes input video information and generates ordered arrays of data samples and corresponding unique
     original coordinates, as well as some meta objects.
@@ -174,7 +177,8 @@ class InputStore(Store):  # +
         *args,
         **kwargs
     ):
-        """
+        """Initialize a class instance.
+
         Parameters
         ----------
         video_order : list, optional
@@ -191,15 +195,14 @@ class InputStore(Store):  # +
             the path to the folder where pre-processed files are stored (not passed if creating from key objects)
         feature_extraction_pars : dict, optional
             a dictionary of feature extraction parameters (not passed if creating from key objects)
-        """
 
+        """
         if key_objects is not None:
             self.load_from_key_objects(key_objects)
 
     @abstractmethod
     def __getitem__(self, ind: int) -> Dict:
-        """
-        Return the sample corresponding to an index
+        """Return the sample corresponding to an index.
 
         Parameters
         ----------
@@ -210,12 +213,12 @@ class InputStore(Store):  # +
         -------
         sample : dict
             the corresponding sample (a dictionary of features)
+
         """
 
     @abstractmethod
     def get_video_id(self, coords: Tuple) -> str:
-        """
-        Get the video id from an element of original coordinates
+        """Get the video id from an element of original coordinates.
 
         Parameters
         ----------
@@ -226,12 +229,12 @@ class InputStore(Store):  # +
         -------
         video_id: str
             the id of the video that the coordinates point to
+
         """
 
     @abstractmethod
     def get_clip_id(self, coords: Tuple) -> str:
-        """
-        Get the clip id from an element of original coordinates
+        """Get the clip id from an element of original coordinates.
 
         Parameters
         ----------
@@ -242,12 +245,12 @@ class InputStore(Store):  # +
         -------
         clip_id : str
             the id of the clip that the coordinates point to
+
         """
 
     @abstractmethod
     def get_clip_length(self, video_id: str, clip_id: str) -> int:
-        """
-        Get the clip length from the id
+        """Get the clip length from the id.
 
         Parameters
         ----------
@@ -260,12 +263,12 @@ class InputStore(Store):  # +
         -------
         clip_length : int
             the length of the clip
+
         """
 
     @abstractmethod
-    def get_clip_start_end(self, coords: Tuple) -> Tuple[int, int]:
-        """
-        Get the clip start and end frames from an element of original coordinates
+    def get_clip_start_end(self, coords: Tuple) -> (int, int):
+        """Get the clip start and end frames from an element of original coordinates.
 
         Parameters
         ----------
@@ -278,12 +281,12 @@ class InputStore(Store):  # +
             the start frame of the clip that the coordinates point to
         end : int
             the end frame of the clip that the coordinates point to
+
         """
 
     @abstractmethod
     def get_clip_start(self, video_id: str, clip_id: str) -> int:
-        """
-        Get the clip start frame from the video id and the clip id
+        """Get the clip start frame from the video id and the clip id.
 
         Parameters
         ----------
@@ -296,14 +299,14 @@ class InputStore(Store):  # +
         -------
         clip_start : int
             the start frame of the clip
+
         """
 
     @abstractmethod
     def get_visibility(
         self, video_id: str, clip_id: str, start: int, end: int, score: float
     ) -> float:
-        """
-        Get the fraction of the frames in that have a visibility score better than a hard_threshold
+        """Get the fraction of the frames in that have a visibility score better than a hard_threshold.
 
         For example, in the case of keypoint data the visibility score can be the number of identified keypoints.
 
@@ -324,24 +327,24 @@ class InputStore(Store):  # +
         -------
         frac_visible: float
             the fraction of frames with visibility above the hard_threshold
+
         """
 
     @abstractmethod
     def get_annotation_objects(self) -> Dict:
-        """
-        Get a dictionary of objects necessary to create an AnnotationStore
+        """Get a dictionary of objects necessary to create an `BehaviorStore`.
 
         Returns
         -------
         annotation_objects : dict
-            a dictionary of objects to be passed to the AnnotationStore constructor where the keys are the names of
+            a dictionary of objects to be passed to the BehaviorStore constructor where the keys are the names of
             the objects
+
         """
 
     @abstractmethod
     def get_folder(self, video_id: str) -> str:
-        """
-        Get the input folder that the file with this video id was read from
+        """Get the input folder that the file with this video id was read from.
 
         Parameters
         ----------
@@ -352,11 +355,11 @@ class InputStore(Store):  # +
         -------
         folder : str
             the path to the directory that contains the input file associated with the video id
+
         """
 
     def get_clip_length_from_coords(self, coords: Tuple) -> int:
-        """
-        Get the length of a clip from an element of the original coordinates array
+        """Get the length of a clip from an element of the original coordinates array.
 
         Parameters
         ----------
@@ -367,41 +370,38 @@ class InputStore(Store):  # +
         -------
         clip_length : int
             the length of the clip
-        """
 
+        """
         v_id = self.get_video_id(coords)
         clip_id = self.get_clip_id(coords)
         l = self.get_clip_length(v_id, clip_id)
         return l
 
     def get_folder_order(self) -> List:
-        """
-        Get a list of folders corresponding to the data samples
+        """Get a list of folders corresponding to the data samples.
 
         Returns
         -------
         folder_order : list
             a list of string folder basenames corresponding to the data samples (e.g. 'folder2'
             if the corresponding file was read from '/path/to/folder1/folder2')
-        """
 
+        """
         return [os.path.basename(self.get_folder(x)) for x in self.get_video_id_order()]
 
     def get_video_id_order(self) -> List:
-        """
-        Get a list of video ids corresponding to the data samples
+        """Get a list of video ids corresponding to the data samples.
 
         Returns
         -------
         video_id_order : list
             a list of string names of the video ids corresponding to the data samples
-        """
 
+        """
         return [self.get_video_id(x) for x in self.get_original_coordinates()]
 
     def get_tag(self, idx: int) -> Union[int, None]:
-        """
-        Return a tag object corresponding to an index
+        """Return a tag object corresponding to an index.
 
         Tags can carry meta information (like annotator id) and are accepted by models that require
         that information and by metrics (some metrics have options for averaging over the tags).
@@ -416,13 +416,12 @@ class InputStore(Store):  # +
         -------
         tag : int
             the tag index
-        """
 
+        """
         return None
 
     def get_indices(self, tag: int) -> List:
-        """
-        Get a list of indices of samples that have a specific meta tag
+        """Get a list of indices of samples that have a specific meta tag.
 
         Parameters
         ----------
@@ -433,26 +432,24 @@ class InputStore(Store):  # +
         -------
         indices : list
             a list of indices that meet the criteria
-        """
 
+        """
         return list(range(len(self)))
 
     def get_tags(self) -> List:
-        """
-        Get a list of all meta tags
+        """Get a list of all meta tags.
 
         Returns
         -------
         tags: List
             a list of unique meta tag values
-        """
 
+        """
         return [None]
 
 
-class AnnotationStore(Store):
-    """
-    A class that generates annotation from video information and stores it
+class BehaviorStore(Store):
+    """A class that generates annotation from video information and stores it.
 
     Processes input video information and generates ordered arrays of annotation samples and corresponding unique
     original coordinates, as well as some meta objects.
@@ -460,7 +457,7 @@ class AnnotationStore(Store):
     Each video and each clip inside the video has a unique id (video_id and clip_id, correspondingly).
     The original coordinates object contains information about the video_id, clip_id and start time of the
     samples in the original input data.
-    An AnnotationStore has to be fully defined with a tuple of key objects.
+    An BehaviorStore has to be fully defined with a tuple of key objects.
     The annotation array can be accessed with integer indices.
     The samples can be stored as a torch.Tensor in RAM or as an array of file paths to be loaded on runtime.
     When no arguments are passed a blank class instance should be created that can later be filled with
@@ -469,7 +466,7 @@ class AnnotationStore(Store):
 
     required_objects = []
     """
-    A list of string names of the objects required from the input store
+    A list of string names of the objects required from the input store.
     """
 
     @abstractmethod
@@ -481,7 +478,8 @@ class AnnotationStore(Store):
         *args,
         **kwargs
     ):
-        """
+        """Initialize the class instance.
+
         Parameters
         ----------
         video_order : list, optional
@@ -491,15 +489,14 @@ class AnnotationStore(Store):
         annotation_path : str | set, optional
             the path or the set of paths to the folder where the annotation files are stored (not passed if creating
             from key objects)
-        """
 
+        """
         if key_objects is not None:
             self.load_from_key_objects(key_objects)
 
     @abstractmethod
     def __getitem__(self, ind: int) -> torch.Tensor:
-        """
-        Return the annotation of the sample corresponding to an index
+        """Return the annotation of the sample corresponding to an index.
 
         Parameters
         ----------
@@ -510,12 +507,12 @@ class AnnotationStore(Store):
         -------
         sample : torch.Tensor
             the corresponding annotation tensor
+
         """
 
     @abstractmethod
     def get_len(self, return_unlabeled: bool) -> int:
-        """
-        Get the length of the subsample of labeled/unlabeled data
+        """Get the length of the subsample of labeled/unlabeled data.
 
         If return_unlabeled is True, the index is in the subsample of unlabeled data, if False in labeled
         and if return_unlabeled is None the index is already correct
@@ -529,14 +526,14 @@ class AnnotationStore(Store):
         -------
         length : int
             the length of the subsample
+
         """
 
     @abstractmethod
     def count_classes(
         self, frac: bool = False, zeros: bool = False, bouts: bool = False
     ) -> Dict:
-        """
-        Get a dictionary with class-wise frame counts
+        """Get a dictionary with class-wise frame counts.
 
         Parameters
         ----------
@@ -556,41 +553,40 @@ class AnnotationStore(Store):
 
     @abstractmethod
     def behaviors_dict(self) -> Dict:
-        """
-        Get a dictionary of class names
+        """Get a dictionary of class names.
 
         Returns
         -------
         behavior_dictionary: dict
             a dictionary with class indices as keys and class names as values
+
         """
 
     @abstractmethod
     def annotation_class(self) -> str:
-        """
-        Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon)
+        """Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon).
 
         Returns
         -------
         annotation_class : str
             the type of annotation
+
         """
 
     @abstractmethod
     def size(self) -> int:
-        """
-        Get the total number of frames in the data
+        """Get the total number of frames in the data.
 
         Returns
         -------
         size : int
             the total number of frames
+
         """
 
     @abstractmethod
     def filtered_indices(self) -> List:
-        """
-        Return the indices of the samples that should be removed
+        """Return the indices of the samples that should be removed.
 
         Choosing the indices can be based on any kind of filering defined in the __init__ function by the data
         parameters
@@ -599,23 +595,23 @@ class AnnotationStore(Store):
         -------
         indices_to_remove : list
             a list of integer indices that should be removed
+
         """
 
     @abstractmethod
     def set_pseudo_labels(self, labels: torch.Tensor) -> None:
-        """
-        Set pseudo labels to the unlabeled data
+        """Set pseudo labels to the unlabeled data.
 
         Parameters
         ----------
         labels : torch.Tensor
             a tensor of pseudo-labels for the unlabeled data
+
         """
 
 
 class PoseInputStore(InputStore):
-    """
-    A subclass of InputStore for pose estimation data
+    """A subclass of `InputStore` for pose estimation data.
 
     Contains methods used by pose estimation feature extractors.
     All methods receive a data dictionary as input. This dictionary is the same as what is passed to the
@@ -627,8 +623,7 @@ class PoseInputStore(InputStore):
     def get_likelihood(
         self, data_dict: Dict, clip_id: str, bodypart: str
     ) -> Union[np.ndarray, None]:
-        """
-        Get the likelihood values
+        """Get the likelihood values.
 
         Parameters
         ----------
@@ -643,14 +638,13 @@ class PoseInputStore(InputStore):
         -------
         likelihoods: np.ndarrray | None
             `None` if the dataset doesn't have likelihoods or an array of shape (#timestamps)
-        """
 
+        """
         return None
 
     @abstractmethod
     def get_coords(self, data_dict: Dict, clip_id: str, bodypart: str) -> np.ndarray:
-        """
-        Get the coordinates array of a specific body part in a specific clip
+        """Get the coordinates array of a specific body part in a specific clip.
 
         Parameters
         ----------
@@ -665,23 +659,23 @@ class PoseInputStore(InputStore):
         -------
         coords : np.ndarray
             the coordinates array of shape (#timesteps, #coordinates)
+
         """
 
     @abstractmethod
     def get_bodyparts(self) -> List:
-        """
-        Get a list of bodypart names
+        """Get a list of bodypart names.
 
         Returns
         -------
         bodyparts : list
             a list of string or integer body part names
+
         """
 
     @abstractmethod
     def get_n_frames(self, data_dict: Dict, clip_id: str) -> int:
-        """
-        Get the length of the clip
+        """Get the length of the clip.
 
         Parameters
         ----------
@@ -694,4 +688,5 @@ class PoseInputStore(InputStore):
         -------
         n_frames : int
             the length of the clip
+
         """

@@ -1,34 +1,86 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
 """
 Here all option dictionaries are stored
 """
 
-from torch.optim import Adam, SGD
-from dlc2action.data.input_store import *
-from dlc2action.data.annotation_store import *
-from dlc2action.feature_extraction import *
-from dlc2action.transformer import *
+from dlc2action.data.annotation_store import (
+    BorisStore,
+    CalMS21Store,
+    CSVActionSegStore,
+    DLC2ActionStore,
+    EmptyBehaviorStore,
+    SIMBAStore,
+)
+from dlc2action.data.input_store import (
+    CalMS21InputStore,
+    DLCTrackletStore,
+    DLCTrackStore,
+    LoadedFeaturesInputStore,
+    Numpy3DInputStore,
+    SIMBAInputStore,
+)
+from dlc2action.feature_extraction import HeatmapExtractor, KinematicExtractor
 from dlc2action.loss import MS_TCN_Loss
-from dlc2action.model.mlp import MLP
-from dlc2action.model.c2f_tcn import C2F_TCN
-from dlc2action.model.asformer import ASFormer
-from dlc2action.model.transformer import Transformer
-from dlc2action.model.edtcn import EDTCN
-from dlc2action.ssl.contrastive import *
-from dlc2action.ssl.masked import *
-from dlc2action.ssl.segment_order import *
-from dlc2action.ssl.tcc import TCCSSL
-from dlc2action.metric.metrics import *
+from dlc2action.metric.metrics import (
+    F1,
+    PR_AUC,
+    Accuracy,
+    Count,
+    EditDistance,
+    Fbeta,
+    mAP,
+    Precision,
+    Recall,
+    SegmentalF1,
+    SegmentalFbeta,
+    SegmentalPrecision,
+    SegmentalRecall,
+    SemiSegmentalF1,
+    SemiSegmentalPR_AUC,
+    SemiSegmentalPrecision,
+    SemiSegmentalRecall,
+)
 
+
+# from dlc2action.model.c3d import C3D_A, C3D_A_MS
+from dlc2action.model.asformer import ASFormer
+from dlc2action.model.c2f_tcn import C2F_TCN
+from dlc2action.model.c2f_transformer import C2F_Transformer
+from dlc2action.model.edtcn import EDTCN
+from dlc2action.model.mlp import MLP
+from dlc2action.model.ms_tcn import MS_TCN3  # ,MS_TCN_P
+from dlc2action.model.transformer import Transformer
+from dlc2action.model.motionbert import MotionBERT
+
+from dlc2action.ssl.contrastive import (
+    ContrastiveMaskedSSL,
+    ContrastiveRegressionSSL,
+    ContrastiveSSL,
+    PairwiseMaskedSSL,
+    PairwiseSSL,
+)
+from dlc2action.ssl.masked import (
+    MaskedFeaturesSSL_FC,
+    MaskedFramesSSL_FC,
+    MaskedKinematicSSL_FC,
+    MaskedFeaturesSSL_TCN,
+    MaskedFramesSSL_TCN,
+    MaskedKinematicSSL_TCN,
+)
+from dlc2action.ssl.segment_order import OrderSSL, ReverseSSL
+from dlc2action.ssl.tcc import TCCSSL
+from dlc2action.transformer.heatmap import HeatmapTransformer
+from dlc2action.transformer.kinematic import KinematicTransformer
+from torch.optim import SGD, Adam
 
 input_stores = {
     "dlc_tracklet": DLCTrackletStore,
     "dlc_track": DLCTrackStore,
-    "pku-mmd": PKUMMDInputStore,
     "calms21": CalMS21InputStore,
     "np_3d": Numpy3DInputStore,
     "features": LoadedFeaturesInputStore,
@@ -36,16 +88,15 @@ input_stores = {
 }
 
 annotation_stores = {
-    "dlc": DLCAnnotationStore,
-    "pku-mmd": PKUMMDAnnotationStore,
-    "boris": BorisAnnotationStore,
-    "none": EmptyAnnotationStore,
-    "calms21": CalMS21AnnotationStore,
-    "csv": CSVAnnotationStore,
-    "simba": SIMBAAnnotationStore,
+    "dlc": DLC2ActionStore,
+    "boris": BorisStore,
+    "none": EmptyBehaviorStore,
+    "calms21": CalMS21Store,
+    "csv": CSVActionSegStore,
+    "simba": SIMBAStore,
 }
 
-feature_extractors = {"kinematic": KinematicExtractor}
+feature_extractors = {"kinematic": KinematicExtractor, "heatmap": HeatmapExtractor}
 
 ssl_constructors = {
     "masked_features": MaskedFeaturesSSL_FC,
@@ -61,7 +112,21 @@ ssl_constructors = {
     "tcc": TCCSSL,
 }
 
-transformers = {"kinematic": KinematicTransformer}
+ssl_constructors_tcn = {
+    "masked_features": MaskedFeaturesSSL_TCN,
+    "masked_joints": MaskedKinematicSSL_TCN,
+    "masked_frames": MaskedFramesSSL_TCN,
+    "contrastive": ContrastiveSSL,
+    "pairwise": PairwiseSSL,
+    "contrastive_masked": ContrastiveMaskedSSL,
+    "pairwise_masked": PairwiseMaskedSSL,
+    "reverse": ReverseSSL,
+    "order": OrderSSL,
+    "contrastive_regression": ContrastiveRegressionSSL,
+    "tcc": TCCSSL,
+}
+
+transformers = {"kinematic": KinematicTransformer, "heatmap": HeatmapTransformer}
 
 losses = {
     "ms_tcn": MS_TCN_Loss,
@@ -76,7 +141,6 @@ metrics = {
     "f1": F1,
     "recall": Recall,
     "count": Count,
-    # "mAP": mAP,
     "segmental_precision": SegmentalPrecision,
     "segmental_recall": SegmentalRecall,
     "segmental_f1": SegmentalF1,
@@ -88,7 +152,7 @@ metrics = {
     "semisegmental_f1": SemiSegmentalF1,
     "pr-auc": PR_AUC,
     "semisegmental_pr-auc": SemiSegmentalPR_AUC,
-    "mAP": PKU_mAP,
+    "mAP": mAP,
 }
 metrics_minimize = [
     "edit_distance"
@@ -98,12 +162,16 @@ metrics_no_direction = ["count"]  # metrics that do not indicate prediction qual
 optimizers = {"Adam": Adam, "SGD": SGD}
 
 models = {
+    "ms_tcn3": MS_TCN3,
     "asformer": ASFormer,
     "mlp": MLP,
     "c2f_tcn": C2F_TCN,
     "edtcn": EDTCN,
     "transformer": Transformer,
+    "c2f_transformer": C2F_Transformer,
+    "motionbert": MotionBERT,
 }
+
 
 blanks = [
     "dataset_inverse_weights",
@@ -188,8 +256,16 @@ basic_parameters = {
             "channel_masking_rate",
         ],
         "c2f_tcn": ["num_f_maps", "feature_dim"],
+        "c2f_transformer": ["num_f_maps", "feature_dim", "heads"],
         "edtcn": ["kernel_size", "mid_channels"],
         "mlp": ["f_maps_list", "dropout_rates"],
+        "ms_tcn3": [
+            "num_layers_PG",
+            "num_layers_R",
+            "num_R",
+            "num_f_maps",
+            "shared_weights",
+        ],
         "transformer": ["num_f_maps", "N", "heads", "num_pool"],
     },
     "general": [
@@ -202,7 +278,6 @@ basic_parameters = {
     ],
     "losses": {
         "ms_tcn": ["focal", "gamma", "alpha"],
-        "clip": ["focal", "gamma", "alpha", "fix_text"],
     },
     "metrics": {
         "f1": ["average", "ignored_classes", "threshold_value"],
@@ -264,20 +339,43 @@ model_hyperparameters = {
         "model/num_f_maps": ("categorical", [32, 64, 128]),
         "model/num_layers": ("int", 5, 10),
         "model/channel_masking_rate": ("float", 0.2, 0.4),
-        "general/len_segment": ("categorical", [64, 128]),
+        "general/len_segment": ("categorical", [256, 512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
     },
     "c2f_tcn": {
         "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
         "losses/ms_tcn/focal": ("categorical", [True, False]),
         "training/temporal_subsampling_size": ("float", 0.75, 1),
         "model/num_f_maps": ("int_log", 32, 128),
-        "general/len_segment": ("categorical", [512, 1024]),
+        "general/len_segment": ("categorical", [512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
+    },
+    "c2f_transformer": {
+        "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
+        "losses/ms_tcn/focal": ("categorical", [True, False]),
+        "training/temporal_subsampling_size": ("float", 0.75, 1),
+        "model/num_f_maps": ("categorical", [32, 64, 128]),
+        "model/heads": ("categorical", [1, 2, 4, 8]),
+        "general/len_segment": ("categorical", [512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
     },
     "edtcn": {
         "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
         "losses/ms_tcn/focal": ("categorical", [True, False]),
         "training/temporal_subsampling_size": ("float", 0.75, 1),
-        "general/len_segment": ("categorical", [128, 256, 512]),
+        "general/len_segment": ("categorical", [256, 512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
+    },
+    "ms_tcn3": {
+        "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
+        "losses/ms_tcn/focal": ("categorical", [True, False]),
+        "training/temporal_subsampling_size": ("float", 0.75, 1),
+        "model/num_layers_PG": ("int", 5, 20),
+        "model/shared_weights": ("categorical", [True, False]),
+        "model/num_layers_R": ("int", 5, 10),
+        "model/num_f_maps": ("int_log", 32, 128),
+        "general/len_segment": ("categorical", [256, 512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
     },
     "transformer": {
         "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
@@ -287,12 +385,32 @@ model_hyperparameters = {
         "model/heads": ("categorical", [1, 2, 4, 8]),
         "model/num_pool": ("int", 0, 4),
         "model/add_batchnorm": ("categorical", [True, False]),
-        "general/len_segment": ("categorical", [64, 128]),
+        "general/len_segment": ("categorical", [256, 512, 1024, 2048]),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
     },
     "mlp": {
         "losses/ms_tcn/alpha": ("float_log", 1e-5, 1e-2),
         "losses/ms_tcn/focal": ("categorical", [True, False]),
         "training/temporal_subsampling_size": ("float", 0.75, 1),
         "model/dropout_rates": ("float", 0.3, 0.6),
+        "losses/ms_tcn/weights": ("categorical", [None, "dataset_inverse_weights"]),
     },
+}
+
+dlc2action_colormaps = {
+    "default": [
+    "#BBBBBF",
+    "#99d096",
+    "#ea678e",
+    "#f9ba5b",
+    "#639cd2",
+    "#F1F285",
+    "#B16CB9",
+    "#ABE3CE",
+    "#DD98A5",
+    "#C44F53",
+    "#BCC144",
+    "#D6AF85",
+    "#BBBBBF",
+]
 }

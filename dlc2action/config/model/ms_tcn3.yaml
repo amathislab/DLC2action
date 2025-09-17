@@ -1,0 +1,16 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
+num_layers_PG: 15 # int; number of layers in prediction generation stage
+num_layers_R: 12 # int; number of layers in refinement stages
+num_R: 3 # int; number of refinement stages
+num_f_maps: 128 # int; number of feature maps
+dims: 'dataset_features' # int; number of input features (set to 'dataset_features' to get the number from BehaviorDataset.dataset_features())
+dropout_rate: 0.5 # float; dropout rate
+skip_connections_refinement: true # bool; if True, skip connections are added to the refinement stages
+block_size_prediction: 5 # int; if not null, skip connections are added to the prediction generation stage with this interval
+shared_weights: false # bool; if true, weights are shared across refinement stages
+block_size_refinement: 0 # int; if not 0, skip connections are added to the refinement stage with this interval

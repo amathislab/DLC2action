@@ -1,2 +1,8 @@
-treba_files: false, # bool; if true, treba feature files are used instead of the regular ones
-task_n: 1, # [1, 2]; the task index to load
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
+treba_files: false # bool; if true, treba feature files are used instead of the regular ones
+task_n: 1 # [1, 2]; the task index to load

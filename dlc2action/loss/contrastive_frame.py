@@ -1,25 +1,37 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-from torch import nn
 import torch
+from torch import nn
 
 
-class _ContrastiveRegressionLoss(nn.Module):
+class ContrastiveRegressionLoss(nn.Module):
+    """Contrastive regression loss for the pairwise SSL module."""
+
     def __init__(self, temperature: float, distance: str, break_factor: int):
+        """Initialize the loss.
+
+        Parameters
+        ----------
+        temperature : float
+            the temperature parameter
+        distance : {'cosine', 'l1', 'l2'}
+            the distance metric (cosine similarity or euclidean distance)
+        break_factor : int
+            the break factor for the length dimension
+
+        """
         self.temp = temperature
         self.distance = distance
         self.break_factor = break_factor
         assert distance in ["l1", "l2", "cosine"]
-        super(_ContrastiveRegressionLoss, self).__init__()
+        super(ContrastiveRegressionLoss, self).__init__()
 
     def _get_distance_matrix(self, tensor1, tensor2) -> torch.Tensor:
-        """
-        Shape (#features, #frames)
-        """
-
+        # Shape (#features, #frames)
         if self.distance == "l1":
             dist = torch.cdist(tensor1.T, tensor2.T, p=1)
         elif self.distance == "l2":
@@ -31,19 +43,19 @@ class _ContrastiveRegressionLoss(nn.Module):
         return dist
 
     def forward(self, tensor1, tensor2):
-        """
-        Compute the loss
+        """Compute the loss.
 
         Parameters
         ----------
         tensor1, tensor2 : torch.Tensor
             tensor of shape `(#batch, #features, #frames)`
+
         Returns
         -------
         loss : float
             the loss value
-        """
 
+        """
         loss = 0
         if self.break_factor is not None:
             B, C, T = tensor1.shape

@@ -1,115 +1,108 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Specific implementations of `dlc2action.data.base_store.AnnotationStore` are defined here
-"""
+"""Specific implementations of `dlc2action.data.base_store.BehaviorStore` are defined here."""
 
-from dlc2action.data.base_store import AnnotationStore
-from dlc2action.utils import strip_suffix
-from typing import Dict, List, Tuple, Set, Union
-import torch
-import numpy as np
-import pickle
-from copy import copy
-from collections import Counter
-from collections.abc import Iterable
-from abc import abstractmethod
 import os
-from tqdm import tqdm
-import pandas as pd
-from collections import defaultdict
+import pickle
+from abc import abstractmethod
+from collections import Counter, defaultdict
+from collections.abc import Iterable
+from copy import copy
 from itertools import combinations
+from typing import Dict, List, Set, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import torch
+from tqdm import tqdm
+from dlc2action.data.base_store import BehaviorStore
+from dlc2action.utils import strip_suffix
 
 
-class EmptyAnnotationStore(AnnotationStore):
+class EmptyBehaviorStore(BehaviorStore):
+    """An empty annotation store that does not contain any data samples."""
+
     def __init__(
         self, video_order: List = None, key_objects: Tuple = None, *args, **kwargs
     ):
-        """
+        """Initialize the store.
+
         Parameters
         ----------
         video_order : list, optional
             a list of video ids that should be processed in the same order (not passed if creating from key objects)
         key_objects : tuple, optional
             a tuple of key objects
-        """
 
+        """
         pass
 
     def __len__(self) -> int:
-        """
-        Get the number of available samples
+        """Get the number of available samples.
 
         Returns
         -------
         length : int
             the number of available samples
-        """
 
+        """
         return 0
 
     def remove(self, indices: List) -> None:
-        """
-        Remove the samples corresponding to indices
+        """Remove the samples corresponding to indices.
 
         Parameters
         ----------
         indices : int
             a list of integer indices to remove
-        """
 
+        """
         pass
 
     def key_objects(self) -> Tuple:
-        """
-        Return a tuple of the key objects necessary to re-create the Store
+        """Return a tuple of the key objects necessary to re-create the Store.
 
         Returns
         -------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         return ()
 
     def load_from_key_objects(self, key_objects: Tuple) -> None:
-        """
-        Load the information from a tuple of key objects
+        """Load the information from a tuple of key objects.
 
         Parameters
         ----------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         pass
 
     def to_ram(self) -> None:
-        """
-        Transfer the data samples to RAM if they were previously stored as file paths
-        """
-
+        """Transfer the data samples to RAM if they were previously stored as file paths."""
         pass
 
     def get_original_coordinates(self) -> np.ndarray:
-        """
-        Return the original coordinates array
+        """Return the original coordinates array.
 
         Returns
         -------
         np.ndarray
             an array that contains the coordinates of the data samples in original input data (video id, clip id,
             start frame)
-        """
 
+        """
         return None
 
     def create_subsample(self, indices: List, ssl_indices: List = None):
-        """
-        Create a new store that contains a subsample of the data
+        """Create a new store that contains a subsample of the data.
 
         Parameters
         ----------
@@ -117,27 +110,27 @@ class EmptyAnnotationStore(AnnotationStore):
             the indices to be included in the subsample
         ssl_indices : list, optional
             the indices to be included in the subsample without the annotation data
-        """
 
+        """
         return self.new()
 
     @classmethod
     def get_file_ids(cls, *args, **kwargs) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Returns
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         return None
 
     def __getitem__(self, ind: int) -> torch.Tensor:
-        """
-        Return the annotation of the sample corresponding to an index
+        """Return the annotation of the sample corresponding to an index.
 
         Parameters
         ----------
@@ -148,16 +141,15 @@ class EmptyAnnotationStore(AnnotationStore):
         -------
         sample : torch.Tensor
             the corresponding annotation tensor
-        """
 
+        """
         return torch.tensor(float("nan"))
 
     def get_len(self, return_unlabeled: bool) -> int:
-        """
-        Get the length of the subsample of labeled/unlabeled data
+        """Get the length of the subsample of labeled/unlabeled data.
 
-        If return_unlabeled is True, the index is in the subsample of unlabeled data, if False in labeled
-        and if return_unlabeled is None the index is already correct
+        If `return_unlabele`d is `True`, the index is in the subsample of unlabeled data, if `False` in labeled
+        and if `return_unlabeled` if `None` the index is already correct.
 
         Parameters
         ----------
@@ -168,16 +160,15 @@ class EmptyAnnotationStore(AnnotationStore):
         -------
         length : int
             the length of the subsample
-        """
 
+        """
         return None
 
     def get_idx(self, index: int, return_unlabeled: bool) -> int:
-        """
-        Convert from an index in the subsample of labeled/unlabeled data to an index in the full array
+        """Convert from an index in the subsample of labeled/unlabeled data to an index in the full array.
 
-        If return_unlabeled is True, the index is in the subsample of unlabeled data, if False in labeled
-        and if return_unlabeled is None the index is already correct
+        If `return_unlabeled` is `True`, the index is in the subsample of unlabeled data, if `False` in labeled
+        and if `return_unlabeled` is `None` the index is already correct.
 
         Parameters
         ----------
@@ -190,96 +181,93 @@ class EmptyAnnotationStore(AnnotationStore):
         -------
         corrected_index : int
             the index in the full dataset
-        """
 
+        """
         return index
 
     def count_classes(
-        self, frac: bool = False, zeros: bool = False, bouts: bool = False
+        self, perc: bool = False, zeros: bool = False, bouts: bool = False
     ) -> Dict:
-        """
-        Get a dictionary with class-wise frame counts
+        """Get a dictionary with class-wise frame counts.
 
         Parameters
         ----------
-        frac : bool, default False
-            if True, a fraction of the total frame count is returned
+        perc : bool, default False
+            if `True`, a fraction of the total frame count is returned
+        zeros : bool, default False
+            if `True` and annotation is not exclusive, zero counts are returned
+        bouts : bool, default False
+            if `True`, instead of frame counts segment counts are returned
 
         Returns
         -------
         count_dictionary : dict
             a dictionary with class indices as keys and frame counts as values
-        """
 
+        """
         return {}
 
     def behaviors_dict(self) -> Dict:
-        """
-        Get a dictionary of class names
+        """Get a dictionary of class names.
 
         Returns
         -------
         behavior_dictionary: dict
             a dictionary with class indices as keys and class names as values
-        """
 
+        """
         return {}
 
     def annotation_class(self) -> str:
-        """
-        Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon)
+        """Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon).
 
         Returns
         -------
         annotation_class : str
             the type of annotation
-        """
 
+        """
         return "none"
 
     def size(self) -> int:
-        """
-        Get the total number of frames in the data
+        """Get the total number of frames in the data.
 
         Returns
         -------
         size : int
             the total number of frames
-        """
 
+        """
         return None
 
     def filtered_indices(self) -> List:
-        """
-        Return the indices of the samples that should be removed
+        """Return the indices of the samples that should be removed.
 
-        Choosing the indices can be based on any kind of filering defined in the __init__ function by the data
-        parameters
+        Choosing the indices can be based on any kind of filering defined in the `__init__` function by the data
+        parameters.
 
         Returns
         -------
         indices_to_remove : list
             a list of integer indices that should be removed
-        """
 
+        """
         return []
 
     def set_pseudo_labels(self, labels: torch.Tensor) -> None:
-        """
-        Set pseudo labels to the unlabeled data
+        """Set pseudo labels to the unlabeled data.
 
         Parameters
         ----------
         labels : torch.Tensor
             a tensor of pseudo-labels for the unlabeled data
-        """
 
+        """
         pass
 
 
-class ActionSegmentationStore(AnnotationStore):  # +
-    """
-    A general realization of an annotation store for action segmentation tasks
+class ActionSegmentationStore(BehaviorStore):  # +
+    """A general realization of an annotation store for action segmentation tasks.
 
     Assumes the following file structure:
     ```
@@ -320,7 +308,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize the store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -369,7 +358,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
         min_frames_action : int, default 0
             the minimum length of an action (shorter actions are not annotated)
         key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
+            the key objects to load the BehaviorStore from
         visibility_min_score : float, default 5
             the minimum visibility score for visibility filtering
         visibility_min_frac : float, default 0.7
@@ -380,16 +369,18 @@ class ActionSegmentationStore(AnnotationStore):  # +
             mark hard negatives as 2 instead of 0 or 1, for loss functions that have options for hard negative processing
         interactive : bool, default False
             if `True`, annotation is assigned to pairs of individuals
-        """
 
+        """
         super().__init__()
 
         if ignored_clips is None:
             ignored_clips = []
         self.len_segment = int(len_segment)
         self.exclusive = exclusive
+        if isinstance(overlap, str):
+            overlap = float(overlap)
         if overlap < 1:
-            overlap = overlap * len_segment
+            overlap = overlap * self.len_segment
         self.overlap = int(overlap)
         self.video_order = video_order
         self.min_frames = min_frames
@@ -461,15 +452,14 @@ class ActionSegmentationStore(AnnotationStore):  # +
         return len(self.data)
 
     def remove(self, indices: List) -> None:
-        """
-        Remove the samples corresponding to indices
+        """Remove the samples corresponding to indices.
 
         Parameters
         ----------
         indices : list
             a list of integer indices to remove
-        """
 
+        """
         if len(indices) > 0:
             mask = np.ones(len(self.data))
             mask[indices] = 0
@@ -478,15 +468,14 @@ class ActionSegmentationStore(AnnotationStore):  # +
             self.original_coordinates = self.original_coordinates[mask]
 
     def key_objects(self) -> Tuple:
-        """
-        Return a tuple of the key objects necessary to re-create the Store
+        """Return a tuple of the key objects necessary to re-create the Store.
 
         Returns
         -------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         return (
             self.original_coordinates,
             self.data,
@@ -498,15 +487,14 @@ class ActionSegmentationStore(AnnotationStore):  # +
         )
 
     def load_from_key_objects(self, key_objects: Tuple) -> None:
-        """
-        Load the information from a tuple of key objects
+        """Load the information from a tuple of key objects.
 
         Parameters
         ----------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         (
             self.original_coordinates,
             self.data,
@@ -519,26 +507,22 @@ class ActionSegmentationStore(AnnotationStore):  # +
         self.labeled_indices, self.unlabeled_indices = self._compute_labeled()
 
     def to_ram(self) -> None:
-        """
-        Transfer the data samples to RAM if they were previously stored as file paths
-        """
-
+        """Transfer the data samples to RAM if they were previously stored as file paths."""
         pass
 
     def get_original_coordinates(self) -> np.ndarray:
-        """
-        Return the video_indices array
+        """Return the `video_indices` array.
 
         Returns
         -------
         original_coordinates : numpy.ndarray
             an array that contains the coordinates of the data samples in original input data
+
         """
         return self.original_coordinates
 
     def create_subsample(self, indices: List, ssl_indices: List = None):
-        """
-        Create a new store that contains a subsample of the data
+        """Create a new store that contains a subsample of the data.
 
         Parameters
         ----------
@@ -546,8 +530,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
             the indices to be included in the subsample
         ssl_indices : list, optional
             the indices to be included in the subsample without the annotation data
-        """
 
+        """
         if ssl_indices is None:
             ssl_indices = []
         data = copy(self.data)
@@ -566,11 +550,10 @@ class ActionSegmentationStore(AnnotationStore):  # +
         return new
 
     def get_len(self, return_unlabeled: bool) -> int:
-        """
-        Get the length of the subsample of labeled/unlabeled data
+        """Get the length of the subsample of labeled/unlabeled data.
 
         If return_unlabeled is True, the index is in the subsample of unlabeled data, if False in labeled
-        and if return_unlabeled is None the index is already correct
+        and if return_unlabeled is None the index is already correct.
 
         Parameters
         ----------
@@ -581,8 +564,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
         -------
         length : int
             the length of the subsample
-        """
 
+        """
         if self.data is None:
             raise RuntimeError("The annotation store data has not been initialized!")
         elif return_unlabeled is None:
@@ -593,8 +576,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
             return len(self.labeled_indices)
 
     def get_indices(self, return_unlabeled: bool) -> List:
-        """
-        Get a list of indices of samples in the labeled/unlabeled subset
+        """Get a list of indices of samples in the labeled/unlabeled subset.
 
         Parameters
         ----------
@@ -606,15 +588,14 @@ class ActionSegmentationStore(AnnotationStore):  # +
         -------
         indices : list
             a list of indices that meet the criteria
-        """
 
+        """
         return list(range(len(self.data)))
 
     def count_classes(
         self, perc: bool = False, zeros: bool = False, bouts: bool = False
     ) -> Dict:
-        """
-        Get a dictionary with class-wise frame counts
+        """Get a dictionary with class-wise frame counts.
 
         Parameters
         ----------
@@ -629,8 +610,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
         -------
         count_dictionary : dict
             a dictionary with class indices as keys and frame counts as values
-        """
 
+        """
         if bouts:
             if self.overlap != 0:
                 data = {}
@@ -693,19 +674,17 @@ class ActionSegmentationStore(AnnotationStore):  # +
         for i in self.behaviors_dict():
             if i not in count_dictionary:
                 count_dictionary[i] = 0
-        return count_dictionary
+        return {int(k): v for k, v in count_dictionary.items()}
 
     def behaviors_dict(self) -> Dict:
-        """
-        Get a dictionary of class names
+        """Get a dictionary of class names.
 
         Returns
         -------
         behavior_dictionary: dict
             a dictionary with class indices as keys and class names as values
-        """
 
-        # if self.behaviors is None
+        """
         if self.exclusive and "other" not in self.behaviors:
             d = {i + 1: b for i, b in enumerate(self.behaviors)}
             d[0] = "other"
@@ -714,57 +693,53 @@ class ActionSegmentationStore(AnnotationStore):  # +
         return d
 
     def annotation_class(self) -> str:
-        """
-        Get the type of annotation ('exclusive_classification', 'nonexclusive_classification')
+        """Get the type of annotation ('exclusive_classification', 'nonexclusive_classification').
 
         Returns
         -------
         annotation_class : str
             the type of annotation
-        """
 
+        """
         if self.exclusive:
             return "exclusive_classification"
         else:
             return "nonexclusive_classification"
 
     def size(self) -> int:
-        """
-        Get the total number of frames in the data
+        """Get the total number of frames in the data.
 
         Returns
         -------
         size : int
             the total number of frames
-        """
 
+        """
         return self.data.shape[0] * self.data.shape[-1]
 
     def filtered_indices(self) -> List:
-        """
-        Return the indices of the samples that should be removed
+        """Return the indices of the samples that should be removed.
 
-        Choosing the indices can be based on any kind of filering defined in the __init__ function by the data
-        parameters
+        Choosing the indices can be based on any kind of filering defined in the `__init__` function by the data
+        parameters.
 
         Returns
         -------
         indices_to_remove : list
             a list of integer indices that should be removed
-        """
 
+        """
         return self.filtered
 
     def set_pseudo_labels(self, labels: torch.Tensor) -> None:
-        """
-        Set pseudo labels to the unlabeled data
+        """Set pseudo labels to the unlabeled data.
 
         Parameters
         ----------
         labels : torch.Tensor
             a tensor of pseudo-labels for the unlabeled data
-        """
 
+        """
         self.data[self.unlabeled_indices] = labels
 
     @classmethod
@@ -775,9 +750,10 @@ class ActionSegmentationStore(AnnotationStore):  # +
         *args,
         **kwargs,
     ) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -790,8 +766,8 @@ class ActionSegmentationStore(AnnotationStore):  # +
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         lists = [annotation_path, annotation_suffix]
         for i in range(len(lists)):
             iterable = isinstance(lists[i], Iterable) * (not isinstance(lists[i], str))
@@ -813,10 +789,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
     def _set_behaviors(
         self, behaviors: List, ignored_classes: List, behavior_file: str
     ):
-        """
-        Get a list of behaviors that should be annotated from behavior parameters
-        """
-
+        """Get a list of behaviors that should be annotated from behavior parameters."""
         if behaviors is not None:
             for b in ignored_classes:
                 if b in behaviors:
@@ -824,10 +797,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
         self.behaviors = behaviors
 
     def _compute_labeled(self) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Get the indices of labeled (annotated) and unlabeled samples
-        """
-
+        """Get the indices of labeled (annotated) and unlabeled samples."""
         if self.data is not None and len(self.data) > 0:
             unlabeled = torch.sum(self.data != -100, dim=1) == 0
             labeled_indices = torch.where(~unlabeled)[0]
@@ -837,12 +807,10 @@ class ActionSegmentationStore(AnnotationStore):  # +
         return labeled_indices, unlabeled_indices
 
     def _generate_annotation(self, times: Dict, name: str) -> Dict:
-        """
-        Process a loaded annotation file to generate a training labels dictionary
-        """
-
+        """Process a loaded annotation file to generate a training labels dictionary."""
         annotation = {}
         if self.behaviors is None and times is not None:
+            self.update_behaviors = True
             behaviors = set()
             for d in times.values():
                 behaviors.update([k for k, v in d.items()])
@@ -853,8 +821,6 @@ class ActionSegmentationStore(AnnotationStore):  # +
                 and not x.startswith("negative")
                 and not x.startswith("unknown")
             ]
-        elif self.behaviors is None and times is None:
-            raise ValueError("Cannot generate annotqtion without behavior information!")
         beh_inv = {v: k for k, v in self.behaviors_dict().items()}
         # if there is no annotation file, generate empty annotation
         if self.interactive:
@@ -885,11 +851,13 @@ class ActionSegmentationStore(AnnotationStore):  # +
                     if self.exclusive:
                         if not self.filter_background:
                             value = beh_inv.get("other", 0)
-                            labels = np.ones(v_len, dtype=np.compat.long) * value
+                            labels = np.ones(v_len, dtype=int) * value
                         else:
-                            labels = -100 * np.ones(v_len, dtype=np.compat.long)
+                            labels = -100 * np.ones(v_len, dtype=int)
                     else:
-                        labels = np.zeros((len(self.behaviors), v_len), dtype=float)
+                        labels = np.zeros(
+                            (len(self.behaviors), v_len), dtype=np.float32
+                        )
                     cat_new = []
                     for cat in times[ind].keys():
                         if cat.startswith("unknown"):
@@ -914,7 +882,12 @@ class ActionSegmentationStore(AnnotationStore):  # +
                             unknown = True
                         if cat in self.correction:
                             cat = self.correction[cat]
-                        for start, end, amb in cat_times:
+                        for entry in cat_times:
+                            if len(entry) == 3:
+                                start, end, amb = entry
+                            else:
+                                start, end = entry
+                                amb = 0
                             if end > self._get_max_frame(name, ind) + 1:
                                 end = self._get_max_frame(name, ind) + 1
                             if amb != 0:
@@ -979,20 +952,17 @@ class ActionSegmentationStore(AnnotationStore):  # +
             if go_on:
                 v_len = max_frame - min_frame + 1
                 if self.exclusive:
-                    annotation[
-                        os.path.basename(name) + "---" + str(ind)
-                    ] = -100 * np.ones(v_len, dtype=np.compat.long)
+                    annotation[os.path.basename(name) + "---" + str(ind)] = (
+                        -100 * np.ones(v_len, dtype=int)
+                    )
                 else:
-                    annotation[
-                        os.path.basename(name) + "---" + str(ind)
-                    ] = -100 * np.ones((len(self.behaviors), v_len), dtype=float)
+                    annotation[os.path.basename(name) + "---" + str(ind)] = (
+                        -100 * np.ones((len(self.behaviors), v_len), dtype=np.float32)
+                    )
         return annotation
 
     def _make_trimmed_annotations(self, annotations_dict: Dict) -> torch.Tensor:
-        """
-        Cut a label dictionary into overlapping pieces of equal length
-        """
-
+        """Cut a label dictionary into overlapping pieces of equal length."""
         labels = []
         self.original_coordinates = []
         masked_all = []
@@ -1050,10 +1020,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
 
     @classmethod
     def _get_file_paths(cls, annotation_path: Union[str, Set]) -> List:
-        """
-        Get a list of relevant files
-        """
-
+        """Get a list of relevant files."""
         file_paths = []
         if annotation_path is not None:
             if isinstance(annotation_path, str):
@@ -1063,10 +1030,7 @@ class ActionSegmentationStore(AnnotationStore):  # +
         return file_paths
 
     def _get_max_frame(self, video_id: str, clip_id: str):
-        """
-        Get the end frame of a clip in a video
-        """
-
+        """Get the end frame of a clip in a video."""
         if clip_id in self.max_frames[video_id]:
             return self.max_frames[video_id][clip_id]
         else:
@@ -1075,11 +1039,12 @@ class ActionSegmentationStore(AnnotationStore):  # +
             )
 
     def _get_min_frame(self, video_id, clip_id):
-        """
-        Get the start frame of a clip in a video
-        """
-
+        """Get the start frame of a clip in a video."""
         if clip_id in self.min_frames[video_id]:
+            if clip_id not in self.min_frames[video_id]:
+                raise KeyError(
+                    f"Check your individual names, video_id : {video_id}, clip_id : {clip_id}"
+                )
             return self.min_frames[video_id][clip_id]
         else:
             return max(
@@ -1088,21 +1053,14 @@ class ActionSegmentationStore(AnnotationStore):  # +
 
     @abstractmethod
     def _load_data(self) -> torch.Tensor:
-        """
-        Load behavior annotation and generate annotation prompts
-        """
+        """Load behavior annotation and generate annotation prompts."""
 
 
-class FileAnnotationStore(ActionSegmentationStore):  # +
-    """
-    A generalized implementation of `ActionSegmentationStore` for datasets where one file corresponds to one video
-    """
+class FileActionSegStore(ActionSegmentationStore):  # +
+    """A generalized implementation of `ActionSegmentationStore` for datasets where one file corresponds to one video."""
 
     def _generate_max_min_frames(self, times: Dict, video_id: str) -> None:
-        """
-        Generate `max_frames` and `min_frames` objects in case they were not passed from an `InputStore`
-        """
-
+        """Generate `max_frames` and `min_frames` objects in case they were not passed from an `InputStore`."""
         if video_id in self.max_frames:
             return
         for ind, cat_dict in times.items():
@@ -1116,10 +1074,7 @@ class FileAnnotationStore(ActionSegmentationStore):  # +
             self.min_frames[video_id][ind] = min(mins)
 
     def _load_data(self) -> torch.Tensor:
-        """
-        Load behavior annotation and generate annotation prompts
-        """
-
+        """Load behavior annotation and generate annotation prompts."""
         if self.video_order is None:
             return None
 
@@ -1162,8 +1117,7 @@ class FileAnnotationStore(ActionSegmentationStore):  # +
 
     @abstractmethod
     def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
+        """Load the annotation from filename.
 
         Parameters
         ----------
@@ -1175,19 +1129,15 @@ class FileAnnotationStore(ActionSegmentationStore):  # +
         times : dict
             a nested dictionary where first-level keys are clip ids, second-level keys are categories and values are
             lists of (start, end, ambiguity status) lists
+
         """
 
 
-class SequenceAnnotationStore(ActionSegmentationStore):  # +
-    """
-    A generalized implementation of `ActionSegmentationStore` for datasets where one file corresponds to multiple videos
-    """
+class SequenceActionSegStore(ActionSegmentationStore):  # +
+    """A generalized implementation of `ActionSegmentationStore` for datasets where one file corresponds to multiple videos."""
 
     def _generate_max_min_frames(self, times: Dict) -> None:
-        """
-        Generate `max_frames` and `min_frames` objects in case they were not passed from an `InputStore`
-        """
-
+        """Generate `max_frames` and `min_frames` objects in case they were not passed from an `InputStore`."""
         for video_id in times:
             if video_id in self.max_frames:
                 continue
@@ -1209,9 +1159,10 @@ class SequenceAnnotationStore(ActionSegmentationStore):  # +
         *args,
         **kwargs,
     ) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -1224,8 +1175,8 @@ class SequenceAnnotationStore(ActionSegmentationStore):  # +
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         file_paths = []
         if annotation_path is not None:
             if isinstance(annotation_path, str):
@@ -1241,10 +1192,7 @@ class SequenceAnnotationStore(ActionSegmentationStore):  # +
         return ids
 
     def _load_data(self) -> torch.Tensor:
-        """
-        Load behavior annotation and generate annotation prompts
-        """
-
+        """Load behavior annotation and generate annotation prompts."""
         if self.video_order is None:
             return None
 
@@ -1287,8 +1235,7 @@ class SequenceAnnotationStore(ActionSegmentationStore):  # +
 
     @abstractmethod
     def _open_sequences(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
+        """Load the annotation from filename.
 
         Parameters
         ----------
@@ -1301,12 +1248,12 @@ class SequenceAnnotationStore(ActionSegmentationStore):  # +
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids,
             third-level keys are categories and values are
             lists of (start, end, ambiguity status) lists
+
         """
 
 
-class DLCAnnotationStore(FileAnnotationStore):  # +
-    """
-    DLC type annotation data
+class DLC2ActionStore(FileActionSegStore):  # +
+    """DLC type annotation data.
 
     The files are either the DLC2Action GUI output or a pickled dictionary of the following structure:
         - nested dictionary,
@@ -1315,7 +1262,6 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
         - values are lists of intervals,
         - the lists of intervals is formatted as `[start_frame, end_frame, ambiguity]`,
         - ambiguity is 1 if the action is ambiguous (!!at the moment DLC2Action will IGNORE those intervals!!) or 0 if it isn't.
-
     A minimum working example of such a dictionary is:
     ```
     {
@@ -1326,17 +1272,13 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
         }
     }
     ```
-
     Here there are two animals: `"ind0"` and `"ind1"`, and two actions: running and eating.
     The only annotated action is eating for `"ind1"` between frames 60 and 70.
-
     If you generate those files manually, run this code for a sanity check:
     ```
     import pickle
-
     with open("/path/to/annotation.pickle", "rb") as f:
     data = pickle.load(f)
-
     for ind, ind_dict in data.items():
         print(f'individual {ind}:')
         for label, intervals in ind_dict.items():
@@ -1344,7 +1286,6 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
                 if ambiguity == 0:
                     print(f'  from {start} to {end} frame: {label}')
     ```
-
     Assumes the following file structure:
     ```
     annotation_path
@@ -1355,10 +1296,7 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
     """
 
     def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from `filename`
-        """
-
+        """Load the annotation from `filename`."""
         try:
             with open(filename, "rb") as f:
                 data = pickle.load(f)
@@ -1382,9 +1320,8 @@ class DLCAnnotationStore(FileAnnotationStore):  # +
             return None
 
 
-class BorisAnnotationStore(FileAnnotationStore):  # +
-    """
-    BORIS type annotation data
+class BorisStore(FileActionSegStore):  # +
+    """BORIS type annotation data.
 
     Assumes the following file structure:
     ```
@@ -1426,7 +1363,8 @@ class BorisAnnotationStore(FileAnnotationStore):  # +
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -1473,7 +1411,7 @@ class BorisAnnotationStore(FileAnnotationStore):  # +
         min_frames_action : int, default 0
             the minimum length of an action (shorter actions are not annotated)
         key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
+            the key objects to load the BehaviorStore from
         visibility_min_score : float, default 5
             the minimum visibility score for visibility filtering
         visibility_min_frac : float, default 0.7
@@ -1482,12 +1420,14 @@ class BorisAnnotationStore(FileAnnotationStore):  # +
             a masked value dictionary (for active learning simulation experiments)
         use_hard_negatives : bool, default False
             mark hard negatives as 2 instead of 0 or 1, for loss functions that have options for hard negative processing
+        default_agent_name : str, default 'ind0'
+            the name of the default agent
         interactive : bool, default False
             if `True`, annotation is assigned to pairs of individuals
         ignored_clips : set, optional
             a set of clip ids to ignore
-        """
 
+        """
         self.default_agent_name = default_agent_name
         super().__init__(
             video_order=video_order,
@@ -1518,10 +1458,7 @@ class BorisAnnotationStore(FileAnnotationStore):  # +
         )
 
     def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
-        """
-
+        """Load the annotation from filename."""
         try:
             df = pd.read_csv(filename, header=15)
             fps = df.iloc[0]["FPS"]
@@ -1549,197 +1486,8 @@ class BorisAnnotationStore(FileAnnotationStore):  # +
             return None
 
 
-class PKUMMDAnnotationStore(FileAnnotationStore):  # +
-    """
-    PKU-MMD annotation data
-
-    Assumes the following file structure:
-    ```
-    annotation_path
-    ├── 0364-L.txt
-    ...
-    └── 0144-M.txt
-    ```
-    """
-
-    def __init__(
-        self,
-        video_order: List = None,
-        min_frames: Dict = None,
-        max_frames: Dict = None,
-        visibility: Dict = None,
-        exclusive: bool = True,
-        len_segment: int = 128,
-        overlap: int = 0,
-        ignored_classes: Set = None,
-        annotation_path: Union[Set, str] = None,
-        behavior_file: str = None,
-        correction: Dict = None,
-        frame_limit: int = 0,
-        filter_annotated: bool = False,
-        filter_background: bool = False,
-        error_class: str = None,
-        min_frames_action: int = None,
-        key_objects: Tuple = None,
-        visibility_min_score: float = 0,
-        visibility_min_frac: float = 0,
-        mask: Dict = None,
-        use_hard_negatives: bool = False,
-        interactive: bool = False,
-        ignored_clips: Set = None,
-        *args,
-        **kwargs,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        video_order : list, optional
-            a list of video ids that should be processed in the same order (not passed if creating from key objects)
-        min_frames : dict, optional
-            a nested dictionary where first-level keys are video ids, second-level keys are clip ids and values are
-            clip start frames (not passed if creating from key objects)
-        max_frames : dict, optional
-            a nested dictionary where first-level keys are video ids, second-level keys are clip ids and values are
-            clip end frames (not passed if creating from key objects)
-        visibility : dict, optional
-            a nested dictionary where first-level keys are video ids, second-level keys are clip ids and values are
-            visibility score arrays (not passed if creating from key objects or if irrelevant for the dataset)
-        exclusive : bool, default True
-            if True, the annotation is single-label; if False, multi-label
-        len_segment : int, default 128
-            the length of the segments in which the data should be cut (in frames)
-        overlap : int, default 0
-            the length of the overlap between neighboring segments (in frames)
-        ignored_classes : set, optional
-            the list of behaviors from the behaviors list or file to not annotate
-        annotation_path : str | set, optional
-            the path or the set of paths to the folder where the annotation files are stored (not passed if creating
-            from key objects)
-        behavior_file : str, optional
-            the path to an .xlsx behavior file (not passed if creating from key objects or if irrelevant for the dataset)
-        correction : dict, optional
-            a dictionary of corrections for the labels (e.g. {'sleping': 'sleeping', 'calm locomotion': 'locomotion'},
-            can be used to correct for variations in naming or to merge several labels in one
-        frame_limit : int, default 0
-            the smallest possible length of a clip (shorter clips are discarded)
-        filter_annotated : bool, default False
-            if True, the samples that do not have any labels will be filtered
-        filter_background : bool, default False
-            if True, only the unlabeled frames that are close to annotated frames will be labeled as background
-        error_class : str, optional
-            the name of the error class (the annotations that intersect with this label will be discarded)
-        min_frames_action : int, default 0
-            the minimum length of an action (shorter actions are not annotated)
-        key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
-        visibility_min_score : float, default 5
-            the minimum visibility score for visibility filtering
-        visibility_min_frac : float, default 0.7
-            the minimum fraction of visible frames for visibility filtering
-        mask : dict, optional
-            a masked value dictionary (for active learning simulation experiments)
-        use_hard_negatives : bool, default False
-            mark hard negatives as 2 instead of 0 or 1, for loss functions that have options for hard negative processing
-        interactive : bool, default False
-            if `True`, annotation is assigned to pairs of individuals
-        ignored_clips : set, optional
-            a set of clip ids to ignore
-        """
-
-        super().__init__(
-            video_order=video_order,
-            min_frames=min_frames,
-            max_frames=max_frames,
-            visibility=visibility,
-            exclusive=exclusive,
-            len_segment=len_segment,
-            overlap=overlap,
-            behaviors=None,
-            ignored_classes=ignored_classes,
-            annotation_suffix={".txt"},
-            annotation_path=annotation_path,
-            behavior_file=behavior_file,
-            correction=correction,
-            frame_limit=frame_limit,
-            filter_annotated=filter_annotated,
-            filter_background=filter_background,
-            error_class=error_class,
-            min_frames_action=min_frames_action,
-            key_objects=key_objects,
-            visibility_min_score=visibility_min_score,
-            visibility_min_frac=visibility_min_frac,
-            mask=mask,
-            use_hard_negatives=use_hard_negatives,
-            interactive=interactive,
-            ignored_clips=ignored_clips,
-            *args,
-            **kwargs,
-        )
-
-    @classmethod
-    def get_file_ids(cls, annotation_path: Union[str, Set], *args, **kwargs) -> List:
-        """
-        Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
-
-        Parameters
-        ----------
-        annotation_path : str | set
-            the path or the set of paths to the folder where the annotation files are stored
-
-        Returns
-        -------
-        video_ids : list
-            a list of video file ids
-        """
-
-        if isinstance(annotation_path, str):
-            annotation_path = [annotation_path]
-        files = []
-        for folder in annotation_path:
-            files += [
-                os.path.basename(x)[:-4] for x in os.listdir(folder) if x[-4:] == ".txt"
-            ]
-        files = sorted(files, key=lambda x: os.path.basename(x))
-        return files
-
-    def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
-        """
-
-        if self.interactive:
-            agent_name = "0+1"
-        else:
-            agent_name = "0"
-        times = {agent_name: defaultdict(lambda: [])}
-        with open(filename) as f:
-            for line in f.readlines():
-                label, start, end, *_ = map(int, line.split(","))
-                times[agent_name][self.all_behaviors[int(label) - 1]].append(
-                    [start, end, 0]
-                )
-        return times
-
-    def _set_behaviors(
-        self, behaviors: List, ignored_classes: List, behavior_file: str
-    ):
-        """
-        Get a list of behaviors that should be annotated from behavior parameters
-        """
-
-        if behavior_file is not None:
-            behaviors = list(pd.read_excel(behavior_file)["Action"])
-        self.all_behaviors = copy(behaviors)
-        for b in ignored_classes:
-            if b in behaviors:
-                behaviors.remove(b)
-        self.behaviors = behaviors
-
-
-class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
-    """
-    CalMS21 annotation data
+class CalMS21Store(SequenceActionSegStore):  # +
+    """CalMS21 annotation data.
 
     Use the `'random:test_from_name:{name}'` and `'val-from-name:{val_name}:test-from-name:{test_name}'`
     partitioning methods with `'train'`, `'test'` and `'unlabeled'` names to separate into train, test and validation
@@ -1773,7 +1521,7 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize the store.
 
         Parameters
         ----------
@@ -1799,11 +1547,11 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
             the path or the set of paths to the folder where the annotation files are stored (not passed if creating
             from key objects)
         key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
+            the key objects to load the BehaviorStore from
         treba_files : bool, default False
             if `True`, TREBA feature files will be loaded
-        """
 
+        """
         self.task_n = int(task_n)
         self.include_task1 = include_task1
         if self.task_n == 1:
@@ -1854,9 +1602,10 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
         *args,
         **kwargs,
     ) -> Iterable:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -1879,8 +1628,8 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         task_n = int(task_n)
         if task_n == 1:
             include_task1 = False
@@ -1894,13 +1643,12 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
         if include_task1:
             files.append(f"calms21_task1_train{postfix}.npy")
         filenames = set(files)
-        return SequenceAnnotationStore.get_file_ids(
+        return SequenceActionSegStore.get_file_ids(
             filenames, annotation_path=annotation_path
         )
 
     def _open_sequences(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
+        """Load the annotation from filename.
 
         Parameters
         ----------
@@ -1913,8 +1661,8 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids,
             third-level keys are categories and values are
             lists of (start, end, ambiguity status) lists
-        """
 
+        """
         data_dict = np.load(filename, allow_pickle=True).item()
         data = {}
         result = {}
@@ -2006,9 +1754,8 @@ class CalMS21AnnotationStore(SequenceAnnotationStore):  # +
         return result
 
 
-class CSVAnnotationStore(FileAnnotationStore):  # +
-    """
-    CSV type annotation data
+class CSVActionSegStore(FileActionSegStore):  # +
+    """CSV type annotation data.
 
     Assumes that files are saved as .csv tables with at least the following columns:
     - from / start : start of action,
@@ -2056,7 +1803,8 @@ class CSVAnnotationStore(FileAnnotationStore):  # +
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize the store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -2103,7 +1851,7 @@ class CSVAnnotationStore(FileAnnotationStore):  # +
         min_frames_action : int, default 0
             the minimum length of an action (shorter actions are not annotated)
         key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
+            the key objects to load the BehaviorStore from
         visibility_min_score : float, default 5
             the minimum visibility score for visibility filtering
         visibility_min_frac : float, default 0.7
@@ -2116,8 +1864,8 @@ class CSVAnnotationStore(FileAnnotationStore):  # +
             the separator in the csv files
         fps : int, default 30
             frames per second in the videos
-        """
 
+        """
         self.default_agent_name = default_agent_name
         self.separator = separator
         self.fps = fps
@@ -2148,11 +1896,7 @@ class CSVAnnotationStore(FileAnnotationStore):  # +
         )
 
     def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from `filename`
-        """
-
-        # try:
+        """Load the annotation from `filename`."""
         data = pd.read_csv(filename, sep=self.separator)
         data.columns = list(map(lambda x: x.lower(), data.columns))
         starts, ends, actions = None, None, None
@@ -2186,9 +1930,8 @@ class CSVAnnotationStore(FileAnnotationStore):  # +
         return times
 
 
-class SIMBAAnnotationStore(FileAnnotationStore):  # +
-    """
-    SIMBA paper format data
+class SIMBAStore(FileActionSegStore):  # +
+    """SIMBA paper format data.
 
     Assumes the following file structure:
     ```
@@ -2225,7 +1968,8 @@ class SIMBAAnnotationStore(FileAnnotationStore):  # +
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize the annotation store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -2269,7 +2013,7 @@ class SIMBAAnnotationStore(FileAnnotationStore):  # +
         min_frames_action : int, default 0
             the minimum length of an action (shorter actions are not annotated)
         key_objects : tuple, optional
-            the key objects to load the AnnotationStore from
+            the key objects to load the BehaviorStore from
         visibility_min_score : float, default 5
             the minimum visibility score for visibility filtering
         visibility_min_frac : float, default 0.7
@@ -2281,8 +2025,8 @@ class SIMBAAnnotationStore(FileAnnotationStore):  # +
         annotation_suffix : str | set, optional
             the suffix or the set of suffices such that the annotation files are named {video_id}{annotation_suffix}
             (not passed if creating from key objects or if irrelevant for the dataset)
-        """
 
+        """
         super().__init__(
             video_order=video_order,
             min_frames=min_frames,
@@ -2312,8 +2056,7 @@ class SIMBAAnnotationStore(FileAnnotationStore):  # +
         )
 
     def _open_annotations(self, filename: str) -> Dict:
-        """
-        Load the annotation from filename
+        """Load the annotation from filename.
 
         Parameters
         ----------
@@ -2325,14 +2068,14 @@ class SIMBAAnnotationStore(FileAnnotationStore):  # +
         times : dict
             a nested dictionary where first-level keys are clip ids, second-level keys are categories and values are
             lists of (start, end, ambiguity status) lists
-        """
 
+        """
         data = pd.read_csv(filename)
         columns = [x for x in data.columns if x.split("_")[-1] == "x"]
         animals = sorted(set([x.split("_")[-2] for x in columns]))
         if len(animals) > 2:
             raise ValueError(
-                "SIMBAAnnotationStore is only implemented for files with 1 or 2 animals!"
+                "SIMBAStore is only implemented for files with 1 or 2 animals!"
             )
         if len(animals) == 1:
             ind = animals[0]

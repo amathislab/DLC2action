@@ -1,25 +1,21 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Implementations of `dlc2action.ssl.base_ssl.SSLConstructor` of the `'contrastive'` type
-"""
+"""Implementations of `dlc2action.ssl.base_ssl.SSLConstructor` of the `'contrastive'` type."""
 
 from typing import Dict, Tuple, Union
 from dlc2action.ssl.base_ssl import SSLConstructor
-from dlc2action.loss.contrastive import _NTXent, _CircleLoss, _TripletLoss
-from dlc2action.loss.contrastive_frame import _ContrastiveRegressionLoss
-from dlc2action.ssl.modules import _FeatureExtractorTCN, _MFeatureExtractorTCN, _FC
-import torch
-from torch import nn
+from dlc2action.loss.contrastive import *
+from dlc2action.loss.contrastive_frame import *
+from dlc2action.ssl.modules import *
 from copy import deepcopy
 
 
 class ContrastiveSSL(SSLConstructor):
-    """
-    A contrastive SSL class with an NT-Xent loss
+    """A contrastive SSL class with an NT-Xent loss.
 
     The SSL input and target are left empty (the SSL input is generated as an augmentation of the
     input sample at runtime).
@@ -34,7 +30,8 @@ class ContrastiveSSL(SSLConstructor):
         ssl_features: int = 128,
         tau: float = 1,
     ) -> None:
-        """
+        """Initialize the SSL constructor.
+
         Parameters
         ----------
         num_f_maps : torch.Size
@@ -45,10 +42,10 @@ class ContrastiveSSL(SSLConstructor):
             the final number of features per clip
         tau : float, default 1
             the tau parameter of NT-Xent loss
-        """
 
+        """
         super().__init__()
-        self.loss_function = _NTXent(tau)
+        self.loss_function = NTXent(tau)
         if len(num_f_maps) > 1:
             raise RuntimeError(
                 "The ContrastiveSSL constructor expects the input data to be 2-dimensional; "
@@ -66,33 +63,23 @@ class ContrastiveSSL(SSLConstructor):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Empty transformation."""
         return torch.tensor(float("nan")), torch.tensor(float("nan"))
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        NT-Xent loss
-        """
-
+        """NT-Xent loss."""
         features1, features2 = predicted
         loss = self.loss_function(features1, features2)
         return loss
 
     def construct_module(self) -> Union[nn.Module, None]:
-        """
-        Clip-wise feature TCN extractor
-        """
-
-        module = _FeatureExtractorTCN(**self.pars)
+        """Clip-wise feature TCN extractor."""
+        module = FeatureExtractorTCN(**self.pars)
         return module
 
 
 class ContrastiveMaskedSSL(SSLConstructor):
-    """
-    A contrastive masked SSL class with an NT-Xent loss
+    """A contrastive masked SSL class with an NT-Xent loss.
 
     A few frames in the middle of each segment are masked and then the output of the second layer of
     feature extraction for the segment is used to predict the output of the first layer for the missing frames.
@@ -110,7 +97,8 @@ class ContrastiveMaskedSSL(SSLConstructor):
         tau: float = 1,
         num_masked: int = 10,
     ) -> None:
-        """
+        """Initialize the ContrastiveMaskedSSL class.
+
         Parameters
         ----------
         num_f_maps : torch.Size
@@ -121,12 +109,14 @@ class ContrastiveMaskedSSL(SSLConstructor):
             the final number of features per clip
         tau : float, default 1
             the tau parameter of NT-Xent loss
-        """
+        num_masked : int, default 10
+            number of frames to be masked in the middle of each segment
 
+        """
         super().__init__()
         self.start = int(len_segment // 2 - num_masked // 2)
         self.end = int(len_segment // 2 + num_masked // 2)
-        self.loss_function = _NTXent(tau)
+        self.loss_function = NTXent(tau)
         if len(num_f_maps) > 1:
             raise RuntimeError(
                 "The ContrastiveMaskedSSL constructor expects the input data to be 2-dimensional; "
@@ -145,10 +135,7 @@ class ContrastiveMaskedSSL(SSLConstructor):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Mask the input data."""
         data = deepcopy(sample_data)
         for key in data.keys():
             data[key][:, self.start : self.end] = 0
@@ -156,26 +143,19 @@ class ContrastiveMaskedSSL(SSLConstructor):
         # return torch.tensor(float("nan")), torch.tensor(float("nan"))
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        NT-Xent loss
-        """
-
+        """NT-Xent loss."""
         features, ssl_features = predicted
         loss = self.loss_function(features, ssl_features)
         return loss
 
     def construct_module(self) -> Union[nn.Module, None]:
-        """
-        Clip-wise feature TCN extractor
-        """
-
-        module = _MFeatureExtractorTCN(**self.pars)
+        """Clip-wise feature TCN extractor."""
+        module = MFeatureExtractorTCN(**self.pars)
         return module
 
 
 class PairwiseSSL(SSLConstructor):
-    """
-    A pairwise SSL class with triplet or circle loss
+    """A pairwise SSL class with triplet or circle loss.
 
     The SSL input and target are left empty (the SSL input is generated as an augmentation of the
     input sample at runtime).
@@ -193,7 +173,8 @@ class PairwiseSSL(SSLConstructor):
         loss: str = "triplet",
         gamma: float = 1,
     ) -> None:
-        """
+        """Initialize the PairwiseSSL class.
+
         Parameters
         ----------
         num_f_maps : torch.Size
@@ -210,13 +191,13 @@ class PairwiseSSL(SSLConstructor):
             the loss function name
         gamma : float, default 1
             the gamma parameter of circle loss
-        """
 
+        """
         super().__init__()
         if loss == "triplet":
-            self.loss_function = _TripletLoss(margin=margin, distance=distance)
+            self.loss_function = TripletLoss(margin=margin, distance=distance)
         elif loss == "circle":
-            self.loss_function = _CircleLoss(
+            self.loss_function = CircleLoss(
                 margin=margin, gamma=gamma, distance=distance
             )
         else:
@@ -240,31 +221,29 @@ class PairwiseSSL(SSLConstructor):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Empty transformation."""
         return torch.tensor(float("nan")), torch.tensor(float("nan"))
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        Triplet or circle loss
-        """
-
+        """Triplet or circle loss."""
         features1, features2 = predicted
         loss = self.loss_function(features1, features2)
         return loss
 
     def construct_module(self) -> Union[nn.Module, None]:
-        """
-        Clip-wise feature TCN extractor
-        """
-
-        module = _FeatureExtractorTCN(**self.pars)
+        """Clip-wise feature TCN extractor."""
+        module = FeatureExtractorTCN(**self.pars)
         return module
 
 
 class PairwiseMaskedSSL(PairwiseSSL):
+    """A contrastive SSL class with triplet or circle loss and masked input.
+
+    A few frames in the middle of each segment are masked and then the output of the second layer of
+    feature extraction for the segment is used to predict the output of the first layer for the missing frames.
+    The SSL input and target are left empty (the SSL input is generated as an augmentation of the
+    input sample at runtime).
+    """
 
     type = "contrastive_2layers"
 
@@ -279,6 +258,28 @@ class PairwiseMaskedSSL(PairwiseSSL):
         gamma: float = 1,
         num_masked: int = 10,
     ) -> None:
+        """Initialize the PairwiseMaskedSSL class.
+
+        Parameters
+        ----------
+        num_f_maps : torch.Size
+            shape of feature extractor output
+        len_segment : int
+            length of segment in feature extractor output
+        ssl_features : int, default 128
+            final number of features per clip
+        margin : float, default 0
+            the margin parameter of triplet or circle loss
+        distance : {'cosine', 'euclidean'}
+            the distance calculation method for triplet or circle loss
+        loss : {'triplet', 'circle'}
+            the loss function name
+        gamma : float, default 1
+            the gamma parameter of circle loss
+        num_masked : int, default 10
+            number of masked frames
+
+        """
         super().__init__(
             num_f_maps, len_segment, ssl_features, margin, distance, loss, gamma
         )
@@ -303,25 +304,20 @@ class PairwiseMaskedSSL(PairwiseSSL):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Mask the input data."""
         data = deepcopy(sample_data)
         for key in data.keys():
             data[key][:, self.start : self.end] = 0
         return data, torch.tensor(float("nan"))
 
     def construct_module(self) -> Union[nn.Module, None]:
-        """
-        Clip-wise feature TCN extractor
-        """
-
-        module = _MFeatureExtractorTCN(**self.pars)
+        """Clip-wise feature TCN extractor."""
+        module = MFeatureExtractorTCN(**self.pars)
         return module
 
 
 class ContrastiveRegressionSSL(SSLConstructor):
+    """Contrastive SSL class with regression loss."""
 
     type = "contrastive"
 
@@ -334,13 +330,31 @@ class ContrastiveRegressionSSL(SSLConstructor):
         temperature: float = 1,
         break_factor: int = None,
     ) -> None:
+        """Initialize the ContrastiveRegressionSSL class.
+
+        Parameters
+        ----------
+        num_f_maps : torch.Size
+            shape of feature extractor output
+        num_features : int, default 128
+            final number of features per clip
+        num_ssl_layers : int, default 1
+            number of SSL layers
+        distance : {'cosine', 'euclidean'}
+            the distance calculation method for triplet or circle loss
+        temperature : float, default 1
+            the temperature parameter of contrastive loss
+        break_factor : int, default None
+            the break factor parameter of contrastive loss
+
+        """
         if len(num_f_maps) > 1:
             raise RuntimeError(
                 "The ContrastiveRegressionSSL constructor expects the input data to be 2-dimensional; "
                 f"got {len(num_f_maps) + 1} dimensions"
             )
         num_f_maps = int(num_f_maps[0])
-        self.loss_function = _ContrastiveRegressionLoss(
+        self.loss_function = ContrastiveRegressionLoss(
             temperature, distance, break_factor
         )
         self.pars = {
@@ -348,28 +362,20 @@ class ContrastiveRegressionSSL(SSLConstructor):
             "num_ssl_layers": num_ssl_layers,
             "num_ssl_f_maps": num_features,
             "dim": num_features,
+            "ssl_input": False,
         }
         super().__init__()
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        NT-Xent loss
-        """
-
+        """NT-Xent loss."""
         features1, features2 = predicted
         loss = self.loss_function(features1, features2)
         return loss
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Empty transformation."""
         return torch.tensor(float("nan")), torch.tensor(float("nan"))
 
     def construct_module(self) -> Union[nn.Module, None]:
-        """
-        Clip-wise feature TCN extractor
-        """
-
-        return _FC(**self.pars)
+        """Clip-wise feature TCN extractor."""
+        return FC(**self.pars)

@@ -1,23 +1,42 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-from dlc2action.task.task_dispatcher import TaskDispatcher
-import pytest
 import os
 import shutil
 
-path = os.path.join(os.path.dirname(__file__), "data")
+import pytest
+import yaml
+from dlc2action.task.task_dispatcher import TaskDispatcher
+
+with open("tests/config_test.yaml", "r") as f:
+    config = yaml.safe_load(f)
+crim_data_path = config["crim_data_path"]
 
 parameters = {
     "data": {
-        "data_path": path,
-        "annotation_path": path,
-        "annotation_suffix": {"2.csv"},
+        "data_path": crim_data_path,
+        "annotation_path": crim_data_path,
+        "behaviors": [
+            "approach",
+            "attack",
+            "copulation",
+            "chase",
+            "circle",
+            "drink",
+            "eat",
+            "clean",
+            "sniff",
+            "up",
+            "walk_away",
+        ],
+        "annotation_suffix": ".csv",
         "data_suffix": {
-            "2DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
+            ".csv",
         },
+        "use_features": False
     },
     "features": {
         "keys": ["coords", "intra_distance"],
@@ -28,9 +47,8 @@ parameters = {
         "feature_dim": 16,
     },
     "general": {
-        "ignored_clips": ["single"],
-        "data_type": "dlc_track",
-        "annotation_type": "csv",
+        "data_type": "simba",
+        "annotation_type": "simba",
         "model_name": "c2f_tcn",  # str; model name
         "num_classes": "dataset_classes",  # int; number of classes
         "exclusive": False,  # bool; if true, single-label classification is used; otherwise multi-label
@@ -42,7 +60,7 @@ parameters = {
         "feature_extraction": "kinematic",  # str; the feature extraction method (only 'kinematic' at the moment)
         "save_dataset": False,  # bool; if true, pre-computed datasets are saved in a pickled file for faster loading
         "only_load_annotated": True,
-        "overlap": 0.8
+        "overlap": 0.8,
     },
     "losses": {
         "ms_tcn": {
@@ -71,7 +89,7 @@ parameters = {
         "batch_size": 16,  # int; batch size
         "model_save_epochs": 5,  # int; interval for saving training checkpoints (the last epoch is always saved)
         "test_frac": 0.2,
-        "partition_method": "random"
+        "partition_method": "time:strict",
     },  # float; fraction of dataset to use as test
 }
 
@@ -83,13 +101,13 @@ def test_task_creation():
     Create a task with set parameters and check that all parameter groups get to the end destination.
     """
 
-    folder = os.path.join(path, "trimmed")
+    folder = os.path.join(crim_data_path, "trimmed")
     if os.path.exists(folder):
         shutil.rmtree(folder)
     task = TaskDispatcher(parameters)
     # check feature extraction parameters
     sample = task.task.train_dataloader.dataset[0]["input"]
-    assert len(sample.keys()) == 2
+    assert len(sample.keys()) == 4 # number of features x number of individuals
     # check model parameters
     model = task.task.model
     # check exclusive
@@ -118,7 +136,7 @@ def test_task_creation():
     assert task.task.model_save_epochs == 5
     # check test_frac
     assert task.task.test_dataloader is not None and len(task.task.test_dataloader) != 0
-    folder = os.path.join(path, "trimmed")
+
     if os.path.exists(folder):
         shutil.rmtree(folder)
 

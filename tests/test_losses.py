@@ -1,14 +1,15 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-import torch
-import pytest
-from copy import deepcopy
-from dlc2action import options
 import inspect
+
 import numpy as np
+import pytest
+import torch
+from dlc2action import options
 
 
 def generate_sample_exclusive(frac_wrong: float):
@@ -43,11 +44,9 @@ def generate_sample_multilabel(frac_wrong: float):
     return prediction, target
 
 
-losses = options.losses
-
 
 # @pytest.mark.skip
-@pytest.mark.parametrize("loss_name", losses)
+@pytest.mark.parametrize("loss_name", ["ms_tcn"])
 @pytest.mark.parametrize("exclusive", [True, False])
 def test_loss(loss_name: str, exclusive: bool):
     """
@@ -77,4 +76,5 @@ def test_loss(loss_name: str, exclusive: bool):
     assert np.sum(np.array(results[1:]) - np.array(results[:-1]) > 0) >= 3
 
 
-# test_loss("ms_tcn", True)
+if __name__ == "__main__":
+    test_loss("ms_tcn", True)

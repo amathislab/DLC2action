@@ -3,16 +3,12 @@
 #
 # This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
+# Incorporates code adapted from C2F-TCN by dipika-singhania
+# Original work Copyright (c) 2021 dipika-singhania
+# Source: https://github.com/dipika-singhania/C2F-TCN
+# Originally licensed under MIT License
+# Combined work licensed under GNU AGPLv3
 #
-# Adapted from C2F-TCN by dipika singhania
-# Adapted from https://github.com/dipika-singhania/C2F-TCN
-# Licensed under MIT License
-#
-""" C2F-TCN
-
-Adapted from https://github.com/dipika-singhania/C2F-TCN
-"""
-
 import torch.nn.functional as F
 import torch.nn as nn
 import torch
@@ -23,9 +19,9 @@ from typing import Union, List, Optional
 nonlinearity = partial(F.relu, inplace=True)
 
 
-class _double_conv(nn.Module):
+class double_conv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super(_double_conv, self).__init__()
+        super(double_conv, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv1d(in_ch, out_ch, kernel_size=5, padding=2),
             nn.BatchNorm1d(out_ch),
@@ -36,41 +32,45 @@ class _double_conv(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass."""
         x = self.conv(x)
         return x
 
 
-class _inconv(nn.Module):
+class inconv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super(_inconv, self).__init__()
-        self.conv = _double_conv(in_ch, out_ch)
+        super(inconv, self).__init__()
+        self.conv = double_conv(in_ch, out_ch)
 
     def forward(self, x):
+        """Forward pass."""
         x = self.conv(x)
         return x
 
 
-class _outconv(nn.Module):
+class outconv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super(_outconv, self).__init__()
+        super(outconv, self).__init__()
         self.conv = nn.Conv1d(in_ch, out_ch, kernel_size=1)
 
     def forward(self, x):
+        """Forward pass."""
         x = self.conv(x)
         return x
 
 
-class _down(nn.Module):
+class down(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super(_down, self).__init__()
-        self.max_pool_conv = nn.Sequential(nn.MaxPool1d(2), _double_conv(in_ch, out_ch))
+        super(down, self).__init__()
+        self.max_pool_conv = nn.Sequential(nn.MaxPool1d(2), double_conv(in_ch, out_ch))
 
     def forward(self, x):
+        """Forward pass."""
         x = self.max_pool_conv(x)
         return x
 
 
-class _up(nn.Module):
+class up(nn.Module):
     """Upscaling then double conv"""
 
     def __init__(self, in_channels, out_channels, bilinear=True):
@@ -83,9 +83,10 @@ class _up(nn.Module):
                 in_channels // 2, in_channels // 2, kernel_size=2, stride=2
             )
 
-        self.conv = _double_conv(in_channels, out_channels)
+        self.conv = double_conv(in_channels, out_channels)
 
     def forward(self, x1, x2):
+        """Forward pass."""
         x1 = self.up(x1)
         # input is CHW
         diff = torch.tensor([x2.size()[2] - x1.size()[2]])
@@ -95,9 +96,9 @@ class _up(nn.Module):
         return self.conv(x)
 
 
-class _TPPblock(nn.Module):
+class TPPblock(nn.Module):
     def __init__(self, in_channels):
-        super(_TPPblock, self).__init__()
+        super(TPPblock, self).__init__()
         self.pool1 = nn.MaxPool1d(kernel_size=2, stride=2)
         self.pool2 = nn.MaxPool1d(kernel_size=3, stride=3)
         self.pool3 = nn.MaxPool1d(kernel_size=5, stride=5)
@@ -108,6 +109,7 @@ class _TPPblock(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass."""
         self.in_channels, t = x.size(1), x.size(2)
         self.layer1 = F.interpolate(
             self.conv(self.pool1(x)), size=t, mode="linear", align_corners=True
@@ -127,14 +129,15 @@ class _TPPblock(nn.Module):
         return out
 
 
-class _Predictor(nn.Module):
+class Predictor(nn.Module):
     def __init__(self, dim, num_classes):
-        super(_Predictor, self).__init__()
+        super(Predictor, self).__init__()
         self.num_classes = num_classes
         self.conv_out_1 = nn.Conv1d(dim, dim, kernel_size=1)
         self.conv_out_2 = nn.Conv1d(dim, num_classes, kernel_size=1)
 
     def forward(self, x):
+        """Forward pass."""
         x = self.conv_out_1(x)
         x = F.relu(x)
         x = self.conv_out_2(x)
@@ -142,7 +145,7 @@ class _Predictor(nn.Module):
         return x
 
 
-class _C2F_TCN_Module(nn.Module):
+class C2F_TCN_Module(nn.Module):
     """
     Features are extracted at the last layer of decoder.
     """
@@ -150,29 +153,30 @@ class _C2F_TCN_Module(nn.Module):
     def __init__(self, n_channels, output_dim, num_f_maps, use_predictor=False):
         super().__init__()
         self.use_predictor = use_predictor
-        self.inc = _inconv(n_channels, num_f_maps * 2)
-        self.down1 = _down(num_f_maps * 2, num_f_maps * 2)
-        self.down2 = _down(num_f_maps * 2, num_f_maps * 2)
-        self.down3 = _down(num_f_maps * 2, num_f_maps)
-        self.down4 = _down(num_f_maps, num_f_maps)
-        self.down5 = _down(num_f_maps, num_f_maps)
-        self.down6 = _down(num_f_maps, num_f_maps)
-        self.up = _up(num_f_maps * 2 + 4, num_f_maps)
-        self.outcc0 = _outconv(num_f_maps, output_dim)
-        self.up0 = _up(num_f_maps * 2, num_f_maps)
-        self.outcc1 = _outconv(num_f_maps, output_dim)
-        self.up1 = _up(num_f_maps * 2, num_f_maps)
-        self.outcc2 = _outconv(num_f_maps, output_dim)
-        self.up2 = _up(num_f_maps * 3, num_f_maps)
-        self.outcc3 = _outconv(num_f_maps, output_dim)
-        self.up3 = _up(num_f_maps * 3, num_f_maps)
-        self.outcc4 = _outconv(num_f_maps, output_dim)
-        self.up4 = _up(num_f_maps * 3, num_f_maps)
-        self.outcc = _outconv(num_f_maps, output_dim)
-        self.tpp = _TPPblock(num_f_maps)
+        self.inc = inconv(n_channels, num_f_maps * 2)
+        self.down1 = down(num_f_maps * 2, num_f_maps * 2)
+        self.down2 = down(num_f_maps * 2, num_f_maps * 2)
+        self.down3 = down(num_f_maps * 2, num_f_maps)
+        self.down4 = down(num_f_maps, num_f_maps)
+        self.down5 = down(num_f_maps, num_f_maps)
+        self.down6 = down(num_f_maps, num_f_maps)
+        self.up = up(num_f_maps * 2 + 4, num_f_maps)
+        self.outcc0 = outconv(num_f_maps, output_dim)
+        self.up0 = up(num_f_maps * 2, num_f_maps)
+        self.outcc1 = outconv(num_f_maps, output_dim)
+        self.up1 = up(num_f_maps * 2, num_f_maps)
+        self.outcc2 = outconv(num_f_maps, output_dim)
+        self.up2 = up(num_f_maps * 3, num_f_maps)
+        self.outcc3 = outconv(num_f_maps, output_dim)
+        self.up3 = up(num_f_maps * 3, num_f_maps)
+        self.outcc4 = outconv(num_f_maps, output_dim)
+        self.up4 = up(num_f_maps * 3, num_f_maps)
+        self.outcc = outconv(num_f_maps, output_dim)
+        self.tpp = TPPblock(num_f_maps)
         self.weights = torch.nn.Parameter(torch.ones(6))
 
     def forward(self, x):
+        """Forward pass."""
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
@@ -223,14 +227,14 @@ class C2F_TCN(Model):
 
     def __init__(
         self,
-        num_classes,
-        input_dims,
-        num_f_maps=128,
-        feature_dim=None,
-        state_dict_path=None,
-        ssl_constructors=None,
-        ssl_types=None,
-        ssl_modules=None,
+        num_classes:int,
+        input_dims:dict,
+        num_f_maps:int=128,
+        feature_dim:int=None,
+        state_dict_path:str=None,
+        ssl_constructors:List=None,
+        ssl_types:List=None,
+        ssl_modules:List=None,
     ):
         input_dims = int(sum([s[0] for s in input_dims.values()]))
         if feature_dim is None:
@@ -246,17 +250,17 @@ class C2F_TCN(Model):
         self.params = {
             "output_dim": int(feature_dim),
             "n_channels": int(input_dims),
-            "num_f_maps": int(num_f_maps),
+            "num_f_maps": int(float(num_f_maps)),
             "use_predictor": self.f_shape is not None,
         }
         super().__init__(ssl_constructors, ssl_modules, ssl_types, state_dict_path)
 
     def _feature_extractor(self) -> Union[torch.nn.Module, List]:
-        return _C2F_TCN_Module(**self.params)
+        return C2F_TCN_Module(**self.params)
 
     def _predictor(self) -> torch.nn.Module:
         if self.params_predictor is not None:
-            return _Predictor(**self.params_predictor)
+            return Predictor(**self.params_predictor)
         else:
             return nn.Identity()
 
