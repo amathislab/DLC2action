@@ -13,16 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest] #[ubuntu-latest, macos-11, windows-latest]
+        os: [ubuntu-latest]
         python-version: [3.13] 
         include:
           - os: ubuntu-latest
             path: ~/.cache/pip
-          - os: macos-11
-            path: ~/Library/Caches/pip
-          - os: windows-latest
-            path: ~\AppData\Local\pip\Cache
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
