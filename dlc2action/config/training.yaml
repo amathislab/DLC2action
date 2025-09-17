@@ -1,4 +1,11 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 lr: 1e-3 # float; learning rate
+weight_decay: 0 # float; weight decay in optimizer
 device: 'auto' # str; device
 verbose: true # bool; print training process
 augment_train: 1 # [0, 1]; either 1 to use augmentations during training or 0 to not use

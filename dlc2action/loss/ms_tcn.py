@@ -3,30 +3,28 @@
 #
 # This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
+# Incorporates code adapted from MS-TCN++ by yabufarha
+# Original work Copyright (c) 2019 June01
+# Source: https://github.com/sj-li/MS-TCN2
+# Originally licensed under MIT License
+# Combined work licensed under GNU AGPLv3
 #
-# Adapted from MS-TCN++ by yabufarha
-# Adapted from https://github.com/sj-li/MS-TCN2
-# Licensed under MIT License
-#
-"""
-Loss for the MS-TCN models
+"""Loss for the MS-TCN models."""
 
-Adapted from https://github.com/sj-li/MS-TCN2
-"""
-
-from torch import nn
-import torch.nn.functional as F
-import torch
+import sys
 from collections.abc import Iterable
 from copy import copy
-import sys
 from typing import Optional
+
+import torch
+import torch.nn.functional as F
+from torch import nn
 
 
 class MS_TCN_Loss(nn.Module):
-    """
-    The MS-TCN loss
-    Crossentropy + consistency loss (MSE over predicted probabilities)
+    """The MS-TCN loss.
+
+    Crossentropy + consistency loss (MSE over predicted probabilities).
     """
 
     def __init__(
@@ -40,7 +38,8 @@ class MS_TCN_Loss(nn.Module):
         alpha: float = 0.15,
         hard_negative_weight: float = 1,
     ) -> None:
-        """
+        """Initialize the loss.
+
         Parameters
         ----------
         num_classes : int
@@ -59,8 +58,8 @@ class MS_TCN_Loss(nn.Module):
             the weight of the consistency loss
         hard_negative_weight : float, default 1
             the weight assigned to the hard negative frames
-        """
 
+        """
         super().__init__()
         self.weights = weights
         self.num_classes = int(num_classes)
@@ -82,10 +81,7 @@ class MS_TCN_Loss(nn.Module):
             self._init_ce()
 
     def _init_ce(self) -> None:
-        """
-        Initialize cross-entropy function
-        """
-
+        """Initialize cross-entropy function."""
         if self.exclusive:
             if self.focal:
                 self.ce = nn.CrossEntropyLoss(
@@ -101,10 +97,7 @@ class MS_TCN_Loss(nn.Module):
             self.ce = nn.BCEWithLogitsLoss(reduction="none")
 
     def _init_weights(self, device: str) -> None:
-        """
-        Initialize the weights vector and the cross-entropy function (after the device is known)
-        """
-
+        """Initialize the weights vector and the cross-entropy function (after the device is known)."""
         if self.exclusive:
             self.weights = torch.tensor(self.weights, device=device, dtype=torch.float)
         else:
@@ -118,10 +111,7 @@ class MS_TCN_Loss(nn.Module):
         self.need_init = False
 
     def _ce_loss(self, p: torch.Tensor, t: torch.Tensor) -> float:
-        """
-        Apply cross-entropy loss
-        """
-
+        """Apply cross-entropy loss."""
         if self.exclusive:
             t = t.long()
             p = p.transpose(2, 1).contiguous().view(-1, self.num_classes)
@@ -131,8 +121,7 @@ class MS_TCN_Loss(nn.Module):
                 return 0
             if self.focal:
                 pr = F.softmax(p[mask], dim=1)
-                # print(f'{pr[range(torch.sum(mask)), t[mask]].shape=}')
-                # print(f'{pr_c[range(torch.sum(mask)), t[mask].cpu()].shape=}')
+                f = (1 - pr[range(torch.sum(mask)), t[mask]]) ** self.gamma
                 f = (1 - pr[range(torch.sum(mask)), t[mask].long()]) ** self.gamma
                 loss = (f * self.ce(p, t)[mask]).mean()
                 return loss
@@ -167,29 +156,27 @@ class MS_TCN_Loss(nn.Module):
             return loss.mean() if loss.size()[-1] != 0 else 0
 
     def consistency_loss(self, p: torch.Tensor) -> float:
-        """
-        Apply consistency loss
-        """
-
+        """Apply consistency loss."""
         mse = self.mse(self.log_nl(p[:, :, 1:]), self.log_nl(p.detach()[:, :, :-1]))
         clamp = torch.clamp(mse, min=0, max=16)
         return torch.mean(clamp)
 
     def forward(self, predictions: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        Compute the loss
+        """Compute the loss.
+
         Parameters
         ----------
         predictions : torch.Tensor
             a tensor of shape (#batch, #classes, #frames)
         target : torch.Tensor
             a tensor of shape (#batch, #classes, #frames) or (#batch, #frames)
+
         Returns
         -------
         loss : float
             the loss value
-        """
 
+        """
         if self.need_init:
             if isinstance(predictions, dict):
                 device = predictions["device"]

@@ -1,24 +1,23 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
+"""Segment order SSL constructors."""
+
 from typing import Dict, Tuple, Union, List
 import torch
 from dlc2action.ssl.base_ssl import SSLConstructor
 from abc import ABC, abstractmethod
-from dlc2action.ssl.modules import _FeatureExtractorTCN
-import torch
-from torch import nn
+from dlc2action.ssl.modules import *
 from copy import deepcopy
 from itertools import permutations
 
 from torch.nn import CrossEntropyLoss, Linear, BCEWithLogitsLoss
 
-
 class ReverseSSL(SSLConstructor, ABC):
-    """
-    A flip detection SSL
+    """A flip detection SSL.
 
     Reverse some of the segments and predict the flip with a binary classifier.
     """
@@ -26,15 +25,16 @@ class ReverseSSL(SSLConstructor, ABC):
     type = "ssl_input"
 
     def __init__(self, num_f_maps: torch.Size, len_segment: int) -> None:
-        """
+        """Initialize the constructor.
+
         Parameters
         ----------
         num_f_maps : torch.Size
             the number of input feature maps
         len_segment : int
             the length of the input segments
-        """
 
+        """
         super().__init__()
         self.ce = BCEWithLogitsLoss()
         if len(num_f_maps) > 1:
@@ -54,10 +54,7 @@ class ReverseSSL(SSLConstructor, ABC):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Do the flip
-        """
-
+        """Do the flip."""
         ssl_target = torch.randint(2, (1,), dtype=torch.float)
         ssl_input = deepcopy(sample_data)
         if ssl_target == 1:
@@ -66,25 +63,18 @@ class ReverseSSL(SSLConstructor, ABC):
         return ssl_input, {"order": ssl_target}
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        Cross-entropy loss
-        """
-
+        """Cross-entropy loss."""
         loss = self.ce(predicted, target.squeeze())
         return loss
 
     def construct_module(self) -> nn.Module:
-        """
-        Construct the SSL prediction module using the parameters specified at initialization
-        """
-
-        module = _FeatureExtractorTCN(**self.pars)
+        """Construct the SSL prediction module using the parameters specified at initialization."""
+        module = FeatureExtractorTCN(**self.pars)
         return module
 
 
 class OrderSSL(SSLConstructor, ABC):
-    """
-    An order prediction SSL
+    """An order prediction SSL.
 
     Cut out segments from the features, permute them and predict the order.
     """
@@ -99,7 +89,8 @@ class OrderSSL(SSLConstructor, ABC):
         ssl_features: int = 32,
         skip_frames: int = 10,
     ) -> None:
-        """
+        """Initialize the OrderSSL.
+
         Parameters
         ----------
         num_f_maps : torch.Size
@@ -112,8 +103,8 @@ class OrderSSL(SSLConstructor, ABC):
             the number of features per permuted segment
         skip_frames : int, default 10
             the number of frames to cut from each permuted segment
-        """
 
+        """
         super().__init__()
         self.ce = CrossEntropyLoss(ignore_index=-100)
         if len(num_f_maps) > 1:
@@ -137,32 +128,23 @@ class OrderSSL(SSLConstructor, ABC):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Empty transformation."""
         return torch.tensor(float("nan")), torch.tensor(float("nan"))
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
-        """
-        Cross-entropy loss
-        """
-
+        """Cross-entropy loss."""
         predicted, target = predicted
         loss = self.ce(predicted, target)
         return loss
 
     def construct_module(self) -> nn.Module:
-        """
-        Construct the SSL prediction module using the parameters specified at initialization
-        """
-
+        """Construct the SSL prediction module using the parameters specified at initialization."""
         class Classifier(nn.Module):
             def __init__(self, num_segments, num_classes, skip_frames, **pars):
                 super().__init__()
                 self.len_segment = pars["len_segment"]
                 pars["len_segment"] -= skip_frames
-                self.extractor = _FeatureExtractorTCN(**pars)
+                self.extractor = FeatureExtractorTCN(**pars)
                 self.num_segments = num_segments
                 self.skip_frames = skip_frames
                 self.fc = Linear(pars["output_dim"] * self.num_segments, num_classes)
@@ -172,7 +154,7 @@ class OrderSSL(SSLConstructor, ABC):
 
             def forward(self, x):
                 target = torch.randint(len(self.orders), (x.shape[0],)).to(x.device)
-                order = self.orders[target]
+                order = self.orders.to(x.device)[target]
                 x = x[:, :, : self.num_segments * self.len_segment]
                 B, F, L = x.shape
                 x = x.reshape((B, F, -1, self.len_segment))

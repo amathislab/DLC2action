@@ -3,27 +3,23 @@
 #
 # This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
+# Incorporates code adapted from ASRF by yiskw713
+# Original work Copyright (c) 2020 yiskw713
+# Source: https://github.com/yiskw713/asrf/blob/main/libs/models/tcn.py
+# Originally licensed under MIT License
+# Combined work licensed under GNU AGPLv3
 #
-# Adapted from ASRF by yiskw713
-# Adapted from https://github.com/yiskw713/asrf/blob/main/libs/models/tcn.py
-# Licensed under MIT License
-#
-""" EDTCN
-
-Adapted from https://github.com/yiskw713/asrf/blob/main/libs/models/tcn.py
-"""
+from typing import Any, List, Tuple, Union
 
 import torch
-from torch import nn
-from typing import Tuple, Any
-from torch.nn import functional as F
 from dlc2action.model.base_model import Model
-from typing import Union, List
+from torch import nn
+from torch.nn import functional as F
 
 
-class _NormalizedReLU(nn.Module):
+class NormalizedReLU(nn.Module):
     """
-    Normalized ReLU Activation prposed in the original TCN paper.
+    Normalized ReLU Activation proposed in the original TCN paper.
     the values are divided by the max computed per frame
     """
 
@@ -32,13 +28,14 @@ class _NormalizedReLU(nn.Module):
         self.eps = eps
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         x = F.relu(x)
         x = x / (x.max(dim=1, keepdim=True)[0] + self.eps)
 
         return x
 
 
-class _EDTCNModule(nn.Module):
+class EDTCNModule(nn.Module):
     """
     Encoder Decoder Temporal Convolutional Network
     """
@@ -71,7 +68,7 @@ class _EDTCNModule(nn.Module):
             padding=(kernel_size - 1) // 2,
         )
         self.dropout1 = nn.Dropout(0.3)
-        self.relu1 = _NormalizedReLU()
+        self.relu1 = NormalizedReLU()
 
         self.enc2 = nn.Conv1d(
             mid_channels[0],
@@ -81,7 +78,7 @@ class _EDTCNModule(nn.Module):
             padding=(kernel_size - 1) // 2,
         )
         self.dropout2 = nn.Dropout(0.3)
-        self.relu2 = _NormalizedReLU()
+        self.relu2 = NormalizedReLU()
 
         # decoder
         self.dec1 = nn.Conv1d(
@@ -92,7 +89,7 @@ class _EDTCNModule(nn.Module):
             padding=(kernel_size - 1) // 2,
         )
         self.dropout3 = nn.Dropout(0.3)
-        self.relu3 = _NormalizedReLU()
+        self.relu3 = NormalizedReLU()
 
         self.dec2 = nn.Conv1d(
             mid_channels[1],
@@ -102,13 +99,14 @@ class _EDTCNModule(nn.Module):
             padding=(kernel_size - 1) // 2,
         )
         self.dropout4 = nn.Dropout(0.3)
-        self.relu4 = _NormalizedReLU()
+        self.relu4 = NormalizedReLU()
 
         self.conv_out = nn.Conv1d(mid_channels[0], output_dim, 1, bias=True)
 
         self.init_weight()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         # encoder 1
         x1 = self.relu1(self.dropout1(self.enc1(x)))
         t1 = x1.shape[2]
@@ -132,6 +130,7 @@ class _EDTCNModule(nn.Module):
         return out
 
     def init_weight(self) -> None:
+        """Initialize weights of the model."""
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.xavier_normal_(m.weight)
@@ -139,14 +138,15 @@ class _EDTCNModule(nn.Module):
                     torch.nn.init.zeros_(m.bias)
 
 
-class _Predictor(nn.Module):
+class Predictor(nn.Module):
     def __init__(self, dim, num_classes):
-        super(_Predictor, self).__init__()
+        super(Predictor, self).__init__()
         self.num_classes = num_classes
         self.conv_out_1 = nn.Conv1d(dim, dim, kernel_size=1)
         self.conv_out_2 = nn.Conv1d(dim, num_classes, kernel_size=1)
 
     def forward(self, x):
+        """Forward pass."""
         x = self.conv_out_1(x)
         x = F.relu(x)
         x = self.conv_out_2(x)
@@ -190,13 +190,13 @@ class EDTCN(Model):
         super().__init__(ssl_constructors, ssl_modules, ssl_types, state_dict_path)
 
     def _feature_extractor(self) -> Union[torch.nn.Module, List]:
-        return _EDTCNModule(**self.params)
+        return EDTCNModule(**self.params)
 
     def _predictor(self) -> torch.nn.Module:
         if self.params_predictor is None:
             return nn.Identity()
         else:
-            return _Predictor(**self.params_predictor)
+            return Predictor(**self.params_predictor)
 
     def features_shape(self) -> torch.Size:
         return self.f_shape

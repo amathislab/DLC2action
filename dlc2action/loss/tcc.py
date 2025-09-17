@@ -3,23 +3,22 @@
 #
 # This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
+# Incorporates code adapted from Temporal Cycle-Consistency by June01
+# Original work Copyright (c) 2004 June01
+# Source: https://github.com/June01/tcc_Temporal_Cycle_Consistency_Loss.pytorch
+# Originally licensed under Apache License Version 2.0, January 2004
+# Combined work licensed under GNU AGPLv3
 #
-# Adapted from Temporal Cycle-Consistency Learning by June01
-# Adapted from https://github.com/June01/tcc_Temporal_Cycle_Consistency_Loss.pytorch
-# Licensed under  Apache License Version 2.0, January 2004
-#
-""" TCC loss
-
-Adapted from from https://github.com/June01/tcc_Temporal_Cycle_Consistency_Loss.pytorch
-
-"""
+"""TCC loss (from https://github.com/June01/tcc_Temporal_Cycle_Consistency_Loss.pytorch)."""
 
 import torch
-from torch.nn import functional as F
 from torch import nn
+from torch.nn import functional as F
 
 
-class _TCCLoss(nn.Module):
+class TCCLoss(nn.Module):
+    """Temporal Cycle Consistency Loss."""
+
     def __init__(
         self,
         loss_type: str = "regression_mse_var",
@@ -32,6 +31,7 @@ class _TCCLoss(nn.Module):
         temperature: float = 0.1,
         label_smoothing: float = 0.1,
     ):
+        """Initialize the loss."""
         super().__init__()
         self.loss_type = loss_type
         self.variance_lambda = variance_lambda
@@ -44,6 +44,7 @@ class _TCCLoss(nn.Module):
         self.label_smoothing = label_smoothing
 
     def forward(self, predictions: torch.Tensor, mask: torch.Tensor) -> float:
+        """Forward pass."""
         real_lens = mask.sum(-1).squeeze().cpu()
         if len(real_lens.shape) == 0:
             return torch.tensor(0)
@@ -136,7 +137,8 @@ def _align(
 
 
 def gen_cycles(num_cycles, batch_size, cycle_length=2):
-    """Generates cycles for alignment.
+    """Generate cycles for alignment.
+
     Generates a batch of indices to cycle over. For example setting num_cycles=2,
     batch_size=5, cycle_length=3 might return something like this:
     cycles = [[0, 3, 4, 0], [1, 2, 0, 3]]. This means we have 2 cycles for which
@@ -144,16 +146,24 @@ def gen_cycles(num_cycles, batch_size, cycle_length=2):
     batch, then we find a matching step in sequence 3 of that batch, then we
     find matching step in sequence 4 and finally come back to sequence 0,
     completing a cycle.
-    Args:
-    num_cycles: Integer, Number of cycles that will be matched in one pass.
-    batch_size: Integer, Number of sequences in one batch.
-    cycle_length: Integer, Length of the cycles. If we are matching between
-      2 sequences (cycle_length=2), we get cycles that look like [0,1,0].
-      This means that we go from sequence 0 to sequence 1 then back to sequence
-      0. A cycle length of 3 might look like [0, 1, 2, 0].
-    Returns:
-    cycles: Tensor, Batch indices denoting cycles that will be used for
-      calculating the alignment loss.
+
+    Parameters
+    ----------
+    num_cycles : int
+        Number of cycles that will be matched in one pass.
+    batch_size : int
+        Number of sequences in one batch.
+    cycle_length : int
+        Length of the cycles. If we are matching between 2 sequences (cycle_length=2),
+        we get cycles that look like [0,1,0]. This means that we go from sequence 0
+        to sequence 1 then back to sequence 0. A cycle length of 3 might look like
+        [0, 1, 2, 0].
+
+    Returns
+    -------
+    cycles : torch.Tensor
+        Batch indices denoting cycles that will be used for calculating the alignment loss.
+
     """
     sorted_idxes = torch.arange(batch_size).unsqueeze(0).repeat([num_cycles, 1])
     sorted_idxes = sorted_idxes.view([batch_size, num_cycles])
@@ -177,13 +187,47 @@ def compute_stochastic_alignment_loss(
     num_cycles,
     cycle_length,
     temperature,
-    label_smoothing,
     variance_lambda,
-    huber_delta,
     normalize_indices,
     real_lens,
 ):
+    """Compute stochastic alignment loss.
 
+    Parameters
+    ----------
+    embs : torch.Tensor
+        Embeddings of shape (batch_size, num_steps, num_channels).
+    steps : torch.Tensor
+        Steps of shape (batch_size, num_steps).
+    seq_lens : torch.Tensor
+        Sequence lengths of shape (batch_size,).
+    num_steps : int
+        Number of steps in the sequence.
+    batch_size : int
+        Batch size.
+    loss_type : str
+        Type of loss to use. Can be either "regression" or "classification".
+    similarity_type : str
+        Type of similarity to use. Can be either "l2" or "cosine".
+    num_cycles : int
+        Number of cycles to use for alignment.
+    cycle_length : int
+        Length of cycles to use for alignment.
+    temperature : float
+        Temperature to use for alignment.
+    variance_lambda : float
+        Lambda to use for variance regularization.
+    normalize_indices : bool
+        Whether to normalize indices.
+    real_lens : torch.Tensor
+        Real lengths of sequences.
+
+    Returns
+    -------
+    loss : torch.Tensor
+        Alignment loss.
+
+    """
     cycles = gen_cycles(num_cycles, batch_size, cycle_length).to(embs.device)
     logits, labels = _align(
         cycles=cycles,
@@ -234,8 +278,41 @@ def compute_alignment_loss(
     huber_delta=0.1,
     normalize_indices=True,
 ):
+    """Compute alignment loss.
 
-    # Get the number of timestemps in the sequence embeddings.
+    Parameters
+    ----------
+    embs : torch.Tensor
+        Sequence embeddings of shape (batch_size, num_steps, emb_dim)
+    real_lens : torch.Tensor
+        Length of each sequence in the batch of shape (batch_size,)
+    steps : torch.Tensor, optional
+        Step indices of shape (batch_size, num_steps), by default None
+    seq_lens : torch.Tensor, optional
+        Length of each sequence in the batch of shape (batch_size,), by default None
+    normalize_embeddings : bool, optional
+        Whether to normalize embeddings, by default False
+    loss_type : str, default "classification"
+        Type of loss to use, by default "classification"
+    similarity_type : str, default "l2"
+        Type of similarity to use
+    num_cycles : int, default 20
+        Number of cycles to use
+    cycle_length : int, default 2
+        Length of cycles to use
+    temperature : float, default 0.1
+        Temperature to use for softmax
+    label_smoothing : float, default 0.1
+        Label smoothing to use
+    variance_lambda : float, default 0.001
+        Variance lambda to use
+    huber_delta : float, default 0.1
+        Huber delta to use
+    normalize_indices : bool, default True
+        Whether to normalize indices
+
+    """
+    # Get the number of timestamps in the sequence embeddings.
     num_steps = embs.shape[1]
     batch_size = embs.shape[0]
 
@@ -277,9 +354,9 @@ def compute_alignment_loss(
         num_cycles=num_cycles,
         cycle_length=cycle_length,
         temperature=temperature,
-        label_smoothing=label_smoothing,
+        # label_smoothing=label_smoothing,
         variance_lambda=variance_lambda,
-        huber_delta=huber_delta,
+        # huber_delta=huber_delta,
         normalize_indices=normalize_indices,
         real_lens=real_lens,
     )
@@ -298,6 +375,7 @@ def regression_loss(
     variance_lambda,
 ):
     """Loss function based on regressing to the correct indices.
+
     In the paper, this is called Cycle-back Regression. There are 3 variants
     of this loss:
     i) regression_mse: MSE of the predicted indices and ground truth indices.
@@ -307,28 +385,38 @@ def regression_loss(
     allows dynamic weighting of the MSE loss based on the similarities.
     iii) regression_huber: Huber loss between the predicted indices and ground
     truth indices.
-    Args:
-      logits: Tensor, Pre-softmax similarity scores after cycling back to the
-        starting sequence.
-      labels: Tensor, One hot labels containing the ground truth. The index where
-        the cycle started is 1.
-      num_steps: Integer, Number of steps in the sequence embeddings.
-      steps: Tensor, step indices/frame indices of the embeddings of the shape
-        [N, T] where N is the batch size, T is the number of the timesteps.
-      seq_lens: Tensor, Lengths of the sequences from which the sampling was done.
-        This can provide additional temporal information to the alignment loss.
-      loss_type: String, This specifies the kind of regression loss function.
-        Currently supported loss functions: regression_mse, regression_mse_var,
-        regression_huber.
-      normalize_indices: Boolean, If True, normalizes indices by sequence lengths.
-        Useful for ensuring numerical instabilities don't arise as sequence
-        indices can be large numbers.
-      variance_lambda: Float, Weight of the variance of the similarity
-        predictions while cycling back. If this is high then the low variance
-        similarities are preferred by the loss while making this term low results
-        in high variance of the similarities (more uniform/random matching).
-    Returns:
-       loss: Tensor, A scalar loss calculated using a variant of regression.
+
+    Parameters
+    ----------
+    logits : torch.Tensor
+        Pre-softmax similarity scores after cycling back to the starting sequence
+        of shape (batch_size, num_steps)
+    labels : torch.Tensor
+        One hot labels containing the ground truth. The index where the cycle
+        started is 1. Shape (batch_size, num_steps)
+    num_steps : int
+        Number of steps in the sequence embeddings
+    steps : torch.Tensor
+        Step indices/frame indices of the embeddings of the shape (batch_size, num_steps)
+    seq_lens : torch.Tensor
+        Lengths of the sequences from which the sampling was done. This can
+        provide additional temporal information to the alignment loss.
+    loss_type : str
+        This specifies the kind of regression loss function. Currently supported
+        loss functions: regression_mse, regression_mse_var, regression_huber.
+    normalize_indices : bool
+        If True, normalizes indices by sequence lengths. Useful for ensuring
+        numerical instabilities don't arise as sequence indices can be large
+        numbers.
+    variance_lambda : float
+        Weight of the variance of the similarity predictions while cycling back
+        to the starting sequence.
+
+    Returns
+    -------
+    loss : torch.Tensor
+        A scalar loss calculated using a variant of regression.
+
     """
     # Just to be safe, we stop gradients from labels as we are generating labels.
     labels = labels.detach()

@@ -1,42 +1,38 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Behavior dataset (class that manages high-level data interactions)
-"""
+"""Behavior dataset (class that manages high-level data interactions)."""
 
-import warnings
-from typing import Dict, Union, Tuple, List, Optional, Any
-
-from numpy import ndarray
-from torch.utils.data import Dataset
-import torch
-from abc import ABC
-import numpy as np
-from copy import copy
-from tqdm import tqdm
-from collections import Counter
 import inspect
-from collections import defaultdict
-from dlc2action.utils import (
-    apply_threshold_hysteresis,
-    apply_threshold,
-    apply_threshold_max,
-)
-from dlc2action.data.base_store import InputStore, AnnotationStore
-from copy import deepcopy, copy
 import os
 import pickle
+import warnings
+from abc import ABC
+from collections import Counter, defaultdict
+from copy import copy, deepcopy
+from typing import Dict, List, Optional, Tuple, Union
+
+import numpy as np
+import torch
 from dlc2action import options
+from dlc2action.data.base_store import BehaviorStore, InputStore
+from dlc2action.utils import (
+    apply_threshold,
+    apply_threshold_hysteresis,
+    apply_threshold_max,
+)
+from numpy import ndarray
+from torch.utils.data import Dataset
+from tqdm import tqdm
 
 
 class BehaviorDataset(Dataset, ABC):
-    """
-    A generalized dataset class
+    """A generalized dataset class.
 
-    Data and annotation are stored in separate InputStore and AnnotationStore objects; the dataset class
+    Data and annotation are stored in separate InputStore and BehaviorStore objects; the dataset class
     manages their interactions.
     """
 
@@ -47,14 +43,15 @@ class BehaviorDataset(Dataset, ABC):
         ssl_transformations: List = None,
         saved_data_path: str = None,
         input_store: InputStore = None,
-        annotation_store: AnnotationStore = None,
+        annotation_store: BehaviorStore = None,
         only_load_annotated: bool = False,
         recompute_annotation: bool = False,
         # mask: str = None,
         ids: List = None,
         **data_parameters,
     ) -> None:
-        """
+        """Initialize a dataset.
+
         Parameters
         ----------
         data_type : str
@@ -67,14 +64,18 @@ class BehaviorDataset(Dataset, ABC):
             the path to a pre-computed pickled dataset
         input_store : InputStore
             a pre-computed input store
-        annotation_store : AnnotationStore
+        annotation_store : BehaviorStore
             a precomputed annotation store
         only_load_annotated : bool
-            if True, the input files that don't have a matching annotation file will be disregarded
+            if `True`, the input files that don't have a matching annotation file will be disregarded
+        recompute_annotation : bool
+            if `True`, the annotation will be recomputed even if a precomputed annotation store is provided
+        ids : list
+            a list of ids to load from the input store
         *data_parameters : dict
             parameters to initialize the input and annotation stores
-        """
 
+        """
         mask = None
         if len(data_parameters) == 0:
             recompute_annotation = False
@@ -151,74 +152,36 @@ class BehaviorDataset(Dataset, ABC):
             self.annotation_store = annotation_store
             ok = True
         elif (
-            annotation_key_objects is not None
+            (annotation_key_objects is not None)
             and mask is None
             and not recompute_annotation
         ):
-            try:
-                self.annotation_store = self._load_annotation_store(
-                    annotation_type, annotation_key_objects
-                )
-                ok = True
-            except:
-                warnings.warn("Loading annotation store from key objects failed")
+            if len(annotation_key_objects) > 0:
+                try:
+                    self.annotation_store = self._load_annotation_store(
+                        annotation_type, annotation_key_objects
+                    )
+                    ok = True
+                except:
+                    warnings.warn("Loading annotation store from key objects failed")
         if not ok:
             self.annotation_store = self._get_annotation_store(
                 annotation_type, deepcopy(data_parameters)
             )
-        if (
-            mask is None
-            and annotation_type != "none"
-            and not recompute_annotation
-            and (
-                self.annotation_store.get_original_coordinates()
-                != self.input_store.get_original_coordinates()
-            ).any()
-        ):
-            raise RuntimeError(
-                "The clip orders in the annotation store and input store are different!"
-            )
-        # filter the data based on data parameters
-        # print(f"1 {self.annotation_store.get_original_coordinates().shape=}")
-        # print(f"1 {self.input_store.get_original_coordinates().shape=}")
         to_remove = self.annotation_store.filtered_indices()
         if len(to_remove) > 0:
             print(
                 f"Filtering {100 * len(to_remove) / len(self.annotation_store):.2f}% of samples"
             )
+        if len(to_remove) == len(self.annotation_store) and len(to_remove) > 0:
+            raise ValueError("All samples were filtered out!")
+
         if len(self.input_store) == len(self.annotation_store):
             self.input_store.remove(to_remove)
         self.annotation_store.remove(to_remove)
         self.input_indices = list(range(len(self.input_store)))
         self.annotation_indices = list(range(len(self.input_store)))
         self.indices = list(range(len(self.input_store)))
-        # print(f'{data_parameters["video_order"]=}')
-        # print(f"{self.annotation_store.get_original_coordinates().shape=}")
-        # print(f"{self.input_store.get_original_coordinates().shape=}")
-        # count = 0
-        # for i, (x, y) in enumerate(zip(
-        #     self.annotation_store.get_original_coordinates(),
-        #     self.input_store.get_original_coordinates(),
-        # )):
-        #     if (x != y).any():
-        #         count += 1
-        #         print({i})
-        #         print(f"ann: {x}")
-        #         print(f"inp: {y}")
-        #         print("\n")
-        #     if count > 50:
-        #         break
-        if annotation_type != "none" and (
-            self.annotation_store.get_original_coordinates().shape
-            != self.input_store.get_original_coordinates().shape
-            or (
-                self.annotation_store.get_original_coordinates()
-                != self.input_store.get_original_coordinates()
-            ).any()
-        ):
-            raise RuntimeError(
-                "The clip orders in the annotation store and input store are different!"
-            )
 
     def __getitem__(self, item: int) -> Dict:
         idx = self._get_idx(item)
@@ -252,41 +215,45 @@ class BehaviorDataset(Dataset, ABC):
         #     return len(self.input_store)
 
     def get_tags(self) -> List:
-        """
-        Get a list of all meta tags
+        """Get a list of all meta tags.
 
         Returns
         -------
         tags: List
             a list of unique meta tag values
-        """
 
+        """
         return self.input_store.get_tags()
 
     def save(self, save_path: str) -> None:
-        """
-        Save the dictionary
+        """Save the dictionary.
 
         Parameters
         ----------
         save_path : str
             the path where the pickled file will be stored
-        """
 
+        """
         input_obj = self.input_store.key_objects()
         annotation_obj = self.annotation_store.key_objects()
         with open(save_path, "wb") as f:
             pickle.dump((input_obj, annotation_obj), f)
 
     def to_ram(self) -> None:
-        """
-        Transfer the dataset to RAM
-        """
-
+        """Transfer the dataset to RAM."""
         self.input_store.to_ram()
         self.annotation_store.to_ram()
 
     def generate_full_length_gt(self) -> Dict:
+        """Generate full-length ground truth from the annotations.
+
+        Returns
+        -------
+        full_length_gt : dict
+            a nested dictionary where first-level keys are video ids, second-level keys are clip ids and
+            values are the ground truth labels
+
+        """
         if self.annotation_class() == "exclusive_classification":
             gt = torch.zeros((len(self), self.len_segment()))
         else:
@@ -298,8 +265,7 @@ class BehaviorDataset(Dataset, ABC):
         return self.generate_full_length_prediction(gt)
 
     def generate_full_length_prediction(self, predicted: torch.Tensor) -> Dict:
-        """
-        Map predictions for the equal-length pieces to predictions for the original data
+        """Map predictions for the equal-length pieces to predictions for the original data.
 
         Probabilities are averaged over predictions on overlapping intervals.
 
@@ -313,8 +279,8 @@ class BehaviorDataset(Dataset, ABC):
         full_length_prediction : dict
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids and values are
             averaged probability tensors
-        """
 
+        """
         result = defaultdict(lambda: {})
         counter = defaultdict(lambda: {})
         coordinates = self.input_store.get_original_coordinates()
@@ -354,8 +320,7 @@ class BehaviorDataset(Dataset, ABC):
         smooth_interval: int = 1,
         cut_annotated: bool = False,
     ) -> Dict:
-        """
-        Find the intervals where the probability of a certain class is below or above a certain hard_threshold
+        """Find the intervals where the probability of a certain class is below or above a certain hard_threshold.
 
         Parameters
         ----------
@@ -384,13 +349,17 @@ class BehaviorDataset(Dataset, ABC):
             the difference between the soft and hard hard_threshold if hysteresis is used; if hysteresis is True, low is False and threshold_diff is None, the soft hard_threshold condition is set to the main_class having a larger probability than other classes
         min_frames_error: int, optional
             if not None, the intervals will only be considered where the error probability is below error_threshold at at least min_frames_error consecutive frames
+        smooth_interval: int, default 1
+            the number of frames to smooth the predictions over
+        cut_annotated: bool, default False
+            if `True`, annotated intervals will be cut out of the predicted intervals
 
         Returns
         -------
         valleys : dict
             a dictionary where keys are video ids and values are lists of (start, end, individual name) tuples that denote the chosen intervals
-        """
 
+        """
         result = defaultdict(lambda: [])
         if type(predicted) is not dict:
             predicted = self.generate_full_length_prediction(predicted)
@@ -480,8 +449,7 @@ class BehaviorDataset(Dataset, ABC):
         return dict(result)
 
     def valleys_union(self, valleys_list) -> Dict:
-        """
-        Find the intersection of two valleys dictionaries
+        """Find the intersection of two valleys dictionaries.
 
         Parameters
         ----------
@@ -492,8 +460,8 @@ class BehaviorDataset(Dataset, ABC):
         -------
         intersection : dict
             a new valleys dictionary with the intersection of the input intervals
-        """
 
+        """
         valleys_list = [x for x in valleys_list if x is not None]
         if len(valleys_list) == 1:
             return valleys_list[0]
@@ -535,8 +503,7 @@ class BehaviorDataset(Dataset, ABC):
         return union
 
     def valleys_intersection(self, valleys_list) -> Dict:
-        """
-        Find the intersection of two valleys dictionaries
+        """Find the intersection of two valleys dictionaries.
 
         Parameters
         ----------
@@ -547,8 +514,8 @@ class BehaviorDataset(Dataset, ABC):
         -------
         intersection : dict
             a new valleys dictionary with the intersection of the input intervals
-        """
 
+        """
         valleys_list = [x for x in valleys_list if x is not None]
         if len(valleys_list) == 1:
             return valleys_list[0]
@@ -601,8 +568,7 @@ class BehaviorDataset(Dataset, ABC):
         skip_normalization_keys: List = None,
         stats: Dict = None,
     ) -> Tuple:
-        """
-        Partition the dataset into three new datasets
+        """Partition the dataset into three new datasets.
 
         Parameters
         ----------
@@ -623,8 +589,8 @@ class BehaviorDataset(Dataset, ABC):
                 if provided),
             - `'random:equalize:segments'` and `'random:equalize:videos'`: sort videos into subsets randomly but
                 making sure that for the rarest classes at least `0.8 * val_frac` of the videos/segments that contain
-                occurences of the class get into the validation subset and `0.8 * test_frac` get into the test subset;
-                this in ensured for all classes in order of increasing number of occurences until the validation and
+                occurrences of the class get into the validation subset and `0.8 * test_frac` get into the test subset;
+                this in ensured for all classes in order of increasing number of occurrences until the validation and
                 test subsets are full
             - `'val-from-name:{val_name}:test-from-name:{test_name}'`: create the validation and test
                 subsets from the video ids that start with specific substrings (`val_name` for validation
@@ -640,19 +606,23 @@ class BehaviorDataset(Dataset, ABC):
             The fraction of the dataset to be used in test
         save_split : bool, default False
             Save a split file if True
+        normalize : bool, default False
+            Normalize the dataset if `True`
+        skip_normalization_keys : list, optional
+            A list of keys to skip normalization for
+        stats : dict, optional
+            A dictionary of (pre-computed) statistics to use for normalization
 
         Returns
         -------
         train_dataset : BehaviorDataset
             train dataset
-
         val_dataset : BehaviorDataset
             validation dataset
-
         test_dataset : BehaviorDataset
             test dataset
-        """
 
+        """
         train_indices, test_indices, val_indices = self._partition_indices(
             split_path=split_path,
             method=method,
@@ -660,18 +630,30 @@ class BehaviorDataset(Dataset, ABC):
             test_frac=test_frac,
             save_split=save_split,
         )
+        ssl_indices = None
+        partition_method = method.split(":")
+        if (
+            partition_method[0] in ("leave-one-in", "leave-n-in")
+            and len(partition_method) > 1
+            and partition_method[2] == "val-for-ssl"
+        ):
+            print("Using validation samples for SSL!")
+            ssl_indices = val_indices
+
         val_dataset = self._create_new_dataset(val_indices)
         test_dataset = self._create_new_dataset(test_indices)
-        train_dataset = self._create_new_dataset(
-            train_indices, ssl_indices=test_indices[: int(len(test_indices) * use_test)]
-        )
+        train_dataset = self._create_new_dataset(train_indices, ssl_indices=ssl_indices)
+
+        train_classes = train_dataset.count_classes()
+        val_classes = val_dataset.count_classes()
+        test_classes = test_dataset.count_classes()
         print("Number of samples:")
         print(f"    validation:")
-        print(f"      {val_dataset.count_classes()}")
+        print(f"      {[f'{k}: {val_classes[k]}' for k in sorted(val_classes.keys())]}")
         print(f"    training:")
-        print(f"      {train_dataset.count_classes()}")
+        print(f"      {[f'{k}: {train_classes[k]}' for k in sorted(train_classes.keys())]}")
         print(f"    test:")
-        print(f"      {test_dataset.count_classes()}")
+        print(f"      {[f'{k}: {test_classes[k]}' for k in sorted(test_classes.keys())]}")
         if normalize:
             if stats is None:
                 print("Computing normalization statistics...")
@@ -684,14 +666,19 @@ class BehaviorDataset(Dataset, ABC):
         return train_dataset, test_dataset, val_dataset
 
     def class_weights(self, proportional=False) -> List:
-        """
-        Calculate class weights in inverse proportion to number of samples
+        """Calculate class weights in inverse proportion to number of samples.
+
+        Parameters
+        ----------
+        proportional : bool, default False
+            If `True`, the weights are proportional to the number of samples in the most common class
+
         Returns
         -------
         weights: list
             a list of class weights
-        """
 
+        """
         items = sorted(
             [
                 (k, v)
@@ -725,7 +712,15 @@ class BehaviorDataset(Dataset, ABC):
             weights[1] = [numerators[k] / (v + 1e-7) for k, v in items]
         return weights
 
-    def boundary_class_weight(self):
+    def _boundary_class_weight(self):
+        """Calculate the weight of the boundary class.
+
+        Returns
+        -------
+        weight: float
+            the weight of the boundary class
+
+        """
         if self.annotation_type != "none":
             f = self.annotation_store.data.flatten()
             _, inv = torch.unique_consecutive(f, return_inverse=True)
@@ -739,8 +734,7 @@ class BehaviorDataset(Dataset, ABC):
             return 0
 
     def count_classes(self, bouts: bool = False) -> Dict:
-        """
-        Get a class counter dictionary
+        """Get a class counter dictionary.
 
         Parameters
         ----------
@@ -751,23 +745,30 @@ class BehaviorDataset(Dataset, ABC):
         -------
         count_dictionary : dict
             a dictionary with class indices as keys and frame or bout counts as values
-        """
 
+        """
         return self.annotation_store.count_classes(bouts=bouts)
 
     def behaviors_dict(self) -> Dict:
-        """
-        Get a behavior dictionary
+        """Get a behavior dictionary.
 
         Returns
         -------
         dict
             behavior dictionary
-        """
 
+        """
         return self.annotation_store.behaviors_dict()
 
     def bodyparts_order(self) -> List:
+        """Get the order of bodyparts.
+
+        Returns
+        -------
+        bodyparts : List
+            a list of bodyparts
+
+        """
         try:
             return self.input_store.get_bodyparts()
         except:
@@ -776,15 +777,14 @@ class BehaviorDataset(Dataset, ABC):
             )
 
     def features_shape(self) -> Dict:
-        """
-        Get the shapes of the input features
+        """Get the shapes of the input features.
 
         Returns
         -------
         shapes : Dict
             a dictionary with the shapes of the features
-        """
 
+        """
         sample = self.input_store[0]
         shapes = {k: v.shape for k, v in sample.items()}
         # for key, value in shapes.items():
@@ -792,61 +792,63 @@ class BehaviorDataset(Dataset, ABC):
         return shapes
 
     def num_classes(self) -> int:
-        """
-        Get the number of classes in the data
+        """Get the number of classes in the data.
 
         Returns
         -------
         num_classes : int
             the number of classes
-        """
 
+        """
         return len(self.annotation_store.behaviors_dict())
 
     def len_segment(self) -> int:
-        """
-        Get the segment length in the data
+        """Get the segment length in the data.
 
         Returns
         -------
         len_segment : int
             the segment length
-        """
 
+        """
         sample = self.input_store[0]
         key = list(sample.keys())[0]
         return sample[key].shape[-1]
 
     def set_ssl_transformations(self, ssl_transformations: List) -> None:
-        """
-        Set new SSL transformations
+        """Set new SSL transformations.
 
         Parameters
         ----------
         ssl_transformations : list
             a list of functions that take a sample feature dictionary as input and output ssl_inputs and ssl_targets
             lists
-        """
 
+        """
         self.ssl_transformations = ssl_transformations
 
     @classmethod
     def new(cls, *args, **kwargs):
-        """
-        Create a new object of the same class
+        """Create a new object of the same class.
+
+        Parameters
+        ----------
+        args : list
+            arguments for the constructor
+        kwargs : dict
+            keyword arguments for the constructor
 
         Returns
         -------
         new_instance: BehaviorDataset
             a new instance of the same class
-        """
 
+        """
         return cls(*args, **kwargs)
 
     @classmethod
     def get_parameters(cls, data_type: str, annotation_type: str) -> List:
-        """
-        Get parameters necessary for initialization
+        """Get parameters necessary for initialization.
 
         Parameters
         ----------
@@ -854,8 +856,13 @@ class BehaviorDataset(Dataset, ABC):
             the data type
         annotation_type : str
             the annotation type
-        """
 
+        Returns
+        -------
+        parameters : list
+            a list of parameters
+
+        """
         input_features = options.input_stores[data_type].get_parameters()
         annotation_features = options.annotation_stores[
             annotation_type
@@ -865,35 +872,30 @@ class BehaviorDataset(Dataset, ABC):
 
     @staticmethod
     def data_types() -> List:
-        """
-        List available data types
+        """List available data types.
 
         Returns
         -------
         data_types : list
             available data types
-        """
 
+        """
         return list(options.input_stores.keys())
 
     @staticmethod
     def annotation_types() -> List:
-        """
-        List available annotation types
+        """List available annotation types.
 
         Returns
         -------
         annotation_types : list
             available annotation types
-        """
 
+        """
         return list(options.annotation_stores.keys())
 
     def _get_SSL_targets(self, input: Dict) -> Tuple[List, List]:
-        """
-        Get the SSL inputs and targets from a sample dictionary
-        """
-
+        """Get the SSL inputs and targets from a sample dictionary."""
         ssl_inputs = []
         ssl_targets = []
         for transform in self.ssl_transformations:
@@ -903,10 +905,7 @@ class BehaviorDataset(Dataset, ABC):
         return ssl_inputs, ssl_targets
 
     def _create_new_dataset(self, indices: List, ssl_indices: List = None):
-        """
-        Create a subsample of the dataset, with samples at ssl_indices losing the annotation
-        """
-
+        """Create a subsample of the dataset, with samples at ssl_indices losing the annotation."""
         if ssl_indices is None:
             ssl_indices = []
         input_store = self.input_store.create_subsample(indices, ssl_indices)
@@ -923,47 +922,34 @@ class BehaviorDataset(Dataset, ABC):
         return new
 
     def _load_input_store(self, data_type: str, key_objects: Tuple) -> InputStore:
-        """
-        Load input store from key objects
-        """
-
+        """Load input store from key objects."""
         input_store = options.input_stores[data_type](key_objects=key_objects)
         return input_store
 
     def _load_annotation_store(
         self, annotation_type: str, key_objects: Tuple
-    ) -> AnnotationStore:
-        """
-        Load annotation store from key objects
-        """
-
+    ) -> BehaviorStore:
+        """Load annotation store from key objects."""
         annotation_store = options.annotation_stores[annotation_type](
             key_objects=key_objects
         )
         return annotation_store
 
     def _get_input_store(self, data_type: str, data_parameters: Dict) -> InputStore:
-        """
-        Create input store from parameters
-        """
-
+        """Create input store from parameters."""
         data_parameters["key_objects"] = None
         input_store = options.input_stores[data_type](**data_parameters)
         return input_store
 
     def _get_annotation_store(
         self, annotation_type: str, data_parameters: Dict
-    ) -> AnnotationStore:
-        """
-        Create annotation store from parameters
-        """
-
+    ) -> BehaviorStore:
+        """Create annotation store from parameters."""
         annotation_store = options.annotation_stores[annotation_type](**data_parameters)
         return annotation_store
 
     def set_indexing_parameters(self, unlabeled: bool, tag: int) -> None:
-        """
-        Set the parameters that change the subset that is returned at `__getitem__`
+        """Set the parameters that change the subset that is returned at `__getitem__`.
 
         Parameters
         ----------
@@ -972,8 +958,8 @@ class BehaviorDataset(Dataset, ABC):
             all if `None`
         tag : int
             if not `None`, only samples with this meta tag will be returned
-        """
 
+        """
         if unlabeled != self.return_unlabeled:
             self.annotation_indices = self.annotation_store.get_indices(unlabeled)
             self.return_unlabeled = unlabeled
@@ -983,10 +969,7 @@ class BehaviorDataset(Dataset, ABC):
         self.indices = [x for x in self.annotation_indices if x in self.input_indices]
 
     def _get_idx(self, index: int) -> int:
-        """
-        Get index in full dataset
-        """
-
+        """Get index in full dataset."""
         return self.indices[index]
 
         # return self.annotation_store.get_idx(
@@ -1001,10 +984,7 @@ class BehaviorDataset(Dataset, ABC):
         test_frac: float = 0,
         save_split: bool = False,
     ) -> Tuple[List, List, List]:
-        """
-        Partition indices into train, validation, test subsets
-        """
-
+        """Partition indices into train, validation, test subsets."""
         if self.mask is not None:
             val_indices = self.mask["val_ids"]
             train_indices = [x for x in range(len(self)) if x not in val_indices]
@@ -1219,15 +1199,33 @@ class BehaviorDataset(Dataset, ABC):
             n = int(method.split(":")[-1])
             videos = np.array(self.input_store.get_video_id_order())
             all_videos = sorted(list(set(videos)))
+            print(len(all_videos))
             validation = [all_videos.pop(n)]
             training = all_videos
+            train_indices = np.where(np.isin(videos, training))[0]
+            val_indices = np.where(np.isin(videos, validation))[0]
+            test_indices = np.array([])
+        elif method.startswith("leave-one-in"):
+            n = int(method.split(":")[1])
+            videos = np.array(self.input_store.get_video_id_order())
+            all_videos = sorted(list(set(videos)))
+            training = [all_videos.pop(n)]
+            validation = all_videos
+            train_indices = np.where(np.isin(videos, training))[0]
+            val_indices = np.where(np.isin(videos, validation))[0]
+            test_indices = np.array([])
+        elif method.startswith("leave-n-in"):
+            train_idx = [int(i) for i in method.split(":")[1].split(",")]
+            videos = np.array(self.input_store.get_video_id_order())
+            all_videos = sorted(list(set(videos)))
+            training = [v for i, v in enumerate(all_videos) if i in train_idx]
+            validation = [v for i, v in enumerate(all_videos) if i not in train_idx]
             train_indices = np.where(np.isin(videos, training))[0]
             val_indices = np.where(np.isin(videos, validation))[0]
             test_indices = np.array([])
         elif method.startswith("time"):
             if method.endswith("strict"):
                 len_segment = self.len_segment()
-                # TODO: change this
                 step = self.input_store.step
                 num_removed = len_segment // step
             else:
@@ -1273,37 +1271,36 @@ class BehaviorDataset(Dataset, ABC):
                 raise ValueError(
                     'You need to either set split_path or change partition method ("file" requires a file)'
                 )
+            active_list = None
+            training, validation, test = [], [], []
             with open(split_path) as f:
-                train_line = f.readline()
-                line = f.readline()
-                while not line.startswith("Validation") and not line.startswith(
-                    "Validataion"
-                ):
-                    line = f.readline()
-                if line.startswith("Validation"):
-                    validation = []
-                    test = []
-                    while True:
-                        line = f.readline()
-                        if line.startswith("Test") or len(line) == 0:
-                            break
-                        validation.append(line.rstrip())
-                    while True:
-                        line = f.readline()
-                        if len(line) == 0:
-                            break
-                        test.append(line.rstrip())
-                    type = train_line[9:-2]
-                else:
-                    line = f.readline()
-                    validation = line.rstrip(",\n ").split(", ")
-                    test = []
-                    type = "videos"
-            if type == "videos":
+                for line in f.readlines():
+                    if line.startswith("Train"):
+                        active_list = training
+                    elif line.startswith("Valid"):
+                        active_list = validation
+                    elif line.startswith("Test"):
+                        active_list = test
+                    else:
+                        stripped_line = line.rstrip(",\n ")
+                        if stripped_line == "":
+                            continue
+                        if ", " in stripped_line:
+                            active_list += stripped_line.split(", ")
+                        else:
+                            active_list.append(stripped_line)
+            all_lines = training + validation + test
+            if len(all_lines[0].split("---")) == 3:
+                entry_type = "coords"
+            else:
+                entry_type = "videos"
+
+            if entry_type == "videos":
                 videos = np.array(self.input_store.get_video_id_order())
                 val_indices = np.where(np.isin(videos, validation))[0]
                 test_indices = np.where(np.isin(videos, test))[0]
-            elif type == "coords":
+                train_indices = np.where(np.isin(videos, training))[0]
+            elif entry_type == "coords":
                 coords = self.input_store.get_original_coordinates()
                 video_ids = self.input_store.get_video_id_order()
                 clip_ids = [self.input_store.get_clip_id(coord) for coord in coords]
@@ -1320,12 +1317,22 @@ class BehaviorDataset(Dataset, ABC):
                 )
                 val_indices = np.where(np.isin(coords, validation))[0]
                 test_indices = np.where(np.isin(coords, test))[0]
+                train_indices = np.where(np.isin(coords, training))[0]
             else:
                 raise ValueError("The split path has unrecognized format!")
-            all = np.ones(len(self))
-            all[val_indices] = 0
-            all[test_indices] = 0
-            train_indices = np.where(all)[0]
+            all_indices = np.ones(len(self))
+            if len(train_indices) == 0:
+                all_indices[val_indices] = 0
+                all_indices[test_indices] = 0
+                train_indices = np.where(all_indices)[0]
+            elif len(val_indices) == 0:
+                all_indices[train_indices] = 0
+                all_indices[test_indices] = 0
+                val_indices = np.where(all_indices)[0]
+            elif len(test_indices) == 0:
+                all_indices[train_indices] = 0
+                all_indices[val_indices] = 0
+                test_indices = np.where(all_indices)[0]
         else:
             raise ValueError(
                 f"The {method} partition is not recognized, please choose from {options.partition_methods}"
@@ -1340,10 +1347,7 @@ class BehaviorDataset(Dataset, ABC):
         split_path: str,
         coords: bool = False,
     ) -> None:
-        """
-        Save a split file
-        """
-
+        """Save a split file."""
         if coords:
             name = "coords"
             training_coords = []
@@ -1380,8 +1384,7 @@ class BehaviorDataset(Dataset, ABC):
                     f.write(x + "\n")
 
     def _get_intervals_from_ind(self, frame_indices: np.ndarray):
-        """
-        Get a list of intervals from a list of frame indices
+        """Get a list of intervals from a list of frame indices.
 
         Example: `[0, 1, 2, 5, 6, 8] -> [[0, 3], [5, 7], [8, 9]]`.
 
@@ -1394,8 +1397,8 @@ class BehaviorDataset(Dataset, ABC):
         -------
         intervals : list
             a list of interval boundaries
-        """
 
+        """
         masked_intervals = []
         breaks = np.where(np.diff(frame_indices) != 1)[0]
         if len(frame_indices) > 0:
@@ -1407,16 +1410,15 @@ class BehaviorDataset(Dataset, ABC):
         return masked_intervals
 
     def get_intervals(self) -> Tuple[dict, Optional[list]]:
-        """
-        Get a list of intervals covered by the dataset in the original coordinates
+        """Get a list of intervals covered by the dataset in the original coordinates.
 
         Returns
         -------
         intervals : dict
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids and
             values are lists of the intervals in `[start, end]` format
-        """
 
+        """
         counter = defaultdict(lambda: {})
         coordinates = self.input_store.get_original_coordinates()
         for coords in coordinates:
@@ -1436,16 +1438,22 @@ class BehaviorDataset(Dataset, ABC):
         return result, self.ids
 
     def get_unannotated_intervals(self, first_intervals=None) -> Dict:
-        """
-        Get a list of intervals in the original coordinates where there is no annotation
+        """Get a list of intervals in the original coordinates where there is no annotation.
+
+        Parameters
+        ----------
+        first_intervals : dict
+            a nested dictionary where first-level keys are video ids, second-level keys are clip ids and
+            values are lists of the intervals in `[start, end]` format. If provided, only the intersection with
+            those intervals will be returned
 
         Returns
         -------
         intervals : dict
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids and
             values are lists of the intervals in `[start, end]` format
-        """
 
+        """
         counter_value = 2
         if first_intervals is None:
             first_intervals = defaultdict(lambda: defaultdict(lambda: []))
@@ -1477,16 +1485,15 @@ class BehaviorDataset(Dataset, ABC):
         return result
 
     def get_annotated_intervals(self) -> Dict:
-        """
-        Get a list of intervals in the original coordinates where there is no annotation
+        """Get a list of intervals in the original coordinates where there is no annotation.
 
         Returns
         -------
         intervals : dict
             a nested dictionary where first-level keys are video ids, second-level keys are clip ids and
             values are lists of the intervals in `[start, end]` format
-        """
 
+        """
         if self.annotation_type == "none":
             return []
         counter_value = 1
@@ -1520,15 +1527,14 @@ class BehaviorDataset(Dataset, ABC):
         return result
 
     def get_ids(self) -> Dict:
-        """
-        Get a dictionary of all clip ids in the dataset
+        """Get a dictionary of all clip ids in the dataset.
 
         Returns
         -------
         ids : dict
             a dictionary where keys are video ids and values are lists of clip ids
-        """
 
+        """
         coordinates = self.input_store.get_original_coordinates()
         video_ids = np.array(self.input_store.get_video_id_order())
         id_set = set(video_ids)
@@ -1540,8 +1546,7 @@ class BehaviorDataset(Dataset, ABC):
         return result
 
     def get_len(self, video_id: str, clip_id: str) -> int:
-        """
-        Get the length of a specific clip
+        """Get the length of a specific clip.
 
         Parameters
         ----------
@@ -1554,15 +1559,14 @@ class BehaviorDataset(Dataset, ABC):
         -------
         length : int
             the length
-        """
 
+        """
         return self.input_store.get_clip_length(video_id, clip_id)
 
     def get_confusion_matrix(
         self, prediction: torch.Tensor, confusion_type: str = "recall"
     ) -> Tuple[ndarray, list]:
-        """
-        Get a confusion matrix
+        """Get a confusion matrix.
 
         Parameters
         ----------
@@ -1580,8 +1584,8 @@ class BehaviorDataset(Dataset, ABC):
             `N_i` is the number of frames that have the i-th label in the ground truth
         classes : list
             a list of classes
-        """
 
+        """
         behaviors_dict = self.annotation_store.behaviors_dict()
         num_behaviors = len(behaviors_dict)
         confusion_matrix = np.zeros((num_behaviors, num_behaviors))
@@ -1632,31 +1636,44 @@ class BehaviorDataset(Dataset, ABC):
         return confusion_matrix, list(behaviors_dict.values()), confusion_type
 
     def annotation_class(self) -> str:
-        """
-        Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon)
+        """Get the type of annotation ('exclusive_classification', 'nonexclusive_classification', more coming soon).
 
         Returns
         -------
         annotation_class : str
             the type of annotation
-        """
 
+        """
         return self.annotation_store.annotation_class()
 
     def set_normalization_stats(self, stats: Dict) -> None:
-        """
-        Set the stats to normalize data at runtime
+        """Set the stats to normalize data at runtime.
 
         Parameters
         ----------
         stats : dict
             a nested dictionary where first-level keys are feature key names, second-level keys are 'mean' and 'std'
             and values are the statistics in `torch` tensors of shape `(#features, 1)`
-        """
 
+        """
         self.stats = stats
 
     def get_min_max_frames(self, video_id) -> Tuple[Dict, Dict]:
+        """Get the minimum and maximum frame numbers for each clip in a video.
+
+        Parameters
+        ----------
+        video_id : str
+            the video id
+
+        Returns
+        -------
+        min_frames : dict
+            a dictionary where keys are clip ids and values are the minimum frame numbers
+        max_frames : dict
+            a dictionary where keys are clip ids and values are the maximum frame numbers
+
+        """
         coords = self.input_store.get_original_coordinates()
         clips = set(
             [
@@ -1675,16 +1692,20 @@ class BehaviorDataset(Dataset, ABC):
         return min_frames, max_frames
 
     def get_normalization_stats(self, skip_keys=None) -> Dict:
-        """
-        Get mean and standard deviation for each key
+        """Get mean and standard deviation for each key.
+
+        Parameters
+        ----------
+        skip_keys : list, optional
+            a list of keys to skip
 
         Returns
         -------
         stats : dict
             a nested dictionary where first-level keys are feature key names, second-level keys are 'mean' and 'std'
             and values are the statistics in `torch` tensors of shape `(#features, 1)`
-        """
 
+        """
         stats = defaultdict(lambda: {})
         sums = defaultdict(lambda: 0)
         if skip_keys is None:

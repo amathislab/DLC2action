@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 ms_tcn:
   weights: 'dataset_inverse_weights' # list; list of weights for weighted cross-entropy
   focal: true # bool; if True, focal loss will be used

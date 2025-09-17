@@ -1,112 +1,65 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-from typing import Dict
-from dlc2action.data.dataset import BehaviorDataset
-import pytest
 import os
-import torch
 
+from typing import Dict
+
+import pytest
+import torch
+from dlc2action.data.dataset import BehaviorDataset
+import yaml
+import sys
+
+
+skip_when_not_direct = pytest.mark.skipif(
+    not any(f.endswith(os.path.basename(__file__)) for f in sys.argv),
+    reason="Skipped when not run directly",
+)
+
+with open("tests/config_test.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+crim_data_path = config["crim_data_path"]
+oft_data_path = config["oft_data_path"]
 
 test_data = [
     {
         "data_type": "dlc_track",
-        "annotation_type": "dlc",
-        "data_path": "/home/liza/data/maushaus",
-        "annotation_path": "/home/liza/data/maushaus",
-        "canvas_shape": [800, 600],
-        "data_prefix": {"ac-", "b1-"},  # multiview
-        "data_suffix": {"DLC_resnet50.h5"},
-        "feature_suffix": ".pt",
-        "len_segment": 512,
+        "annotation_type": "csv",
+        "data_path": oft_data_path,
+        "annotation_path": oft_data_path,
+        "canvas_shape": [928, 576],
+        "data_suffix": "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
+        "annotation_suffix": ".csv",
+        "behaviors": ["Grooming", "Supported", "Unsupported"],
+        "len_segment": 30,
         "overlap": 0,
-        "behaviors": [
-            "grooming",
-            "general locomotion",
-            "running on treadmill",
-            "hut",
-            "water",
-        ],
-        "annotation_suffix": {"_lane.pickle"},
-        "exclusive": False,
+        "exclusive": True,
+        "only_load_annotated": True,
+        "feature_extraction": "heatmap",
+        "feature_extraction_pars": {"canvas_shape": [928, 576]},
+    },
+    {
+        "data_type": "dlc_track",
+        "annotation_type": "csv",
+        "data_path": oft_data_path,
+        "annotation_path": oft_data_path,
+        "canvas_shape": [928, 576],
+        "data_suffix": "DeepCut_resnet50_Blockcourse1May9shuffle1_1030000.csv",
+        "annotation_suffix": ".csv",
+        "behaviors": ["Grooming", "Supported", "Unsupported"],
+        "len_segment": 30,
+        "overlap": 0,
+        "exclusive": True,
         "only_load_annotated": True,
     },
-    # {
-    #     "data_type": "pku-mmd",
-    #     "annotation_type": "pku-mmd",
-    #     "data_path": "/home/liza/data/pku_mmd/PKU_Skeleton_Renew/sample_tmp",
-    #     "annotation_path": "/home/liza/data/pku_mmd/Train_Label_PKU_final/sample_tmp",
-    #     "behavior_file": "/home/liza/data/pku_mmd/Actions.xlsx",
-    # },
-    {
-        "data_type": "dlc_tracklet",
-        "annotation_type": "dlc",
-        "feature_suffix": "_pca_feat.pickle",
-        "data_path": "/home/liza/data/marmoset_sample",
-        "annotation_path": "/home/liza/data/marmoset_sample",
-        "behaviors": ["inactive alert", "locomotion"],
-        "correction": {
-            "calm locomotion": "locomotion",
-            "agitated_locomotion": "locomotion",
-            "leaping": "locomotion",
-            "chewing": "inactive alert",
-            "looking around": "inactive alert",
-        },
-        "annotation_suffix": {"_banty.h5", "_banty.pickle"},
-        "error_class": "DLC error",
-        "data_suffix": {
-            "_el.pickle",
-        },
-        "frame_limit": 2,
-        "canvas_shape": [1280, 720],
-        "ignored_bodyparts": {"tailend", "tail1", "tail2"},
-    },
-    {
-        "data_type": "dlc_track",
-        "annotation_type": "boris",
-        "data_path": "/home/liza/data/cricket",
-        "annotation_path": "/home/liza/data/cricket",
-        "behaviors": ["Grooming", "Search", "Pursuit"],
-        "annotation_suffix": {".csv"},
-        "data_suffix": {
-            "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
-        },
-        "default_agent_name": "mouse",
-        "ignored_clips": ["single"],
-    },
-    {
-        "data_type": "dlc_track",
-        "annotation_type": "boris",
-        "data_path": "/home/liza/data/cricket",
-        "annotation_path": "/home/liza/data/cricket",
-        "behaviors": ["Grooming", "Search", "Pursuit"],
-        "annotation_suffix": {".csv"},
-        "data_suffix": {
-            "DLC_resnet50_preycapSep30shuffle1_20000_bx_filtered.h5",
-        },
-        "default_agent_name": "mouse",
-        "ignored_clips": ["single"],
-        "feature_extraction": "heatmap",
-        "canvas_shape": [2250, 1088],
-        "feature_extraction_pars": {"canvas_shape": [2250, 1088]},
-    },
-    # {
-    #     "data_type": "calms21",
-    #     "annotation_type": "calms21",
-    #     "task_n": 1,
-    #     "data_path": "/home/liza/data/calms21",
-    #     "annotation_path": "/home/liza/data/calms21",
-    #     "len_segment": 256,
-    #     "overlap": 100,
-    #     "only_load_annotated": True,
-    #     "interactive": True,
-    # },
 ]
 
-
-@pytest.mark.skip
+@skip_when_not_direct
 @pytest.mark.parametrize("data_parameters", test_data)
 def test_dataset_creation(data_parameters: Dict):
     """
@@ -160,6 +113,6 @@ def test_dataset_creation(data_parameters: Dict):
     assert len(dataset.annotation_store) > 0
 
 
-# test_dataset_creation(test_data[-1])
-# for data in test_data:
-#     test_dataset_creation(data)
+if __name__ == "__main__":
+    test_dataset_creation(test_data[0])
+    test_dataset_creation(test_data[1])

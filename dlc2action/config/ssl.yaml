@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 contrastive:
   ssl_features: 32 # int; length of clip feature vectors
   tau: 1 # float; tau (NT-Xent loss parameter)
@@ -5,7 +11,7 @@ contrastive:
   num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
 contrastive_regression:
   temperature: 1 # float; temperature
-  distance: "cosine" # ["cosine", "euclidean"]; 
+  distance: "cosine" # ["cosine", "euclidean"];
   num_f_maps: 'model_features' # list; shape of the segments that enter the SSL module
   num_features: 128 # int; number of feature maps
 contrastive_masked:

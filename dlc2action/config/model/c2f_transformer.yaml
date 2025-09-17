@@ -1,0 +1,10 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
+input_dims: "dataset_features" # int | str; the number of input features (leave as "dataset_features" to compute it automatically)
+heads: 4 # int; number of heads
+feature_dim: null # int; if not null, intermediate features are generated with this dimension and then passed to a 2-layer MLP for classification (useful for SSL)
+num_f_maps: 128 # int; number of feature maps

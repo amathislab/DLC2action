@@ -3,37 +3,34 @@
 #
 # This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
 #
+# Incorporates code adapted from ASFormer by ChinaYi
+# Original work Copyright (c) 2021 ChinaYi
+# Source: https://github.com/ChinaYi/ASFormer
+# Originally licensed under MIT License
+# Combined work licensed under GNU AGPLv3
 #
-# Adapted from ASFormer by ChinaYi
-# Adapted from https://github.com/ChinaYi/ASFormer
-# Licensed under MIT License
-#
-""" ASFormer
+import copy
+import math
+from typing import List, Union
 
-Adapted from https://github.com/ChinaYi/ASFormer
-"""
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import optim
 from dlc2action.model.base_model import Model
-from typing import Union, List
-
-import copy
-import numpy as np
-import math
+from torch import optim
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def _exponential_descrease(idx_decoder, p=3):
+def exponential_descrease(idx_decoder, p=3):
+    """Exponential decrease function for the attention window."""
     return math.exp(-p * idx_decoder)
 
 
-class _AttentionHelper(nn.Module):
+class AttentionHelper(nn.Module):
     def __init__(self):
-        super(_AttentionHelper, self).__init__()
+        super(AttentionHelper, self).__init__()
         self.softmax = nn.Softmax(dim=-1)
 
     def scalar_dot_att(self, proj_query, proj_key, proj_val, padding_mask):
@@ -64,32 +61,41 @@ class _AttentionHelper(nn.Module):
         return out, attention
 
 
-class _AttLayer(nn.Module):
+class AttLayer(nn.Module):
     def __init__(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type):  # r1 = r2
-        super(_AttLayer, self).__init__()
+        self._fix_types(q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type)
+        super(AttLayer, self).__init__()
 
         self.query_conv = nn.Conv1d(
-            in_channels=q_dim, out_channels=q_dim // r1, kernel_size=1
+            in_channels=self.q_dim, out_channels=self.q_dim // self.r1, kernel_size=1
         )
         self.key_conv = nn.Conv1d(
-            in_channels=k_dim, out_channels=k_dim // r2, kernel_size=1
+            in_channels=self.k_dim, out_channels=self.k_dim // self.r2, kernel_size=1
         )
         self.value_conv = nn.Conv1d(
-            in_channels=v_dim, out_channels=v_dim // r3, kernel_size=1
+            in_channels=self.v_dim, out_channels=self.v_dim // self.r3, kernel_size=1
         )
 
         self.conv_out = nn.Conv1d(
-            in_channels=v_dim // r3, out_channels=v_dim, kernel_size=1
+            in_channels=self.v_dim // self.r3, out_channels=self.v_dim, kernel_size=1
         )
 
-        self.bl = bl
-        self.stage = stage
-        self.att_type = att_type
         assert self.att_type in ["normal_att", "block_att", "sliding_att"]
         assert self.stage in ["encoder", "decoder"]
 
-        self.att_helper = _AttentionHelper()
+        self.att_helper = AttentionHelper()
         self.window_mask = self.construct_window_mask()
+
+    def _fix_types(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type):
+        self.q_dim = int(float(q_dim))
+        self.k_dim = int(float(k_dim))
+        self.v_dim = int(float(v_dim))
+        self.r1 = int(float(r1))
+        self.r2 = int(float(r2))
+        self.r3 = int(float(r3))
+        self.bl = int(float(bl))
+        self.stage = stage
+        self.att_type = att_type
 
     def construct_window_mask(self):
         """
@@ -101,6 +107,7 @@ class _AttLayer(nn.Module):
         return window_mask.to(device)
 
     def forward(self, x1, x2, mask):
+        """Forward pass."""
         # x1 from the encoder
         # x2 from the decoder
 
@@ -292,15 +299,15 @@ class _AttLayer(nn.Module):
         return output * mask[:, 0:1, :]
 
 
-class _MultiHeadAttLayer(nn.Module):
+class MultiHeadAttLayer(nn.Module):
     def __init__(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type, num_head):
-        super(_MultiHeadAttLayer, self).__init__()
+        super(MultiHeadAttLayer, self).__init__()
         #         assert v_dim % num_head == 0
         self.conv_out = nn.Conv1d(v_dim * num_head, v_dim, 1)
         self.layers = nn.ModuleList(
             [
                 copy.deepcopy(
-                    _AttLayer(q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type)
+                    AttLayer(q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type)
                 )
                 for i in range(num_head)
             ]
@@ -308,14 +315,15 @@ class _MultiHeadAttLayer(nn.Module):
         self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, x1, x2, mask):
+        """Forward pass."""
         out = torch.cat([layer(x1, x2, mask) for layer in self.layers], dim=1)
         out = self.conv_out(self.dropout(out))
         return out
 
 
-class _ConvFeedForward(nn.Module):
+class ConvFeedForward(nn.Module):
     def __init__(self, dilation, in_channels, out_channels):
-        super(_ConvFeedForward, self).__init__()
+        super(ConvFeedForward, self).__init__()
         self.layer = nn.Sequential(
             nn.Conv1d(
                 in_channels, out_channels, 3, padding=dilation, dilation=dilation
@@ -324,12 +332,13 @@ class _ConvFeedForward(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass."""
         return self.layer(x)
 
 
-class _FCFeedForward(nn.Module):
+class FCFeedForward(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(_FCFeedForward, self).__init__()
+        super(FCFeedForward, self).__init__()
         self.layer = nn.Sequential(
             nn.Conv1d(in_channels, out_channels, 1),  # conv1d equals fc
             nn.ReLU(),
@@ -338,17 +347,18 @@ class _FCFeedForward(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass."""
         return self.layer(x)
 
 
-class _AttModule(nn.Module):
+class AttModule(nn.Module):
     def __init__(
         self, dilation, in_channels, out_channels, r1, r2, att_type, stage, alpha
     ):
-        super(_AttModule, self).__init__()
-        self.feed_forward = _ConvFeedForward(dilation, in_channels, out_channels)
+        super(AttModule, self).__init__()
+        self.feed_forward = ConvFeedForward(dilation, in_channels, out_channels)
         self.instance_norm = nn.InstanceNorm1d(in_channels, track_running_stats=False)
-        self.att_layer = _AttLayer(
+        self.att_layer = AttLayer(
             in_channels,
             in_channels,
             out_channels,
@@ -364,6 +374,7 @@ class _AttModule(nn.Module):
         self.alpha = alpha
 
     def forward(self, x, f, mask):
+        """Forward pass."""
         out = self.feed_forward(x)
         out = self.alpha * self.att_layer(self.instance_norm(out), f, mask) + out
         out = self.conv_1x1(out)
@@ -371,11 +382,11 @@ class _AttModule(nn.Module):
         return (x + out) * mask[:, 0:1, :]
 
 
-class _PositionalEncoding(nn.Module):
+class PositionalEncoding(nn.Module):
     "Implement the PE function."
 
     def __init__(self, d_model, max_len=10000):
-        super(_PositionalEncoding, self).__init__()
+        super(PositionalEncoding, self).__init__()
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len).unsqueeze(1)
@@ -390,10 +401,11 @@ class _PositionalEncoding(nn.Module):
     #         self.register_buffer('pe', pe)
 
     def forward(self, x):
+        """Forward pass."""
         return x + self.pe[:, :, 0 : x.shape[2]]
 
 
-class _Encoder(nn.Module):
+class Encoder(nn.Module):
     def __init__(
         self,
         num_layers,
@@ -405,11 +417,11 @@ class _Encoder(nn.Module):
         att_type,
         alpha,
     ):
-        super(_Encoder, self).__init__()
+        super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1)  # fc layer
         self.layers = nn.ModuleList(
             [
-                _AttModule(
+                AttModule(
                     2**i, num_f_maps, num_f_maps, r1, r2, att_type, "encoder", alpha
                 )
                 for i in range(num_layers)  # 2**i
@@ -420,12 +432,7 @@ class _Encoder(nn.Module):
         self.channel_masking_rate = channel_masking_rate
 
     def forward(self, x, mask):
-        """
-        :param x: (N, C, L)
-        :param mask:
-        :return:
-        """
-
+        """Forward pass."""
         if self.channel_masking_rate > 0:
             x = x.unsqueeze(2)
             x = self.dropout(x)
@@ -438,17 +445,17 @@ class _Encoder(nn.Module):
         return feature
 
 
-class _Decoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(
         self, num_layers, r1, r2, num_f_maps, input_dim, num_classes, att_type, alpha
     ):
         super(
-            _Decoder, self
+            Decoder, self
         ).__init__()  # self.position_en = PositionalEncoding(d_model=num_f_maps)
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1)
         self.layers = nn.ModuleList(
             [
-                _AttModule(
+                AttModule(
                     2**i, num_f_maps, num_f_maps, r1, r2, att_type, "decoder", alpha
                 )
                 for i in range(num_layers)  # 2 ** i
@@ -457,6 +464,7 @@ class _Decoder(nn.Module):
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
     def forward(self, x, fencoder, mask):
+        """Forward pass."""
         feature = self.conv_1x1(x)
         for layer in self.layers:
             feature = layer(feature, fencoder, mask)
@@ -466,7 +474,7 @@ class _Decoder(nn.Module):
         return out, feature
 
 
-class _MyTransformer(nn.Module):
+class MyTransformer(nn.Module):
     def __init__(
         self,
         num_layers,
@@ -476,8 +484,8 @@ class _MyTransformer(nn.Module):
         input_dim,
         channel_masking_rate,
     ):
-        super(_MyTransformer, self).__init__()
-        self.encoder = _Encoder(
+        super(MyTransformer, self).__init__()
+        self.encoder = Encoder(
             num_layers,
             r1,
             r2,
@@ -489,6 +497,7 @@ class _MyTransformer(nn.Module):
         )
 
     def forward(self, x):
+        """Forward pass."""
         mask = (x.sum(1).unsqueeze(1) != 0).int()
         feature = self.encoder(x, mask)
         feature = feature * mask
@@ -496,7 +505,7 @@ class _MyTransformer(nn.Module):
         return feature
 
 
-class _Predictor(nn.Module):
+class Predictor(nn.Module):
     def __init__(
         self,
         num_layers,
@@ -506,11 +515,11 @@ class _Predictor(nn.Module):
         num_classes,
         num_decoders,
     ):
-        super(_Predictor, self).__init__()
+        super(Predictor, self).__init__()
         self.decoders = nn.ModuleList(
             [
                 copy.deepcopy(
-                    _Decoder(
+                    Decoder(
                         num_layers,
                         r1,
                         r2,
@@ -518,7 +527,7 @@ class _Predictor(nn.Module):
                         num_classes,
                         num_classes,
                         att_type="sliding_att",
-                        alpha=_exponential_descrease(s),
+                        alpha=exponential_descrease(s),
                     )
                 )
                 for s in range(num_decoders)
@@ -528,6 +537,7 @@ class _Predictor(nn.Module):
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
     def forward(self, x):
+        """Forward pass."""
         mask = (x.sum(1).unsqueeze(1) != 0).int()
         out = self.conv_out(x) * mask[:, 0:1, :]
         outputs = out.unsqueeze(0)
@@ -547,44 +557,44 @@ class ASFormer(Model):
 
     def __init__(
         self,
-        num_decoders,
-        num_layers,
-        r1,
-        r2,
-        num_f_maps,
-        input_dim,
-        num_classes,
-        channel_masking_rate,
-        state_dict_path=None,
-        ssl_constructors=None,
-        ssl_types=None,
-        ssl_modules=None,
+        num_decoders:int,
+        num_layers:int,
+        r1:float,
+        r2:float,
+        num_f_maps:int,
+        input_dim:dict,
+        num_classes:int,
+        channel_masking_rate:float,
+        state_dict_path:str=None,
+        ssl_constructors:List=None,
+        ssl_types:List=None,
+        ssl_modules:List=None,
     ):
         input_dim = sum([x[0] for x in input_dim.values()])
-        self.num_f_maps = num_f_maps
+        self.num_f_maps = int(float(num_f_maps))
         self.params = {
-            "num_layers": int(num_layers),
-            "r1": r1,
-            "r2": r2,
-            "num_f_maps": int(num_f_maps),
-            "input_dim": int(input_dim),
-            "channel_masking_rate": channel_masking_rate,
+            "num_layers": int(float(num_layers)),
+            "r1": float(r1),
+            "r2": float(r2),
+            "num_f_maps": self.num_f_maps,
+            "input_dim": int(float(input_dim)),
+            "channel_masking_rate": float(channel_masking_rate),
         }
         self.params_predictor = {
-            "num_layers": int(num_layers),
+            "num_layers": int(float(num_layers)),
             "r1": r1,
             "r2": r2,
-            "num_f_maps": int(num_f_maps),
-            "num_classes": int(num_classes),
-            "num_decoders": int(num_decoders),
+            "num_f_maps": self.num_f_maps,
+            "num_classes": int(float(num_classes)),
+            "num_decoders": int(float(num_decoders)),
         }
         super().__init__(ssl_constructors, ssl_modules, ssl_types, state_dict_path)
 
     def _feature_extractor(self) -> Union[torch.nn.Module, List]:
-        return _MyTransformer(**self.params)
+        return MyTransformer(**self.params)
 
     def _predictor(self) -> torch.nn.Module:
-        return _Predictor(**self.params_predictor)
+        return Predictor(**self.params_predictor)
 
     def features_shape(self) -> torch.Size:
         return torch.Size([self.num_f_maps])

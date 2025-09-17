@@ -1,14 +1,16 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-import torch
-from dlc2action import options
 import inspect
+from copy import deepcopy
+
 import numpy as np
 import pytest
-from copy import deepcopy
+import torch
+from dlc2action import options
 
 
 def generate_sample_exclusive(frac_wrong: float):
@@ -97,5 +99,3 @@ def test_metric(metric_name: str, exclusive: bool):
     else:
         assert np.sum(np.array(results[1:]) - np.array(results[:-1]) < 0) >= 3
 
-
-# test_metric('pku-map', True)

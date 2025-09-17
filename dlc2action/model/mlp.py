@@ -1,18 +1,20 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-from dlc2action.model.base_model import Model
-import torch
-from torch import nn
 from typing import List, Union
+
+import torch
+from dlc2action.model.base_model import Model
+from torch import nn
 from torch.nn import functional as F
 
 
-class _MLPModule(nn.Module):
+class MLPModule(nn.Module):
     def __init__(self, f_maps_list, input_dims, num_classes, dropout_rates=None):
-        super(_MLPModule, self).__init__()
+        super(MLPModule, self).__init__()
         input_dims = int(sum([s[0] for s in input_dims.values()]))
         if dropout_rates is None:
             dropout_rates = 0.5
@@ -29,6 +31,7 @@ class _MLPModule(nn.Module):
         self.dropout = nn.ModuleList([nn.Dropout(r) for r in dropout_rates])
 
     def forward(self, x):
+        """Forward pass."""
         for i, layer in enumerate(self.layers):
             x = layer(x)
             if i < len(self.layers) - 1:
@@ -62,7 +65,7 @@ class MLP(Model):
         super().__init__(ssl_constructors, ssl_modules, ssl_types, state_dict_path)
 
     def _feature_extractor(self) -> Union[torch.nn.Module, List]:
-        return _MLPModule(**self.params)
+        return MLPModule(**self.params)
 
     def _predictor(self) -> torch.nn.Module:
         return nn.Identity()

@@ -1,23 +1,20 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
+"""Temporal Cycle Consistency SSL constructor."""
+
 from dlc2action.ssl.base_ssl import SSLConstructor
 import torch
-from dlc2action.loss.tcc import _TCCLoss
+from dlc2action.loss.tcc import TCCLoss
 from typing import Dict, Union, Tuple
 from torch import nn
-from dlc2action.ssl.modules import _FC
-
+from dlc2action.ssl.modules import FC
 
 class TCCSSL(SSLConstructor):
-    """
-    A contrastive SSL class with an NT-Xent loss
-
-    The SSL input and target are left empty (the SSL input is generated as an augmentation of the
-    input sample at runtime).
-    """
+    """Temporal Cycle Consistency SSL constructor."""
 
     type = "ssl_target"
 
@@ -26,7 +23,6 @@ class TCCSSL(SSLConstructor):
         num_f_maps: torch.Size,
         len_segment: int,
         projection_head_f_maps: int = None,
-        loss_type: str = "regression_mse_var",
         variance_lambda: float = 0.001,
         normalize_indices: bool = True,
         normalize_embeddings: bool = False,
@@ -36,6 +32,7 @@ class TCCSSL(SSLConstructor):
         temperature: float = 0.1,
         label_smoothing: float = 0.1,
     ) -> None:
+        """Initialize the constructor."""
         super().__init__()
         if len(num_f_maps) > 1:
             raise RuntimeError(
@@ -46,8 +43,8 @@ class TCCSSL(SSLConstructor):
         if projection_head_f_maps is None:
             projection_head_f_maps = num_f_maps
         self.len_segment = int(len_segment)
-        self.loss_function = _TCCLoss(
-            loss_type,
+        self.loss_function = TCCLoss(
+            "regression_mse_var",
             variance_lambda,
             normalize_indices,
             normalize_embeddings,
@@ -65,10 +62,7 @@ class TCCSSL(SSLConstructor):
         }
 
     def transformation(self, sample_data: Dict) -> Tuple:
-        """
-        Empty transformation
-        """
-
+        """Get the mask."""
         mask = torch.ones((1, self.len_segment))
         for key, value in sample_data.items():
             mask *= (torch.sum(value, 0) == 0).unsqueeze(0)
@@ -76,13 +70,14 @@ class TCCSSL(SSLConstructor):
         return torch.tensor(float("nan")), {"loaded": mask}
 
     def loss(self, predicted: torch.Tensor, target: torch.Tensor) -> float:
+        """TCC loss."""
         loss = self.loss_function(predicted, target)
         return loss
 
     def construct_module(self) -> Union[nn.Module, None]:
-
+        """Construct the SSL prediction module using the parameters specified at initialization."""
         if self.pars["num_ssl_f_maps"] is None:
             module = nn.Identity()
         else:
-            module = _FC(**self.pars)
+            module = FC(**self.pars)
         return module

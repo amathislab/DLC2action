@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 data_prefix: null # str | set; data prefix or a set of data prefixes (if not null, files are assumed to be named {data_prefix}{video_id}{data_suffix}; use multiple prefixes to pass multiple views as input)
 feature_suffix: null # str; suffix of files with additional features saved as a dictionary (files should be named {video_id}{feature_suffix} and places at data path)
 canvas_shape: ??? # list; [x, y] size of the canvas where the coordinates are defined

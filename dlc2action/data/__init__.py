@@ -1,13 +1,12 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
+"""Dataset and related objects.
 
-"""
-## Dataset and related objects
-
-### Dataset
+## Dataset
 
 The dataset class in `dlc2action` is `dataset.BehaviorDataset`. It defines all high-level interaction between
 `Task`,
@@ -15,10 +14,10 @@ input data and annotations (like loading, filtering or adding pseudo-labels). It
 for all data types and is not meant to be inherited from. All customisation happens in *store* classes instead.
 Every dataset has an *input store* and an *annotation store* that perform the actual data operations.
 
-### Store
+## Store
 
 *Stores* are defined by an abstract data handling parent class.
-It is inherited from by `base_store.InputStore` and `base_store.AnnotationStore` and implementations of
+It is inherited from by `base_store.InputStore` and `base_store.BehaviorStore` and implementations of
 these classes (for input and
 annotation data, respectively, see `input_store` and `annotation_store`) are used by datasets. In other words,
 adding a new dataset to `dlc2action` means
@@ -38,18 +37,18 @@ indices). The indexing is consistent across time and stores (the features at ind
 should correspond to labels at index 42 at an annotation store for the same dataset). That is checked at runtime
 by comparing the original coordinates arrays of the two stores.
 
-![image](https://i.ibb.co/Y8zc43H/data.png)
+![image](media/data.png)
 
 In addition, every store is defined by a tuple of *key objects* (e.g. the input data array, the original
 coordinates array and a dictionary with lengths of the original videos). When these key objects are saved and a
 new store is created from them, it behaves identically to the original. Finally, when initialising a dataset,
 input stores are always created first and annotations stores second, if at all. If there is any information that
 needs to be passed from an input store to an annotation store, it is packed in a dictionary, termed *annotation
-objects*. `base_store.AnnotationStore` child classes have a `required_annotation_objects` attribute that contains
+objects*. `base_store.BehaviorStore` child classes have a `required_annotation_objects` attribute that contains
 the keys that
 need to be passed in any case, but you can add optional fields too.
 
-Data is usually stored either as a `torch.Tensor` (in `base_store.AnnotationStore` instances), a
+Data is usually stored either as a `torch.Tensor` (in `base_store.BehaviorStore` instances), a
 `dlc2action.utils.TensorDict` (in `base_store.InputStore` instances where all data fits in RAM) or a `numpy.ndarray`
 of filenames (in `base_store.InputStore` instances with large amounts of data).
 """

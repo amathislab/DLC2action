@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 recall:
   average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
   ignored_classes: null # set; a set of class ids to ignore in calculation
@@ -24,7 +30,7 @@ f_beta:
 #   average: 'macro' # ['macro', 'micro', 'none']; averaging method
 #   ignored_classes: None # set; a set of class ids to ignore in calculation
 count:
-  classes: !!set {0, 1, 2, 3, 4, 5} # set; the class to count the occurences of
+  classes: !!set {0, 1, 2, 3, 4, 5} # set; the class to count the occurrences of
 segmental_precision:
   average: 'macro' # ['macro', 'micro', 'none']; averaging method for classes
   ignored_classes: null # set; a set of class ids to ignore in calculation

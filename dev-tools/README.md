@@ -1,3 +1,9 @@
+<!--
+Copyright 2025-present by A. Mathis Group and contributors. All rights reserved.
+
+  This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+
+-->
 # Developer tools useful for maintaining the repository
 
 ## Code headers

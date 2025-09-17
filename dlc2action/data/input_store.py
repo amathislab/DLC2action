@@ -1,33 +1,31 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Specific realisations of `dlc2action.data.base_store.InputStore` are defined here
-"""
+"""Specific realisations of `dlc2action.data.base_store.InputStore` are defined here."""
 
-from dlc2action.data.base_store import PoseInputStore
-from typing import Dict, List, Tuple, Union, Set, Optional, Iterable
-from dlc2action.utils import TensorDict, strip_suffix, strip_prefix
-import numpy as np
-from collections import defaultdict
-import torch
+import mimetypes
 import os
 import pickle
 from abc import abstractmethod
-import pandas as pd
-from p_tqdm import p_map
-from dlc2action import options
-from PIL import Image
-from tqdm import tqdm
-import mimetypes
+from collections import defaultdict
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
+import numpy as np
+import pandas as pd
+import torch
+from p_tqdm import p_map
+from tqdm import tqdm
+
+from dlc2action import options
+from dlc2action.data.base_store import PoseInputStore
+from dlc2action.utils import TensorDict, strip_prefix, strip_suffix
 
 
 class GeneralInputStore(PoseInputStore):
-    """
-    A generalized realization of a PoseInputStore
+    """A generalized realization of a `PoseInputStore`.
 
     Assumes the following file structure:
     ```
@@ -70,7 +68,8 @@ class GeneralInputStore(PoseInputStore):
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -117,10 +116,16 @@ class GeneralInputStore(PoseInputStore):
             the number of cpus to use in data processing
         frame_limit : int, default 1
             clips shorter than this number of frames will be ignored
+        normalize : bool, default False
+            whether to normalize the pose
         feature_extraction_pars : dict, optional
             parameters of the feature extractor
-        """
+        centered : bool, default False
+            whether the pose is centered
+        transpose_features : bool, default False
+            whether to transpose the features
 
+        """
         super().__init__()
         self.loaded_max = 0
         if feature_extraction_pars is None:
@@ -150,8 +155,10 @@ class GeneralInputStore(PoseInputStore):
         self.data_prefixes = data_prefix
         self.feature_suffix = feature_suffix
         self.convert_int_indices = convert_int_indices
+        if isinstance(overlap, str):
+            overlap = float(overlap)
         if overlap < 1:
-            overlap = overlap * len_segment
+            overlap = overlap * self.len_segment
         self.overlap = int(overlap)
         self.canvas_shape = canvas_shape
         self.default_agent_name = default_agent_name
@@ -201,6 +208,7 @@ class GeneralInputStore(PoseInputStore):
             self.load_from_key_objects(key_objects)
 
     def __getitem__(self, ind: int) -> Dict:
+        """Get a single item from the dataset."""
         prompt = self.data[ind]
         if not self.ram:
             with open(prompt, "rb") as f:
@@ -208,14 +216,14 @@ class GeneralInputStore(PoseInputStore):
         return prompt
 
     def __len__(self) -> int:
+        """Get the length of the dataset."""
         if self.data is None:
             raise RuntimeError("The input store data has not been initialized!")
         return len(self.data)
 
     @classmethod
     def _get_file_paths(cls, file_paths: Set, data_path: Union[str, Set]) -> List:
-        """
-        Get a set of relevant files
+        """Get a set of relevant files.
 
         Parameters
         ----------
@@ -228,8 +236,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         file_paths : list
             a list of relevant file paths (input and feature files that follow the dataset naming pattern)
-        """
 
+        """
         if file_paths is None:
             file_paths = []
         file_paths = list(file_paths)
@@ -241,8 +249,7 @@ class GeneralInputStore(PoseInputStore):
         return file_paths
 
     def get_folder(self, video_id: str) -> str:
-        """
-        Get the input folder that the file with this video id was read from
+        """Get the input folder that the file with this video id was read from.
 
         Parameters
         ----------
@@ -253,8 +260,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         folder : str
             the path to the directory that contains the input file associated with the video id
-        """
 
+        """
         for file in self.file_paths:
             if (
                 strip_prefix(
@@ -266,15 +273,14 @@ class GeneralInputStore(PoseInputStore):
                 return os.path.dirname(file)
 
     def remove(self, indices: List) -> None:
-        """
-        Remove the samples corresponding to indices
+        """Remove the samples corresponding to indices.
 
         Parameters
         ----------
         indices : int
             a list of integer indices to remove
-        """
 
+        """
         if len(indices) > 0:
             mask = np.ones(len(self.original_coordinates))
             mask[indices] = 0
@@ -287,15 +293,14 @@ class GeneralInputStore(PoseInputStore):
                 self.metadata = self.metadata[mask]
 
     def key_objects(self) -> Tuple:
-        """
-        Return a tuple of the key objects necessary to re-create the Store
+        """Return a tuple of the key objects necessary to re-create the Store.
 
         Returns
         -------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         for k, v in self.min_frames.items():
             self.min_frames[k] = dict(v)
         for k, v in self.max_frames.items():
@@ -313,15 +318,14 @@ class GeneralInputStore(PoseInputStore):
         )
 
     def load_from_key_objects(self, key_objects: Tuple) -> None:
-        """
-        Load the information from a tuple of key objects
+        """Load the information from a tuple of key objects.
 
         Parameters
         ----------
         key_objects : tuple
             a tuple of key objects
-        """
 
+        """
         (
             self.original_coordinates,
             self.min_frames,
@@ -335,37 +339,36 @@ class GeneralInputStore(PoseInputStore):
         ) = key_objects
 
     def to_ram(self) -> None:
-        """
-        Transfer the data samples to RAM if they were previously stored as file paths
-        """
-
+        """Transfer the data samples to RAM if they were previously stored as file paths."""
         if self.ram:
             return
 
         if os.name != "nt":
-            data = p_map(lambda x: self[x], list(range(len(self))), num_cpus=self.num_cpus)
+            data = p_map(
+                lambda x: self[x], list(range(len(self))), num_cpus=self.num_cpus
+            )
         else:
-            print("Multiprocessing is not supported on Windows, loading files sequentially.")
+            print(
+                "Multiprocessing is not supported on Windows, loading files sequentially."
+            )
             data = [load(x) for x in tqdm(self.data)]
         self.data = TensorDict(data)
         self.ram = True
 
     def get_original_coordinates(self) -> np.ndarray:
-        """
-        Return the original coordinates array
+        """Return the original coordinates array.
 
         Returns
         -------
         np.ndarray
             an array that contains the coordinates of the data samples in original input data (video id, clip id,
             start frame)
-        """
 
+        """
         return self.original_coordinates
 
     def create_subsample(self, indices: List, ssl_indices: List = None):
-        """
-        Create a new store that contains a subsample of the data
+        """Create a new store that contains a subsample of the data.
 
         Parameters
         ----------
@@ -373,8 +376,8 @@ class GeneralInputStore(PoseInputStore):
             the indices to be included in the subsample
         ssl_indices : list, optional
             the indices to be included in the subsample without the annotation data
-        """
 
+        """
         if ssl_indices is None:
             ssl_indices = []
         new = self.new()
@@ -393,8 +396,7 @@ class GeneralInputStore(PoseInputStore):
         return new
 
     def get_video_id(self, coords: Tuple) -> str:
-        """
-        Get the video id from an element of original coordinates
+        """Get the video id from an element of original coordinates.
 
         Parameters
         ----------
@@ -405,14 +407,13 @@ class GeneralInputStore(PoseInputStore):
         -------
         video_id: str
             the id of the video that the coordinates point to
-        """
 
+        """
         video_name = coords[0].split("---")[0]
         return video_name
 
     def get_clip_id(self, coords: Tuple) -> str:
-        """
-        Get the clip id from an element of original coordinates
+        """Get the clip id from an element of original coordinates.
 
         Parameters
         ----------
@@ -423,14 +424,13 @@ class GeneralInputStore(PoseInputStore):
         -------
         clip_id : str
             the id of the clip that the coordinates point to
-        """
 
+        """
         clip_id = coords[0].split("---")[1]
         return clip_id
 
     def get_clip_length(self, video_id: str, clip_id: str) -> int:
-        """
-        Get the clip length from the id
+        """Get the clip length from the id.
 
         Parameters
         ----------
@@ -443,16 +443,15 @@ class GeneralInputStore(PoseInputStore):
         -------
         clip_length : int
             the length of the clip
-        """
 
+        """
         inds = clip_id.split("+")
         max_frame = min([self.max_frames[video_id][x] for x in inds])
         min_frame = max([self.min_frames[video_id][x] for x in inds])
         return max_frame - min_frame + 1
 
     def get_clip_start_end(self, coords: Tuple) -> Tuple[int, int]:
-        """
-        Get the clip start and end frames from an element of original coordinates
+        """Get the clip start and end frames from an element of original coordinates.
 
         Parameters
         ----------
@@ -465,8 +464,8 @@ class GeneralInputStore(PoseInputStore):
             the start frame of the clip that the coordinates point to
         end : int
             the end frame of the clip that the coordinates point to
-        """
 
+        """
         l = self.get_clip_length_from_coords(coords)
         i = coords[1]
         start = int(i) * self.step
@@ -474,8 +473,7 @@ class GeneralInputStore(PoseInputStore):
         return start, end
 
     def get_clip_start(self, video_name: str, clip_id: str) -> int:
-        """
-        Get the clip start frame from the video id and the clip id
+        """Get the clip start frame from the video id and the clip id.
 
         Parameters
         ----------
@@ -488,8 +486,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         clip_start : int
             the start frame of the clip
-        """
 
+        """
         return max(
             [self.min_frames[video_name][clip_id_k] for clip_id_k in clip_id.split("+")]
         )
@@ -497,8 +495,7 @@ class GeneralInputStore(PoseInputStore):
     def get_visibility(
         self, video_id: str, clip_id: str, start: int, end: int, score: int
     ) -> float:
-        """
-        Get the fraction of the frames in that have a visibility score better than a hard_threshold
+        """Get the fraction of the frames in that have a visibility score better than a hard_threshold.
 
         For example, in the case of keypoint data the visibility score can be the number of identified keypoints.
 
@@ -519,8 +516,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         frac_visible: float
             the fraction of frames with visibility above the hard_threshold
-        """
 
+        """
         s = 0
         for ind_k in clip_id.split("+"):
             s += np.sum(self.visibility[video_id][ind_k][start:end] > score) / (
@@ -529,16 +526,15 @@ class GeneralInputStore(PoseInputStore):
         return s / len(clip_id.split("+"))
 
     def get_annotation_objects(self) -> Dict:
-        """
-        Get a dictionary of objects necessary to create an AnnotationStore
+        """Get a dictionary of objects necessary to create an `BehaviorStore`.
 
         Returns
         -------
         annotation_objects : dict
-            a dictionary of objects to be passed to the AnnotationStore constructor where the keys are the names of
+            a dictionary of objects to be passed to the BehaviorStore constructor where the keys are the names of
             the objects
-        """
 
+        """
         min_frames = self.min_frames
         max_frames = self.max_frames
         num_bp = self.visibility
@@ -559,9 +555,10 @@ class GeneralInputStore(PoseInputStore):
         *args,
         **kwargs,
     ) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -584,8 +581,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         if data_suffix is None:
             if cls.data_suffix is not None:
                 data_suffix = cls.data_suffix
@@ -626,8 +623,7 @@ class GeneralInputStore(PoseInputStore):
         return ids
 
     def get_bodyparts(self) -> List:
-        """
-        Get a list of bodypart names
+        """Get a list of bodypart names.
 
         Parameters
         ----------
@@ -640,13 +636,12 @@ class GeneralInputStore(PoseInputStore):
         -------
         bodyparts : list
             a list of string or integer body part names
-        """
 
+        """
         return [x for x in self.bodyparts if x not in self.ignored_bodyparts]
 
     def get_coords(self, data_dict: Dict, clip_id: str, bodypart: str) -> np.ndarray:
-        """
-        Get the coordinates array of a specific bodypart in a specific clip
+        """Get the coordinates array of a specific bodypart in a specific clip.
 
         Parameters
         ----------
@@ -661,8 +656,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         coords : np.ndarray
             the coordinates array of shape (#timesteps, #coordinates)
-        """
 
+        """
         columns = [x for x in data_dict[clip_id].columns if x != "likelihood"]
         xy_coord = (
             data_dict[clip_id]
@@ -672,8 +667,7 @@ class GeneralInputStore(PoseInputStore):
         return xy_coord
 
     def get_n_frames(self, data_dict: Dict, clip_id: str) -> int:
-        """
-        Get the length of the clip
+        """Get the length of the clip.
 
         Parameters
         ----------
@@ -686,8 +680,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         n_frames : int
             the length of the clip
-        """
 
+        """
         if clip_id in data_dict:
             return len(data_dict[clip_id].groupby(level=0))
         else:
@@ -696,13 +690,12 @@ class GeneralInputStore(PoseInputStore):
             )
 
     def _filter(self, data_dict: Dict) -> Tuple[Dict, Dict, Dict]:
-        """
-        Apply filters to a data dictionary + normalize the values and generate frame index dictionaries
+        """Apply filters to a data dictionary + normalize the values and generate frame index dictionaries.
 
         The filters include filling nan values, applying length and likelihood thresholds and removing
         ignored clip ids.
-        """
 
+        """
         new_data_dict = {}
         keys = list(data_dict.keys())
         for key in keys:
@@ -717,9 +710,9 @@ class GeneralInputStore(PoseInputStore):
             if "likelihood" in coord.columns:
                 columns = list(coord.columns)
                 columns.remove("likelihood")
-                coord.loc[
-                    coord["likelihood"] < self.likelihood_threshold, columns
-                ] = np.nan
+                coord.loc[coord["likelihood"] < self.likelihood_threshold, columns] = (
+                    np.nan
+                )
             if not isinstance(self.centered, Iterable):
                 self.centered = [
                     bool(self.centered)
@@ -794,18 +787,11 @@ class GeneralInputStore(PoseInputStore):
         return files
 
     def _make_trimmed_data(self, keypoint_dict: Dict) -> Tuple[List, Dict, List]:
-        """
-        Cut a keypoint dictionary into overlapping pieces of equal length
-        """
-
+        """Cut a keypoint dictionary into overlapping pieces of equal length."""
         X = []
         original_coordinates = []
         lengths = defaultdict(lambda: {})
-        if not os.path.exists(self.feature_save_path):
-            try:
-                os.mkdir(self.feature_save_path)
-            except FileExistsError:
-                pass
+        os.makedirs(self.feature_save_path, exist_ok=True)
         order = sorted(list(keypoint_dict.keys()))
         for v_id in order:
             keypoints = keypoint_dict[v_id]
@@ -827,10 +813,14 @@ class GeneralInputStore(PoseInputStore):
                 original_coordinates.append((v_id, i))
                 for key in keypoints:
                     sample_dict[key] = keypoints[key][start : start + self.len_segment]
-                    sample_dict[key] = torch.tensor(np.array(sample_dict[key])).float()
-                    sample_dict[key] = sample_dict[key].permute(
-                        (*range(1, len(sample_dict[key].shape)), 0)
+                    arr = np.asarray(sample_dict[key], dtype=np.float32)
+                    tensor = (
+                        torch.from_numpy(arr)
+                        .permute(*range(1, arr.ndim), 0)
+                        .contiguous()
                     )
+                    sample_dict[key] = tensor
+
                 name = os.path.join(self.feature_save_path, f"{v_id}_{start}.pickle")
                 X.append(name)
                 lengths[video_id][clip_id] = v_len
@@ -839,10 +829,7 @@ class GeneralInputStore(PoseInputStore):
         return X, dict(lengths), original_coordinates
 
     def _load_saved_features(self, video_id: str):
-        """
-        Load saved features file `(#frames, #features)`
-        """
-
+        """Load saved features file `(#frames, #features)`."""
         basenames = [os.path.basename(x) for x in self.file_paths]
         loaded_features_cat = []
         self.feature_suffix = sorted(self.feature_suffix)
@@ -858,7 +845,16 @@ class GeneralInputStore(PoseInputStore):
             elif extension in ["pt", "pth"]:
                 loaded_features = torch.load(path)
             elif extension == "npy":
-                loaded_features = np.load(path, allow_pickle=True).item()
+                try:
+                    loaded_features = np.load(path, allow_pickle=True).item()
+                except:
+                    loaded_features = np.load(path, allow_pickle=True)
+                    loaded_features = {
+                        "features": loaded_features,
+                        "min_frames": {video_id: 0},
+                        "max_frames": {video_id: len(loaded_features)},
+                        "video_tag": video_id,
+                    }
             else:
                 raise ValueError(
                     f"Found feature file in an unrecognized format: .{extension}. \n "
@@ -886,8 +882,7 @@ class GeneralInputStore(PoseInputStore):
     def get_likelihood(
         self, data_dict: Dict, clip_id: str, bodypart: str
     ) -> Union[np.ndarray, None]:
-        """
-        Get the likelihood values
+        """Get the likelihood values.
 
         Parameters
         ----------
@@ -902,8 +897,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         likelihoods: np.ndarrray | None
             `None` if the dataset doesn't have likelihoods or an array of shape (#timestamps)
-        """
 
+        """
         if "likelihood" in data_dict[clip_id].columns:
             likelihood = (
                 data_dict[clip_id]
@@ -915,18 +910,14 @@ class GeneralInputStore(PoseInputStore):
             return None
 
     def _get_video_metadata(self, metadata_list: Optional[List]):
-        """
-        Make a single metadata dictionary from a list of dictionaries recieved from different data prefixes
-        """
-
+        """Make a single metadata dictionary from a list of dictionaries received from different data prefixes."""
         if metadata_list is None:
             return None
         else:
             return metadata_list[0]
 
     def get_indices(self, tag: int) -> List:
-        """
-        Get a list of indices of samples that have a specific meta tag
+        """Get a list of indices of samples that have a specific meta tag.
 
         Parameters
         ----------
@@ -937,31 +928,29 @@ class GeneralInputStore(PoseInputStore):
         -------
         indices : list
             a list of indices that meet the criteria
-        """
 
+        """
         if tag is None:
             return list(range(len(self.data)))
         else:
             return list(np.where(self.metadata == tag)[0])
 
     def get_tags(self) -> List:
-        """
-        Get a list of all meta tags
+        """Get a list of all meta tags.
 
         Returns
         -------
         tags: List
             a list of unique meta tag values
-        """
 
+        """
         if self.metadata is None:
             return [None]
         else:
             return list(np.unique(self.metadata))
 
     def get_tag(self, idx: int) -> Union[int, None]:
-        """
-        Return a tag object corresponding to an index
+        """Return a tag object corresponding to an index.
 
         Tags can carry meta information (like annotator id) and are accepted by models that require
         that information. When a tag is `None`, it is not passed to the model.
@@ -975,8 +964,8 @@ class GeneralInputStore(PoseInputStore):
         -------
         tag : int
             the tag object
-        """
 
+        """
         if self.metadata is None or idx is None:
             return None
         else:
@@ -984,23 +973,16 @@ class GeneralInputStore(PoseInputStore):
 
     @abstractmethod
     def _load_data(self) -> None:
-        """
-        Load input data and generate data prompts
-        """
+        """Load input data and generate data prompts."""
 
 
 class FileInputStore(GeneralInputStore):
-    """
-    An implementation of `dlc2action.data.InputStore` for datasets where each input data file corresponds to one video
-    """
+    """An implementation of `dlc2action.data.InputStore` for datasets where each input data file corresponds to one video."""
 
     def _count_bodyparts(
         self, data: Dict, stripped_name: str, max_frames: Dict
     ) -> Dict:
-        """
-        Create a visibility score dictionary (with a score from 0 to 1 assigned to each frame of each clip)
-        """
-
+        """Create a visibility score dictionary (with a score from 0 to 1 assigned to each frame of each clip)."""
         result = {stripped_name: {}}
         prefixes = list(data.keys())
         for ind in data[prefixes[0]]:
@@ -1018,25 +1000,26 @@ class FileInputStore(GeneralInputStore):
         return result
 
     def _generate_features(self, data: Dict, video_id: str) -> Dict:
-        """
-        Generate features from the raw coordinates
-        """
-
+        """Generate features from the raw coordinates."""
         features = defaultdict(lambda: {})
         loaded_common = []
+
         for prefix, data_dict in data.items():
             if prefix == "":
                 prefix = None
             if "loaded" in data_dict:
-                loaded_common.append(torch.tensor(data_dict.pop("loaded")))
-
+                # loaded_common.append(torch.tensor(data_dict.pop("loaded")))
+                loaded_common.append(torch.from_numpy(data_dict.pop("loaded")))
             key_features = self.extractor.extract_features(
                 data_dict, video_id, prefix=prefix
             )
             for f_key in key_features:
                 features[f_key].update(key_features[f_key])
         if len(loaded_common) > 0:
-            loaded_common = torch.cat(loaded_common, dim=1)
+            if len(loaded_common) == 1:
+                loaded_common = loaded_common[0]
+            else:
+                loaded_common = torch.cat(loaded_common, dim=1)
         else:
             loaded_common = None
         if self.feature_suffix is not None:
@@ -1099,10 +1082,7 @@ class FileInputStore(GeneralInputStore):
         return features
 
     def _load_data(self) -> np.array:
-        """
-        Load input data and generate data prompts
-        """
-
+        """Load input data and generate data prompts."""
         if self.video_order is None:
             return None
 
@@ -1152,7 +1132,9 @@ class FileInputStore(GeneralInputStore):
         if os.name != "nt":
             dict_list = p_map(make_data_dictionary, files, num_cpus=self.num_cpus)
         else:
-            print("Multiprocessing is not supported on Windows, loading files sequentially.")
+            print(
+                "Multiprocessing is not supported on Windows, loading files sequentially."
+            )
             dict_list = tqdm([make_data_dictionary(f) for f in files])
 
         self.visibility = {}
@@ -1192,8 +1174,7 @@ class FileInputStore(GeneralInputStore):
     def _open_data(
         self, filename: str, default_clip_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Load the keypoints from filename and organize them in a dictionary
+        """Load the keypoints from filename and organize them in a dictionary.
 
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
         The first level is the frame numbers and the second is the body part names. The dataframes should have from
@@ -1215,21 +1196,17 @@ class FileInputStore(GeneralInputStore):
         metadata_dictionary : dict
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
+
         """
 
 
 class SequenceInputStore(GeneralInputStore):
-    """
-    An implementation of `dlc2action.data.InputStore` for datasets where input data files correspond to multiple videos
-    """
+    """An implementation of `dlc2action.data.InputStore` for datasets where input data files correspond to multiple videos."""
 
     def _count_bodyparts(
         self, data: Dict, stripped_name: str, max_frames: Dict
     ) -> Dict:
-        """
-        Create a visibility score dictionary (with a score from 0 to 1 assigned to each frame of each clip)
-        """
-
+        """Create a visibility score dictionary (with a score from 0 to 1 assigned to each frame of each clip)."""
         result = {stripped_name: {}}
         for ind in data.keys():
             num_bp = len(data[ind].index.unique(level=1))
@@ -1244,10 +1221,7 @@ class SequenceInputStore(GeneralInputStore):
         return result
 
     def _generate_features(self, data: Dict, name: str) -> Dict:
-        """
-        Generate features for an individual
-        """
-
+        """Generate features for an individual."""
         features = self.extractor.extract_features(data, name, prefix=None)
         if self.feature_suffix is not None:
             loaded_features = self._load_saved_features(name)
@@ -1297,10 +1271,7 @@ class SequenceInputStore(GeneralInputStore):
         return features
 
     def _load_data(self) -> np.array:
-        """
-        Load input data and generate data prompts
-        """
-
+        """Load input data and generate data prompts."""
         if self.video_order is None:
             return None
 
@@ -1310,6 +1281,7 @@ class SequenceInputStore(GeneralInputStore):
                 files.append(f)
 
         def make_data_dictionary(seq_tuple):
+            loaded_features = None
             seq_id, sequence = seq_tuple
             data, tag = self._get_data(seq_id, sequence, self.default_agent_name)
             if "loaded" in data.keys():
@@ -1318,8 +1290,9 @@ class SequenceInputStore(GeneralInputStore):
             sample_df = list(data.values())[0]
             self.bodyparts = sorted(list(sample_df.index.unique(1)))
             data_dict = self._generate_features(data, seq_id)
-            for key in data_dict.keys():
-                data_dict[key]["loaded"] = loaded_features
+            if loaded_features is not None:
+                for key in data_dict.keys():
+                    data_dict[key]["loaded"] = loaded_features
             bp_dict = self._count_bodyparts(
                 data=data, stripped_name=seq_id, max_frames=max_frames
             )
@@ -1337,7 +1310,9 @@ class SequenceInputStore(GeneralInputStore):
                 make_data_dictionary, sorted(seq_tuples), num_cpus=self.num_cpus
             )
         else:
-            print("Multiprocessing is not supported on Windows, loading files sequentially.")
+            print(
+                "Multiprocessing is not supported on Windows, loading files sequentially."
+            )
             dict_list = tqdm([make_data_dictionary(f) for f in files])
 
         self.visibility = {}
@@ -1353,15 +1328,15 @@ class SequenceInputStore(GeneralInputStore):
             bp_dictionary,
             min_frames,
             max_frames,
-            metadata,
+            tag,
         ) in dict_list:
             X += names
             self.original_coordinates += coords
             self.visibility.update(bp_dictionary)
             self.min_frames.update(min_frames)
             self.max_frames.update(max_frames)
-            if metadata is not None:
-                self.metadata += metadata
+            if tag is not None:
+                self.metadata += [tag for _ in names]
         del dict_list
 
         if len(self.metadata) != len(self.original_coordinates):
@@ -1382,9 +1357,10 @@ class SequenceInputStore(GeneralInputStore):
         *args,
         **kwargs,
     ) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -1401,8 +1377,8 @@ class SequenceInputStore(GeneralInputStore):
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         if file_paths is None:
             file_paths = []
         if data_path is not None:
@@ -1420,8 +1396,7 @@ class SequenceInputStore(GeneralInputStore):
 
     @abstractmethod
     def _open_file(self, filename: str) -> List:
-        """
-        Open a file and make a list of sequences
+        """Open a file and make a list of sequences.
 
         The sequence objects should contain information about all clips in one video. The sequences and
         video ids will be processed in the `_get_data` function.
@@ -1435,14 +1410,14 @@ class SequenceInputStore(GeneralInputStore):
         -------
         video_tuples : list
             a list of video tuples: `(video_id, sequence)`
+
         """
 
     @abstractmethod
     def _get_data(
         self, video_id: str, sequence, default_agent_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Get the keypoint dataframes from a sequence
+        """Get the keypoint dataframes from a sequence.
 
         The sequences and video ids are generated in the `_open_file` function.
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
@@ -1457,7 +1432,8 @@ class SequenceInputStore(GeneralInputStore):
             the video id
         sequence
             an object containing information about all clips in one video
-        default_agent_name
+        default_agent_name : str
+            the default agent name
 
         Returns
         -------
@@ -1466,12 +1442,12 @@ class SequenceInputStore(GeneralInputStore):
         metadata_dictionary : dict
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
+
         """
 
 
 class DLCTrackStore(FileInputStore):
-    """
-    DLC track data
+    """DLC track data.
 
     Assumes the following file structure:
     ```
@@ -1494,8 +1470,7 @@ class DLCTrackStore(FileInputStore):
     def _open_data(
         self, filename: str, default_agent_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Load the keypoints from filename and organize them in a dictionary
+        """Load the keypoints from filename and organize them in a dictionary.
 
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
         The first level is the frame numbers and the second is the body part names. The dataframes should have from
@@ -1507,8 +1482,8 @@ class DLCTrackStore(FileInputStore):
         ----------
         filename : str
             path to the pose file
-        default_clip_name : str
-            the name to assign to a clip if it does not have a name in the raw data
+        default_agent_name : str
+            the default agent name
 
         Returns
         -------
@@ -1517,8 +1492,8 @@ class DLCTrackStore(FileInputStore):
         metadata_dictionary : dict
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
-        """
 
+        """
         if filename.endswith("h5"):
             temp = pd.read_hdf(filename)
             temp = temp.droplevel("scorer", axis=1)
@@ -1529,7 +1504,7 @@ class DLCTrackStore(FileInputStore):
             old_idx = temp.columns.to_frame()
             old_idx.insert(0, "individuals", self.default_agent_name)
             temp.columns = pd.MultiIndex.from_frame(old_idx)
-        df = temp.stack(["individuals", "bodyparts"])
+        df = temp.stack(["individuals", "bodyparts"], future_stack=True)
         idx = pd.MultiIndex.from_product(
             [df.index.levels[0], df.index.levels[1], df.index.levels[2]],
             names=df.index.names,
@@ -1546,8 +1521,7 @@ class DLCTrackStore(FileInputStore):
 
 
 class DLCTrackletStore(FileInputStore):
-    """
-    DLC tracklet data
+    """DLC tracklet data.
 
     Assumes the following file structure:
     ```
@@ -1570,8 +1544,7 @@ class DLCTrackletStore(FileInputStore):
     def _open_data(
         self, filename: str, default_agent_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Load the keypoints from filename and organize them in a dictionary
+        """Load the keypoints from filename and organize them in a dictionary.
 
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
         The first level is the frame numbers and the second is the body part names. The dataframes should have from
@@ -1583,8 +1556,8 @@ class DLCTrackletStore(FileInputStore):
         ----------
         filename : str
             path to the pose file
-        default_clip_name : str
-            the name to assign to a clip if it does not have a name in the raw data
+        default_agent_name : str
+            the default agent name
 
         Returns
         -------
@@ -1593,8 +1566,8 @@ class DLCTrackletStore(FileInputStore):
         metadata_dictionary : dict
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
-        """
 
+        """
         output = {}
         with open(filename, "rb") as f:
             data_p = pickle.load(f)
@@ -1634,147 +1607,8 @@ class DLCTrackletStore(FileInputStore):
         return output, None
 
 
-class PKUMMDInputStore(FileInputStore):
-    """
-    PKU-MMD data
-
-    Assumes the following file structure:
-    ```
-    data_path
-    ├── 0073-R.txt
-    ...
-    └── 0274-L.txt
-    ```
-    """
-
-    data_suffix = ".txt"
-
-    def __init__(
-        self,
-        video_order: str = None,
-        data_path: Union[str, Set] = None,
-        file_paths: Set = None,
-        feature_save_path: str = None,
-        feature_extraction: str = "kinematic",
-        len_segment: int = 128,
-        overlap: int = 0,
-        key_objects: Tuple = None,
-        num_cpus: int = None,
-        interactive: bool = False,
-        feature_extraction_pars: Dict = None,
-        *args,
-        **kwargs,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        video_order : list, optional
-            a list of video ids that should be processed in the same order (not passed if creating from key objects)
-        data_path : str | set, optional
-            the path to the folder where the pose and feature files are stored or a set of such paths
-            (not passed if creating from key objects or from `file_paths`)
-        file_paths : set, optional
-            a set of string paths to the pose and feature files
-            (not passed if creating from key objects or from `data_path`)
-        feature_save_path : str, optional
-            the path to the folder where pre-processed files are stored (not passed if creating from key objects)
-        feature_extraction : str, default 'kinematic'
-            the feature extraction method (run options.feature_extractors to see available options)
-        len_segment : int, default 128
-            the length of the segments in which the data should be cut (in frames)
-        overlap : int, default 0
-            the length of the overlap between neighboring segments (in frames)
-        interactive : bool, default False
-            if True, distances between two agents are included; if False, only the first agent features are computed
-        key_objects : tuple, optional
-            a tuple of key objects
-        num_cpus : int, optional
-            the number of cpus to use in data processing
-        feature_extraction_pars : dict, optional
-            parameters of the feature extractor
-        """
-
-        if feature_extraction_pars is None:
-            feature_extraction_pars = {}
-        feature_extraction_pars["interactive"] = interactive
-        self.interactive = interactive
-        super().__init__(
-            video_order,
-            data_path,
-            file_paths,
-            data_suffix=".txt",
-            data_prefix=None,
-            feature_suffix=None,
-            convert_int_indices=False,
-            feature_save_path=feature_save_path,
-            canvas_shape=[1, 1, 1],
-            len_segment=len_segment,
-            overlap=overlap,
-            feature_extraction=feature_extraction,
-            ignored_clips=None,
-            ignored_bodyparts=None,
-            default_agent_name="ind0",
-            key_objects=key_objects,
-            likelihood_threshold=0,
-            num_cpus=num_cpus,
-            frame_limit=1,
-            interactive=interactive,
-            feature_extraction_pars=feature_extraction_pars,
-        )
-
-    def _open_data(
-        self, filename: str, default_clip_name: str
-    ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Load the keypoints from filename and organize them in a dictionary
-
-        In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
-        The first level is the frame numbers and the second is the body part names. The dataframes should have from
-        two to four columns labeled `"x"`, `"y"` and (optionally) `"z"` and `"likelihood"`. Each frame should have
-        information on all the body parts. You don't have to filter the data in any way or fill the nans, it will
-        be done automatically.
-
-        Parameters
-        ----------
-        filename : str
-            path to the pose file
-        default_clip_name : str
-            the name to assign to a clip if it does not have a name in the raw data
-
-        Returns
-        -------
-        data dictionary : dict
-            a dictionary where the keys are clip ids and the values are keypoint dataframes (see above for details)
-        metadata_dictionary : dict
-            a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
-            like the annotator tag; for no metadata pass `None`)
-        """
-
-        keypoint_dict = {"0": [], "1": []}
-        with open(filename) as f:
-            for line in f.readlines():
-                line_data = list(map(float, line.split()))
-                line_data = np.array(line_data)
-                line_data = line_data.reshape((2, 25, 3))[:, :, [0, 2, 1]]
-                for ind in keypoint_dict:
-                    keypoint_dict[ind].append(line_data[int(ind)])
-        for ind in keypoint_dict:
-            data = np.stack(keypoint_dict[ind])
-            mi = pd.MultiIndex.from_product(
-                [list(range(data.shape[0])), list(range(data.shape[1]))]
-            )
-            data = data.reshape((-1, 3))
-            keypoint_dict[ind] = pd.DataFrame(
-                data=data, index=mi, columns=["x", "y", "z"]
-            )
-        if not self.interactive:
-            keypoint_dict.pop("1")
-        return keypoint_dict, None
-
-
 class CalMS21InputStore(SequenceInputStore):
-    """
-    CalMS21 data
+    """CalMS21 data.
 
     Use the `'random:test_from_name:{name}'` and `'val-from-name:{val_name}:test-from-name:{test_name}'`
     partitioning methods with `'train'`, `'test'` and `'unlabeled'` names to separate into train, test and validation
@@ -1813,7 +1647,8 @@ class CalMS21InputStore(SequenceInputStore):
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -1846,8 +1681,8 @@ class CalMS21InputStore(SequenceInputStore):
             the number of cpus to use in data processing
         feature_extraction_pars : dict, optional
             parameters of the feature extractor
-        """
 
+        """
         self.task_n = int(task_n)
         self.include_task1 = include_task1
         self.treba_files = treba_files
@@ -1887,9 +1722,10 @@ class CalMS21InputStore(SequenceInputStore):
         *args,
         **kwargs,
     ) -> Iterable:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the `__init__` function.
 
         Parameters
         ----------
@@ -1912,8 +1748,8 @@ class CalMS21InputStore(SequenceInputStore):
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         task_n = int(task_n)
         if task_n == 1:
             include_task1 = False
@@ -1932,8 +1768,7 @@ class CalMS21InputStore(SequenceInputStore):
         return SequenceInputStore.get_file_ids(filenames, data_path, file_paths)
 
     def _open_file(self, filename: str) -> List:
-        """
-        Open a file and make a list of sequences
+        """Open a file and make a list of sequences.
 
         The sequence objects should contain information about all clips in one video. The sequences and
         video ids will be processed in the `_get_data` function.
@@ -1947,8 +1782,8 @@ class CalMS21InputStore(SequenceInputStore):
         -------
         video_tuples : list
             a list of video tuples: `(video_id, sequence)`
-        """
 
+        """
         if os.path.basename(filename).startswith("calms21_unlabeled_videos"):
             mode = "unlabeled"
         elif os.path.basename(filename).startswith(f"calms21_task{self.task_n}_test"):
@@ -1967,8 +1802,7 @@ class CalMS21InputStore(SequenceInputStore):
     def _get_data(
         self, video_id: str, sequence, default_agent_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Get the keypoint dataframes from a sequence
+        """Get the keypoint dataframes from a sequence.
 
         The sequences and video ids are generated in the `_open_file` function.
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
@@ -1984,6 +1818,7 @@ class CalMS21InputStore(SequenceInputStore):
         sequence
             an object containing information about all clips in one video
         default_agent_name
+            the name of the default agent
 
         Returns
         -------
@@ -1992,8 +1827,8 @@ class CalMS21InputStore(SequenceInputStore):
         metadata_dictionary : dict
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
-        """
 
+        """
         if "metadata" in sequence:
             annotator = sequence["metadata"]["annotator-id"]
         else:
@@ -2040,13 +1875,13 @@ class CalMS21InputStore(SequenceInputStore):
                 ),
                 "loaded": sequence[:, -32:],
             }
-        metadata = {k: annotator for k in data.keys()}
+        # metadata = {k: annotator for k in data.keys()}
+        metadata = annotator
         return data, metadata
 
 
 class Numpy3DInputStore(FileInputStore):
-    """
-    3D data
+    """3D data.
 
     Assumes the data files to be `numpy` arrays saved in `.npy` format with shape `(#frames, #keypoints, 3)`.
 
@@ -2093,7 +1928,8 @@ class Numpy3DInputStore(FileInputStore):
         centered: bool = False,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -2142,8 +1978,10 @@ class Numpy3DInputStore(FileInputStore):
             clips shorter than this number of frames will be ignored
         feature_extraction_pars : dict, optional
             parameters of the feature extractor
-        """
+        centered : bool, default False
+            if `True`, the pose is centered at the center of mass of the body
 
+        """
         super().__init__(
             video_order,
             data_path,
@@ -2171,8 +2009,7 @@ class Numpy3DInputStore(FileInputStore):
     def _open_data(
         self, filename: str, default_clip_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
-        """
-        Load the keypoints from filename and organize them in a dictionary
+        """Load the keypoints from filename and organize them in a dictionary.
 
         In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.
         The first level is the frame numbers and the second is the body part names. The dataframes should have from
@@ -2195,8 +2032,7 @@ class Numpy3DInputStore(FileInputStore):
             a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,
             like the annotator tag; for no metadata pass `None`)
         """
-
-        data = np.load(filename)
+        data = np.load(filename, allow_pickle=True)
         bodyparts = [str(i) for i in range(data.shape[1])]
         clip_id = self.default_agent_name
         columns = ["x", "y", "z"]
@@ -2210,8 +2046,7 @@ class Numpy3DInputStore(FileInputStore):
 
 
 class LoadedFeaturesInputStore(GeneralInputStore):
-    """
-    Non-pose feature files
+    """Non-pose feature files.
 
     The feature files should to be dictionaries where keys are clip IDs (e.g. animal names) and values are
     feature values (arrays of shape `(#frames, #features)`). If the arrays are shaped as `(#features, #frames)`,
@@ -2246,7 +2081,8 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         transpose_features: bool = False,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -2260,6 +2096,8 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         feature_suffix : str | set, optional
             the suffix or the set of suffices such that the additional feature files are named
             {video_id}{feature_suffix} (and placed at the data_path folder)
+        convert_int_indices : bool, default True
+            if `True`, convert any integer key `i` in feature files to `'ind{i}'`
         feature_save_path : str, optional
             the path to the folder where pre-processed files are stored (not passed if creating from key objects)
         len_segment : int, default 128
@@ -2276,10 +2114,10 @@ class LoadedFeaturesInputStore(GeneralInputStore):
             the number of cpus to use in data processing
         frame_limit : int, default 1
             clips shorter than this number of frames will be ignored
-        feature_extraction_pars : dict, optional
-            parameters of the feature extractor
-        """
+        transpose_features : bool, default False
+            if `True`,
 
+        """
         super().__init__(
             video_order,
             data_path,
@@ -2299,8 +2137,7 @@ class LoadedFeaturesInputStore(GeneralInputStore):
     def get_visibility(
         self, video_id: str, clip_id: str, start: int, end: int, score: int
     ) -> float:
-        """
-        Get the fraction of the frames in that have a visibility score better than a hard_threshold
+        """Get the fraction of the frames in that have a visibility score better than a hard_threshold.
 
         For example, in the case of keypoint data the visibility score can be the number of identified keypoints.
 
@@ -2321,17 +2158,14 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         -------
         frac_visible: float
             the fraction of frames with visibility above the hard_threshold
-        """
 
+        """
         return 1
 
     def _generate_features(
         self, video_id: str
     ) -> Tuple[Dict, Dict, Dict, Union[str, int]]:
-        """
-        Generate features from the raw coordinates
-        """
-
+        """Generate features from the raw coordinates."""
         features = defaultdict(lambda: {})
         loaded_features = self._load_saved_features(video_id)
         min_frames = None
@@ -2366,10 +2200,7 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         return features, min_frames, max_frames, video_tag
 
     def _load_data(self) -> np.array:
-        """
-        Load input data and generate data prompts
-        """
-
+        """Load input data and generate data prompts."""
         if self.video_order is None:
             return None
 
@@ -2397,7 +2228,9 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         if os.name != "nt":
             dict_list = p_map(make_data_dictionary, files, num_cpus=self.num_cpus)
         else:
-            print("Multiprocessing is not supported on Windows, loading files sequentially.")
+            print(
+                "Multiprocessing is not supported on Windows, loading files sequentially."
+            )
             dict_list = tqdm([make_data_dictionary(f) for f in files])
 
         self.visibility = {}
@@ -2442,9 +2275,10 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         *args,
         **kwargs,
     ) -> List:
-        """
+        """Get file ids.
+
         Process data parameters and return a list of ids  of the videos that should
-        be processed by the __init__ function
+        be processed by the __init__ function.
 
         Parameters
         ----------
@@ -2467,8 +2301,8 @@ class LoadedFeaturesInputStore(GeneralInputStore):
         -------
         video_ids : list
             a list of video file ids
-        """
 
+        """
         if feature_suffix is None:
             feature_suffix = []
         if isinstance(feature_suffix, str):
@@ -2493,18 +2327,17 @@ class LoadedFeaturesInputStore(GeneralInputStore):
 
 
 class SIMBAInputStore(FileInputStore):
-    """
-    SIMBA paper format data
+    """SIMBA paper format data.
 
-     Assumes the following file structure
+    Assumes the following file structure:
 
-     ```
-     data_path
-     ├── Video1.csv
-     ...
-     └── Video9.csv
-     ```
-     Here `data_suffix` is `.csv`.
+    ```
+    data_path
+    ├── Video1.csv
+    ...
+    └── Video9.csv
+    ```
+    Here `data_suffix` is `.csv`.
     """
 
     def __init__(
@@ -2532,7 +2365,8 @@ class SIMBAInputStore(FileInputStore):
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize a store.
+
         Parameters
         ----------
         video_order : list, optional
@@ -2573,10 +2407,16 @@ class SIMBAInputStore(FileInputStore):
             coordinate values with likelihoods less than this value will be set to 'unknown'
         num_cpus : int, optional
             the number of cpus to use in data processing
+        normalize : bool, default False
+            whether to normalize the pose
         feature_extraction_pars : dict, optional
             parameters of the feature extractor
-        """
+        centered : bool, default False
+            whether the pose is centered at the object of interest
+        use_features : bool, default False
+            whether to use features
 
+        """
         self.use_features = use_features
         if feature_extraction_pars is not None:
             feature_extraction_pars["interactive"] = True
@@ -2608,6 +2448,8 @@ class SIMBAInputStore(FileInputStore):
     def _open_data(
         self, filename: str, default_clip_name: str
     ) -> Tuple[Dict, Optional[Dict]]:
+
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
         data = pd.read_csv(filename)
         output = {}
         column_dict = {"x": "x", "y": "y", "z": "z", "p": "likelihood"}
@@ -2638,3 +2480,4 @@ class SIMBAInputStore(FileInputStore):
                 .values
             )
         return output, None
+    

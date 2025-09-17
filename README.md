@@ -1,37 +1,38 @@
-[![Generic badge](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
+<div align="center">
+
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+![Version](https://img.shields.io/badge/python_version-3.13-purple)
+[![PyPI version](https://badge.fury.io/py/dlc2action.svg)](https://badge.fury.io/py/dlc2action)
+[![Downloads](https://pepy.tech/badge/dlc2action)](https://pepy.tech/project/dlc2action)
+[![Downloads](https://pepy.tech/badge/dlc2action/month)](https://pepy.tech/project/dlc2action/month)
+[![Generic badge](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-![](logos/title.png)
+![logo](logos/title.png)
 
-DLC2Action is an action segmentation package that makes running and tracking of machine learning experiments easy.
+</div>
 
-## Installation
+# 🌈 DLC2Action
+DLC2Action is an action segmentation package that makes running and tracking experiments easy.
 
-### Via the Python Package Index
-
+## 🛠️ Installation
 You can simply install DLC2Action by typing:
-
 ```
-pip install "dlc2action==0.2b3"
+pip install dlc2action
 ```
 
-### From Github
-
-You can also install DLC2Action for development (or based on the bleeding edge) by running in your terminal:
-
+Or you can install DLC2Action for development by running this in your terminal.
 ```
 git clone https://github.com/amathislab/DLC2Action
 cd DLC2Action
-conda create --name DLC2Action python=3.9
+conda create --name DLC2Action python=3.13
 conda activate DLC2Action
 python -m pip install .
 ```
 
-## Features
-
+## 📖 Features
 The functionality of DLC2Action includes:
  - compiling and updating project-specific configuration files,
- - filling in configuration dictionaries automatically whenever possible,
+ - filling in the configuration dictionaries automatically whenever possible,
  - saving training parameters and results,
  - running predictions and hyperparameter searches,
  - creating active learning files,
@@ -43,39 +44,36 @@ The functionality of DLC2Action includes:
 
 and more.
 
-## A quick example
-
+## ⚡ A quick example
 You can start a new project, run an experiment, visualize it and use the trained model to make a prediction
 in a few lines of code.
 ```python
-from dlc2action.project import Project
-
-# create a new project
-project = Project('project_name', data_type='data_type', annotation_type='annotation_type',
-                  data_path='path/to/data/folder', annotation_path='path/to/annotation/folder')
-# set important parameters, like the set labels you want to predict
+project = Project("project", data_type="dlc_track", annotation_type="csv")
 project.update_parameters(...)
-# run a training episode
-project.run_episode('episode_1')
-# plot the results
-project.plot_episodes(['episode_1'], metrics=['recall'])
-# use the model trained in episode_1 to make a prediction for new data
-project.run_prediction('prediction_1', episode_names=['episode_1'], data_path='path/to/new_data/folder')
+project.run_default_hyperparameter_search("search")
+project.run_episode("episode", load_search="search")
+project.evaluate(["episode"])
+project.run_prediction("prediction", episode_names=["episode"], data_path="/path/to/new/data")
 ```
 
-## How to get more information?
+## 📊 Benchmarks
 
-Check out the [examples](/examples) or [read the documentation](https://amathislab.github.io/DLC2action/html_docs/dlc2action.html) for a taste of what else you can do.
+We provide standardized benchmarks on action segmentation to help you evaluate DLC2Action's performance. Check out the [benchmarks section](examples/benchmarks/README.md) for detailed results and comparisons.
 
+## 📚 How to get more information ?
 
-## Acknowledgments
+Check out the [examples](/examples) or [read the documentation](html_docs/dlc2action/index.html) for a taste of what else you can do.
 
-DLC2Action is developed by members of the [A. Mathis Group at EPFL](https://www.mathislab.org/). We are grateful to many people for feedback, alpha-testing, suggestions and contributions, in particular to Liza Kozlova, Andy Bonnetto, Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
+## 🙏 Acknowledgments
 
-## License:
+DLC2Action is developed by members of the [A. Mathis Group](https://mathislab.org/) at EPFL. We are grateful to many people for feedback, alpha-testing, suggestions and contributions, in particular to Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
+
+We are also grateful to the creators of the different benchmarks, as well as models that were adapted in DLC2action. In particular, the MS-TCN, the C2F-TCN, the ASFormer, the EDTCN and the MotionBERT models, and the CalMS21, the SIMBA CRIM13 and SIMBA-RAT, the OFT and EPM, the SHOT7m2 and hBABEL, and the Atari-HEAD datasets. Please refer to the [benchmarks section](examples/benchmarks/README.md) for detailed references and consider citing these works when using them.
+
+## 📝 License
 
 Note that the software is provided "as is", without warranty of any kind, express or implied. If you use the code or data, please cite us!
 
-## Reference:
+## 📑 Reference
 
-Stay tuned for our first publication -- any feedback on this beta release is welcome at this time. Thanks for using DLC2Action. Please reach out if you want to collaborate!
+Stay tuned for our first publication -- any feedback on this release candidate for version 1 is welcome. Thanks for using DLC2Action. Please reach out if you want to collaborate!

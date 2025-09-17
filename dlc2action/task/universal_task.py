@@ -1,75 +1,87 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-Training and inference
-"""
+"""Training and inference."""
 
-from typing import Callable, Dict, Union, Tuple, List, Set, Any, Optional
-
-import numpy as np
-from torch.optim import Optimizer, Adam
-from torch import nn
-from torch.utils.data import DataLoader
-import torch
-from collections.abc import Iterable
-from tqdm import tqdm
-import warnings
-from random import randint
-from matplotlib import pyplot as plt
-from matplotlib import cm
-from collections import defaultdict
-from dlc2action.transformer.base_transformer import Transformer, EmptyTransformer
-from dlc2action.data.dataset import BehaviorDataset
-from dlc2action.model.base_model import Model, LoadedModel
-from dlc2action.metric.base_metric import Metric
 import os
 import random
-from copy import deepcopy, copy
-from optuna.trial import Trial
+import warnings
+from collections import defaultdict
+from collections.abc import Iterable
+from copy import copy, deepcopy
+from math import ceil, exp, floor, pi, sqrt
+from random import randint
+from time import time
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+
+import numpy as np
+import torch
+from dlc2action.data.dataset import BehaviorDataset
+from dlc2action.metric.base_metric import Metric
+from dlc2action.model.base_model import LoadedModel, Model
+from dlc2action.transformer.base_transformer import EmptyTransformer, Transformer
+from dlc2action.options import dlc2action_colormaps
+from matplotlib import cm
+from matplotlib import pyplot as plt
+from matplotlib import rc
 from optuna import TrialPruned
-from math import pi, sqrt, exp, floor, ceil
+from optuna.trial import Trial
+from torch import nn
+from torch.optim import Adam, Optimizer
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 class MyDataParallel(nn.DataParallel):
+    """A wrapper for nn.DataParallel that allows to call methods of the model."""
+
     def __init__(self, *args, **kwargs):
+        """Initialize the class."""
         super().__init__(*args, **kwargs)
         self.process_labels = self.module.process_labels
 
     def freeze_feature_extractor(self):
+        """Freeze the feature extractor."""
         self.module.freeze_feature_extractor()
 
     def unfreeze_feature_extractor(self):
+        """Unfreeze the feature extractor."""
         self.module.unfreeze_feature_extractor()
 
     def transform_labels(self, device):
+        """Transform labels to the device."""
         return self.module.transform_labels(device)
 
     def logit_scale(self):
+        """Return the logit scale of the model."""
         return self.module.logit_scale()
 
     def main_task_off(self):
+        """Turn off the main task training."""
         self.module.main_task_off()
 
     def state_dict(self, *args, **kwargs):
+        """Return the state of the module."""
         return self.module.state_dict(*args, **kwargs)
 
     def ssl_on(self):
+        """Turn on SSL training."""
         self.module.ssl_on()
 
     def ssl_off(self):
+        """Turn off SSL training."""
         self.module.ssl_off()
 
     def extract_features(self, x, start=0):
+        """Extract features from the model."""
         return self.module.extract_features(x, start)
 
 
 class Task:
-    """
-    A universal trainer class that performs training, evaluation and prediction for all types of tasks and data
-    """
+    """A universal trainer class that performs training, evaluation and prediction for all types of tasks and data."""
 
     def __init__(
         self,
@@ -81,6 +93,7 @@ class Task:
         ssl_losses: List = None,
         ssl_weights: List = None,
         lr: float = 1e-3,
+        weight_decay: float = 0,
         metrics: Dict = None,
         val_dataloader: DataLoader = None,
         test_dataloader: DataLoader = None,
@@ -106,7 +119,8 @@ class Task:
         parallel: bool = False,
         skip_metrics: List = None,
     ) -> None:
-        """
+        """Initialize the class.
+
         Parameters
         ----------
         train_dataloader : torch.utils.data.DataLoader
@@ -125,10 +139,14 @@ class Task:
             a list of SSL weights (if not provided initializes to 1)
         lr : float, default 1e-3
             learning rate
+        weight_decay : float, default 0
+            weight decay
         metrics : dict, optional
             a list of metric functions
         val_dataloader : torch.utils.data.DataLoader, optional
             a validation dataloader
+        test_dataloader : torch.utils.data.DataLoader, optional
+            a test dataloader
         optimizer : torch.optim.Optimizer, optional
             an optimizer (`Adam` by default)
         device : str, default 'cuda'
@@ -169,8 +187,12 @@ class Task:
             the maximum value of pseudolabeling alpha
         alpha_growth_stop : int, default 600
             pseudolabeling alpha stops growing after this epoch
-        """
+        parallel : bool, default False
+            if True, the model is trained on multiple GPUs
+        skip_metrics : list, optional
+            a list of metrics to skip
 
+        """
         # pseudolabeling might be buggy right now -- not using it!
         if skip_metrics is None:
             skip_metrics = []
@@ -206,6 +228,7 @@ class Task:
 
         self.optimizer_class = optimizer
         self.lr = lr
+        self.weight_decay = weight_decay
         if not isinstance(model, Model):
             self.model = LoadedModel(model=model)
         else:
@@ -263,15 +286,14 @@ class Task:
         self.decision_thresholds = [0.5 for x in self.behaviors_dict()]
 
     def save_checkpoint(self, checkpoint_path: str) -> None:
-        """
-        Save a general checkpoint
+        """Save a general checkpoint.
 
         Parameters
         ----------
         checkpoint_path : str
             the path where the checkpoint will be saved
-        """
 
+        """
         torch.save(
             {
                 "epoch": self.epoch,
@@ -284,8 +306,7 @@ class Task:
     def load_from_checkpoint(
         self, checkpoint_path, only_model: bool = False, load_strict: bool = True
     ) -> None:
-        """
-        Load from a checkpoint
+        """Load from a checkpoint.
 
         Parameters
         ----------
@@ -296,11 +317,13 @@ class Task:
             dictionary)
         load_strict : bool, default True
             if `True`, any inconsistencies in state dictionaries are regarded as errors
-        """
 
+        """
         if checkpoint_path is None:
             return
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        checkpoint = torch.load(
+            checkpoint_path, map_location=self.device, weights_only=False
+        )
         self.model.to(self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"], strict=load_strict)
         if not only_model:
@@ -308,23 +331,19 @@ class Task:
             self.epoch = checkpoint["epoch"]
 
     def save_model(self, save_path: str) -> None:
-        """
-        Save the model state dictionary
+        """Save the model state dictionary.
 
         Parameters
         ----------
         save_path : str
             the path where the state will be saved
-        """
 
+        """
         torch.save(self.model.state_dict(), save_path)
         print("saved the model successfully")
 
     def _apply_predict_functions(self, predicted):
-        """
-        Map from model output to prediction
-        """
-
+        """Map from model output to prediction."""
         predicted = self.primary_predict_function(predicted)
         predicted = self.predict_function(predicted)
         return predicted
@@ -339,10 +358,7 @@ class Task:
         embedding: bool = False,
         subsample: List = None,
     ) -> Tuple:
-        """
-        Get the prediction of `self.model` for input averaged over `augment_n` augmentations
-        """
-
+        """Get the prediction of `self.model` for input averaged over `augment_n` augmentations."""
         if augment_n == 0:
             augment_n = 1
             augment = False
@@ -356,7 +372,11 @@ class Task:
             subsample=subsample,
         )
         if not embedding:
+            # t1 = time()
             predicted, ssl_predicted = self.model(model_input, ssl_inputs, tag=tags)
+            # t2 = time()
+            # with open("/home/andy/Documents/EPFLsmartkitchenrecording/baselines/DLC2Action_baselines/inference_times/body_hand_eyes_2405.txt", "a") as f:
+            # f.write(f"Time: {t2 - t1}\n")
         else:
             predicted = self.model.extract_features(model_input)
             ssl_predicted = None
@@ -392,9 +412,9 @@ class Task:
         return predicted, ssl_predicted, ssl_targets
 
     def _ssl_loss(self, ssl_predicted, ssl_targets):
-        """
-        Apply SSL losses
-        """
+        """Apply SSL losses."""
+        if self.ssl_losses is None or ssl_predicted is None or ssl_targets is None:
+            return []
 
         ssl_loss = []
         for loss, predicted, target in zip(self.ssl_losses, ssl_predicted, ssl_targets):
@@ -408,12 +428,11 @@ class Task:
         temporal_subsampling_size: int = None,
         skip_metrics: List = None,
     ) -> Tuple[float, float]:
-        """
-        Calculate the loss function and the metric for a dataloader batch
+        """Calculate the loss function and the metric for a dataloader batch.
 
         Averaging the predictions over augment_n augmentations.
-        """
 
+        """
         if "target" not in batch or torch.isnan(batch["target"]).all():
             raise ValueError("Cannot compute loss function with nan targets!")
         main_input = {k: v.to(self.device) for k, v in batch["input"].items()}
@@ -421,16 +440,20 @@ class Task:
         main_target = batch["target"].to(self.device)
         if "ssl_targets" in batch:
             ssl_targets = [
-                {k: v.to(self.device) for k, v in x.items()}
-                if isinstance(x, dict)
-                else None
+                (
+                    {k: v.to(self.device) for k, v in x.items()}
+                    if isinstance(x, dict)
+                    else None
+                )
                 for x in batch["ssl_targets"]
             ]
         if "ssl_inputs" in batch:
             ssl_inputs = [
-                {k: v.to(self.device) for k, v in x.items()}
-                if isinstance(x, dict)
-                else None
+                (
+                    {k: v.to(self.device) for k, v in x.items()}
+                    if isinstance(x, dict)
+                    else None
+                )
                 for x in batch["ssl_inputs"]
             ]
         if temporal_subsampling_size is not None:
@@ -472,10 +495,7 @@ class Task:
         apply_primary_function: bool = True,
         skip_metrics: List = None,
     ) -> Tuple[float, float]:
-        """
-        Compute the losses and metrics from predictions
-        """
-
+        """Compute the losses and metrics from predictions."""
         if skip_metrics is None:
             skip_metrics = []
         if not skip_loss:
@@ -499,6 +519,7 @@ class Task:
             if apply_primary_function:
                 predicted = self.primary_predict_function(predicted)
             predicted_transformed = self.predict_function(predicted)
+
             for name, metric_function in self.metrics.items():
                 if name not in skip_metrics:
                     if metric_function.needs_raw_data:
@@ -512,10 +533,7 @@ class Task:
         return loss, ssl_losses
 
     def _calculate_metrics(self) -> Dict:
-        """
-        Calculate the final values of epoch metrics
-        """
-
+        """Calculate the final values of epoch metrics."""
         epoch_metrics = {}
         for metric_name, metric in self.metrics.items():
             m = metric.calculate()
@@ -529,6 +547,7 @@ class Task:
                     m = m.item()
                 epoch_metrics[metric_name] = m
             metric.reset()
+        # print("calculate metric", epoch_metrics)
         return epoch_metrics
 
     def _run_epoch(
@@ -541,13 +560,12 @@ class Task:
         alpha: float = 1,
         temporal_subsampling_size: int = None,
     ) -> Tuple:
-        """
-        Run one epoch on dataloader
+        """Run one epoch on dataloader.
 
         Averaging the predictions over augment_n augmentations.
         Use "train" mode for training and "val" mode for evaluation.
-        """
 
+        """
         if mode == "train":
             self.model.train()
         elif mode == "val":
@@ -612,8 +630,7 @@ class Task:
         temporal_subsampling_size: int = None,
         loading_bar: bool = False,
     ) -> Tuple:
-        """
-        Train the task and return a log of epoch-average loss and metric
+        """Train the task and return a log of epoch-average loss and metric.
 
         You can use the autostop parameters to finish training when the parameters are not improving. It will be
         stopped if the average value of `autostop_metric` over the last `autostop_interval` epochs is smaller than
@@ -639,6 +656,10 @@ class Task:
             if `False`, the main task (action segmentation) will not be used in training
         ssl_on : bool, default True
             if `False`, the SSL task will not be used in training
+        temporal_subsampling_size : int, optional
+            if not `None`, the temporal subsampling will be used in training with the given size
+        loading_bar : bool, default False
+            if `True`, a loading bar will be displayed
 
         Returns
         -------
@@ -647,8 +668,8 @@ class Task:
         metrics_log: dict
             a dictionary of metric value logs (first-level keys are 'train' and 'val', second-level keys are metric
             names, values are lists of function values)
-        """
 
+        """
         if self.parallel and not isinstance(self.model, nn.DataParallel):
             self.model = MyDataParallel(self.model)
         self.model.to(self.device)
@@ -706,8 +727,10 @@ class Task:
 
             for metric_name, metric_value in sorted(epoch_metrics.items()):
                 if metric_name not in self.skip_metrics:
-                    metrics_log["train"][metric_name].append(metric_value)
+                    if isinstance(metric_value, list):
+                        metric_value = torch.mean(torch.Tensor(metric_value))
                     epoch_string += f", {metric_name} {metric_value:.3f}"
+                    metrics_log["train"][metric_name].append(metric_value)
 
             if (
                 self.val_dataloader is not None
@@ -733,6 +756,8 @@ class Task:
                             epoch_string += f", ssl_loss_{key} {value:.4f}"
 
                     for metric_name, metric_value in sorted(val_epoch_metrics.items()):
+                        if isinstance(metric_value, list):
+                            metric_value = torch.mean(torch.Tensor(metric_value))
                         metrics_log["val"][metric_name].append(metric_value)
                         epoch_string += f", {metric_name} {metric_value:.3f}"
 
@@ -800,9 +825,9 @@ class Task:
         prediction: Union[torch.Tensor, Dict],
         data: Union[DataLoader, BehaviorDataset, str] = None,
         batch_size: int = 32,
+        indices: list = None,
     ) -> Tuple:
-        """
-        Compute metrics for a prediction
+        """Compute metrics for a prediction.
 
         Parameters
         ----------
@@ -837,9 +862,9 @@ class Task:
                     video_id = dataset.input_store.get_video_id(c)
                     clip_id = dataset.input_store.get_clip_id(c)
                     start, end = dataset.input_store.get_clip_start_end(c)
-                    predicted[i, :, : end - start] = prediction[video_id][clip_id][
-                        :, start:end
-                    ]
+                    beh_ind = list(prediction[video_id]["classes"].keys())
+                    pred_tmp = prediction[video_id][clip_id][beh_ind, :]
+                    predicted[i, :, : end - start] = pred_tmp[:, start:end]
                 self._compute(
                     [],
                     [],
@@ -853,6 +878,9 @@ class Task:
             for batch in data:
                 main_target = batch["target"]
                 predicted = prediction[batch["index"]]
+                if not indices is None:
+                    indices_new = [indices.index(i) for i in range(len(indices))]
+                    predicted = predicted[:, indices_new]
                 self._compute(
                     [],
                     [],
@@ -863,12 +891,12 @@ class Task:
                     apply_primary_function=False,
                 )
         epoch_metrics = self._calculate_metrics()
-        strings = [
-            f"{metric_name} {metric_value:.3f}"
-            for metric_name, metric_value in epoch_metrics.items()
-        ]
-        val_string = ", ".join(sorted(strings))
-        print(val_string)
+        # strings = [
+        #     f"{metric_name} {metric_value:.3f}"
+        #     for metric_name, metric_value in epoch_metrics.items()
+        # ]
+        # val_string = ", ".join(sorted(strings))
+        # print(val_string)
         return epoch_loss, epoch_metrics
 
     def evaluate(
@@ -878,8 +906,7 @@ class Task:
         batch_size: int = 32,
         verbose: bool = True,
     ) -> Tuple:
-        """
-        Evaluate the Task model
+        """Evaluate the Task model.
 
         Parameters
         ----------
@@ -900,8 +927,8 @@ class Task:
             the average value of the SSL loss function
         metric : dict
             a dictionary of average values of metric functions
-        """
 
+        """
         if self.parallel and not isinstance(self.model, nn.DataParallel):
             self.model = MyDataParallel(self.model)
         self.model.to(self.device)
@@ -929,8 +956,7 @@ class Task:
         to_ram: bool = False,
         embedding: bool = False,
     ) -> torch.Tensor:
-        """
-        Make a prediction with the Task model
+        """Make a prediction with the Task model.
 
         Parameters
         ----------
@@ -957,8 +983,8 @@ class Task:
         -------
         prediction : torch.Tensor
             a prediction for the input data
-        """
 
+        """
         if self.parallel and not isinstance(self.model, nn.DataParallel):
             self.model = MyDataParallel(self.model)
         self.model.to(self.device)
@@ -996,8 +1022,7 @@ class Task:
         return output
 
     def dataset(self, mode="train") -> BehaviorDataset:
-        """
-        Get a dataset
+        """Get a dataset.
 
         Parameters
         ----------
@@ -1008,16 +1033,15 @@ class Task:
         -------
         dataset : dlc2action.data.dataset.BehaviorDataset
             the dataset
-        """
 
+        """
         dataloader = self.dataloader(mode)
         if dataloader is None:
             raise ValueError("The length of the dataloader is 0!")
         return dataloader.dataset
 
     def dataloader(self, mode: str = "train") -> DataLoader:
-        """
-        Get a dataloader
+        """Get a dataloader.
 
         Parameters
         ----------
@@ -1028,8 +1052,8 @@ class Task:
         -------
         dataloader : torch.utils.data.DataLoader
             the dataloader
-        """
 
+        """
         if mode == "train":
             return self.train_dataloader
         elif mode == "val":
@@ -1042,10 +1066,7 @@ class Task:
             )
 
     def _get_dataset(self, dataset):
-        """
-        Get a dataset from a dataloader, a string ('train', 'test' or 'val') or `None` (default)
-        """
-
+        """Get a dataset from a dataloader, a string ('train', 'test' or 'val') or `None` (default)."""
         if dataset is None:
             dataset = self.dataset("val")
         elif dataset in ["train", "val", "test"]:
@@ -1058,10 +1079,7 @@ class Task:
             raise TypeError(f"The {type(dataset)} type of dataset is not recognized!")
 
     def _get_dataloader(self, dataset):
-        """
-        Get a dataloader from a dataset, a string ('train', 'test' or 'val') or `None` (default)
-        """
-
+        """Get a dataloader from a dataset, a string ('train', 'test' or 'val') or `None` (default)."""
         if dataset is None:
             dataset = self.dataloader("val")
         elif dataset in ["train", "val", "test"]:
@@ -1078,8 +1096,7 @@ class Task:
     def generate_full_length_prediction(
         self, dataset=None, batch_size=32, augment_n=10
     ):
-        """
-        Compile a prediction for the original input sequences
+        """Compile a prediction for the original input sequences.
 
         Parameters
         ----------
@@ -1095,8 +1112,8 @@ class Task:
         prediction : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are prediction tensors
-        """
 
+        """
         dataset = self._get_dataset(dataset)
         if not isinstance(dataset, BehaviorDataset):
             raise TypeError(
@@ -1123,11 +1140,12 @@ class Task:
     def generate_submission(
         self, frame_number_map_file, dataset=None, batch_size=32, augment_n=10
     ):
-        """
-        Generate a MABe-22 style submission dictionary
+        """Generate a MABe-22 style submission dictionary.
 
         Parameters
         ----------
+        frame_number_map_file : str
+            the path to the frame number map file
         dataset : BehaviorDataset, optional
             the dataset to generate a prediction for (if `None`, generate for the validation dataset)
         batch_size : int, default 32
@@ -1139,8 +1157,8 @@ class Task:
         -------
         submission : dict
             a dictionary with frame number mapping and embeddings
-        """
 
+        """
         dataset = self._get_dataset(dataset)
         if not isinstance(dataset, BehaviorDataset):
             raise TypeError(
@@ -1181,10 +1199,7 @@ class Task:
         return predicted
 
     def _get_intervals(self, tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Get a list of True group beginning and end indices from a boolean tensor
-        """
-
+        """Get a list of True group beginning and end indices from a boolean tensor."""
         output, indices = torch.unique_consecutive(tensor, return_inverse=True)
         true_indices = torch.where(output)[0]
         starts = torch.tensor(
@@ -1196,13 +1211,12 @@ class Task:
         return torch.stack([starts, ends]).T
 
     def _smooth(self, tensor: torch.Tensor, smooth_interval: int = 1) -> torch.Tensor:
-        """
-        Get rid of jittering in a non-exclusive classification tensor
+        """Get rid of jittering in a non-exclusive classification tensor.
 
         First, remove intervals of 0 shorter than `smooth_interval`. Then, remove intervals of 1 shorter than
         `smooth_interval`.
-        """
 
+        """
         if len(tensor.shape) > 1:
             for c in tensor.shape[1]:
                 intervals = self._get_intervals(tensor[:, c] == 0)
@@ -1233,9 +1247,9 @@ class Task:
                         tensor[start:end] = tensor[start - 1]
         return tensor
 
-    def _visualize_results_label(
+    def _visualize_results_single(
         self,
-        label: str,
+        behavior: str,
         save_path: str = None,
         add_legend: bool = True,
         ground_truth: bool = True,
@@ -1247,11 +1261,12 @@ class Task:
         smooth_interval: int = 0,
         title: str = None,
     ):
-        """
-        Visualize random predictions
+        """Visualize random predictions.
 
         Parameters
         ----------
+        behavior : str
+            the behavior to visualize
         save_path : str, optional
             the path where the plot will be saved
         add_legend : bool, default True
@@ -1274,14 +1289,18 @@ class Task:
             the dataset to make the prediction for (if not provided, the validation dataset is used)
         drop_classes : set, optional
             a set of class names to not be displayed
-        """
+        smooth_interval : int, default 0
+            the interval to smooth the predictions over
+        title : str, optional
+            the title of the plot
 
+        """
         if title is None:
             title = ""
         dataset = self._get_dataset(dataset)
         inverse_dict = {v: k for k, v in dataset.behaviors_dict().items()}
-        label_ind = inverse_dict[label]
-        labels = {1: label, -100: "unknown"}
+        label_ind = inverse_dict[behavior]
+        labels = {1: behavior, -100: "unknown"}
         label_keys = [1, -100]
         color_list = ["blue", "gray"]
         if whole_video:
@@ -1351,9 +1370,9 @@ class Task:
             for c in classes_gt:
                 c_i = label_keys.index(int(c))
                 if c in classes:
-                    label = None
+                    behavior = None
                 else:
-                    label = labels[int(c)]
+                    behavior = labels[int(c)]
                 output, indices, counts = torch.unique_consecutive(
                     gt == c, return_inverse=True, return_counts=True
                 )
@@ -1374,7 +1393,7 @@ class Task:
                     list(zip(res_indices_start, res_indices_len)),
                     (1.5, 1),
                     facecolors=color_list[c_i],
-                    label=label,
+                    label=behavior,
                 )
         self._compute(
             main_target=batch["target"][j].unsqueeze(0).to(self.device),
@@ -1449,12 +1468,12 @@ class Task:
         dataset: Union[BehaviorDataset, DataLoader, str, None] = None,
         drop_classes: Set = None,
         search_classes: Set = None,
-        num_samples: int = 1,
         smooth_interval_prediction: int = None,
-        behavior_name: str = None,
+        font_size: float = None,
+        num_plots: int = 1,
+        window_size:int =400
     ):
-        """
-        Visualize random predictions
+        """Visualize random predictions.
 
         Parameters
         ----------
@@ -1482,75 +1501,45 @@ class Task:
             a set of class names to not be displayed
         search_classes : set, optional
             if given, only intervals where at least one of the classes is in ground truth will be shown
-        """
+        smooth_interval_prediction : int, optional
+            if given, the prediction will be smoothed with a moving average of the given size
 
+        """
         if drop_classes is None:
             drop_classes = []
         dataset = self._get_dataset(dataset)
-        if dataset.annotation_class() == "exclusive_classification":
-            exclusive = True
-        elif dataset.annotation_class() == "nonexclusive_classification":
-            exclusive = False
-        else:
+        if dataset.annotation_class() != "exclusive_classification":
             raise NotImplementedError(
-                f"Results visualisation is not implemented for {dataset.annotation_class() } datasets!"
+                "Results visualisation is only implemented for exclusive classification datasets!"
             )
-        if exclusive:
-            labels = {
-                k: v
-                for k, v in dataset.behaviors_dict().items()
-                if v not in drop_classes
-            }
-            labels.update({-100: "unknown"})
-        else:
-            inverse_dict = {v: k for k, v in dataset.behaviors_dict().items()}
-            if behavior_name is None:
-                behavior_name = list(inverse_dict.keys())[0]
-            label_ind = inverse_dict[behavior_name]
-            labels = {1: label, -100: "unknown"}
+        labels = {
+            k: v for k, v in dataset.behaviors_dict().items() if v not in drop_classes
+        }
+        labels.update({-100: "unknown"})
         label_keys = sorted([int(x) for x in labels.keys()])
         if search_classes is None:
             ok = True
         else:
             ok = False
         classes = []
-        if whole_video:
-            predicted = self.generate_full_length_prediction(dataset)
-            keys = list(predicted.keys())
+        predicted = self.generate_full_length_prediction(dataset)
+        keys = list(predicted.keys())
         counter = 0
-        if whole_video:
-            max_iter = len(keys) * 2
-        else:
-            max_iter = len(dataset) * 2
+        max_iter = len(keys) * 2
         while len(classes) < min_classes or not ok:
             counter += 1
             if counter > max_iter:
                 raise RuntimeError(
                     "Plotting is taking too many iterations; you should probably make some of the parameters less restrictive"
                 )
-            if whole_video:
-                i = randint(0, len(keys) - 1)
-                prediction = predicted[keys[i]]
-                keys_i = list(prediction.keys())
-                j = randint(0, len(keys_i) - 1)
-                prediction = prediction[keys_i[j]]
-                key1 = keys[i]
-                key2 = keys_i[j]
-            else:
-                dataloader = DataLoader(dataset)
-                i = randint(0, len(dataloader) - 1)
-                for num, batch in enumerate(dataloader):
-                    if num == i:
-                        break
-                input = {k: v.to(self.device) for k, v in batch["input"].items()}
-                prediction, *_ = self._get_prediction(
-                    input, batch.get("tag"), augment_n=5
-                )
-                prediction = self._apply_predict_functions(prediction)
-                j = randint(0, len(prediction) - 1)
-                prediction = prediction[j]
-            if not exclusive:
-                prediction = prediction[label_ind]
+            i = randint(0, len(keys) - 1)
+            prediction = predicted[keys[i]]
+            keys_i = list(prediction.keys())
+            j = randint(0, len(keys_i) - 1)
+            prediction = prediction[keys_i[j]]
+            key1 = keys[i]
+            key2 = keys_i[j]
+
             if smooth_interval_prediction > 0:
                 unsmoothed_prediction = deepcopy(prediction)
                 prediction = self._smooth(prediction, smooth_interval_prediction)
@@ -1563,7 +1552,12 @@ class Task:
             if search_classes is not None:
                 ok = any([x in classes for x in search_classes])
         fig, ax = plt.subplots(figsize=(width, height))
-        color_list = cm.get_cmap(colormap, lut=len(labels)).colors
+        cmap = cm.get_cmap(colormap) if colormap != "dlc2action" else None
+        color_list = (
+            [cmap(c) for c in np.linspace(0, 1, len(labels))]
+            if colormap != "dlc2action"
+            else dlc2action_colormaps["default"]
+        )
 
         def _plot_prediction(prediction, height, set_labels=True):
             for c in label_keys:
@@ -1605,10 +1599,7 @@ class Task:
             _plot_prediction(prediction, 0)
             gt_height = 1.5
         if ground_truth:
-            if not whole_video:
-                gt = batch["target"][j].to(self.device)
-            else:
-                gt = dataset.generate_full_length_gt()[key1][key2]
+            gt = dataset.generate_full_length_gt()[key1][key2]
             for c in label_keys:
                 c_i = label_keys.index(int(c))
                 if labels[int(c)] in classes:
@@ -1651,77 +1642,95 @@ class Task:
         if add_legend:
             ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         if hide_axes:
-            plt.axis("off")
-        if save_path is not None:
-            plt.savefig(save_path, transparent=transparent)
+            # plt.axis("off")
+            plt.box(False)
+        if font_size is not None:
+            font = {"size": font_size}
+            rc("font", **font)
+        plt.title(f"{key1} -- {key2}")
+        plt.tight_layout()
+        for seed in range(num_plots):
+            if not whole_video:
+                ax.set_xlim((seed * window_size, (seed + 1) * window_size))
+            if save_path is not None:
+                plt.savefig(
+                    save_path.replace(".svg", f"_{seed}_{key1} -- {key2}.svg"), transparent=transparent
+                )
+                print(f"Saved in {save_path.replace('.svg', f'_{seed}_{key1} -- {key2}.svg')}")
         plt.show()
+        plt.close()
 
     def set_ssl_transformations(self, ssl_transformations):
+        """Set SSL transformations.
+
+        Parameters
+        ----------
+        ssl_transformations : list
+            a list of callable SSL transformations
+
+        """
         self.train_dataloader.dataset.set_ssl_transformations(ssl_transformations)
         if self.val_dataloader is not None:
             self.val_dataloader.dataset.set_ssl_transformations(ssl_transformations)
 
     def set_ssl_losses(self, ssl_losses: list) -> None:
-        """
-        Set SSL losses
+        """Set SSL losses.
 
         Parameters
         ----------
         ssl_losses : list
             a list of callable SSL losses
-        """
 
+        """
         self.ssl_losses = ssl_losses
 
     def set_log(self, log: str) -> None:
-        """
-        Set the log file
+        """Set the log file.
 
         Parameters
         ----------
         log: str
             the mew log file path
-        """
 
+        """
         self.log_file = log
 
     def set_keep_target_none(self, keep_target_none: List) -> None:
-        """
-        Set the keep_target_none parameter of the transformer
+        """Set the keep_target_none parameter of the transformer.
 
         Parameters
         ----------
         keep_target_none : list
             a list of bool values
-        """
 
+        """
         self.transformer.keep_target_none = keep_target_none
 
     def set_generate_ssl_input(self, generate_ssl_input: list) -> None:
-        """
-        Set the generate_ssl_input parameter of the transformer
+        """Set the generate_ssl_input parameter of the transformer.
 
         Parameters
         ----------
         generate_ssl_input : list
             a list of bool values
-        """
 
+        """
         self.transformer.generate_ssl_input = generate_ssl_input
 
     def set_model(self, model: Model) -> None:
-        """
-        Set a new model
+        """Set a new model.
 
         Parameters
         ----------
         model: Model
             the new model
-        """
 
+        """
         self.epoch = 0
         self.model = model
-        self.optimizer = self.optimizer_class(model.parameters(), lr=self.lr)
+        self.optimizer = self.optimizer_class(
+            model.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
         if self.model.process_labels:
             self.model.set_behaviors(list(self.behaviors_dict().values()))
 
@@ -1731,8 +1740,7 @@ class Task:
         val_dataloader: DataLoader = None,
         test_dataloader: DataLoader = None,
     ) -> None:
-        """
-        Set new dataloaders
+        """Set new dataloaders.
 
         Parameters
         ----------
@@ -1742,53 +1750,49 @@ class Task:
             the new validation dataloader
         test_dataloader : torch.utils.data.DataLoader
             the new test dataloader
-        """
 
+        """
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.test_dataloader = test_dataloader
 
     def set_loss(self, loss: Callable) -> None:
-        """
-        Set new loss function
+        """Set new loss function.
 
         Parameters
         ----------
         loss: callable
             the new loss function
-        """
 
+        """
         self.loss = loss
 
     def set_metrics(self, metrics: dict) -> None:
-        """
-        Set new metric
+        """Set new metric.
 
         Parameters
         ----------
         metrics : dict
             the new metric dictionary
-        """
 
+        """
         self.metrics = metrics
 
     def set_transformer(self, transformer: Transformer) -> None:
-        """
-        Set a new transformer
+        """Set a new transformer.
 
         Parameters
         ----------
         transformer: Transformer
             the new transformer
-        """
 
+        """
         self.transformer = transformer
 
     def set_predict_functions(
         self, primary_predict_function: Callable, predict_function: Callable
     ) -> None:
-        """
-        Set new predict functions
+        """Set new predict functions.
 
         Parameters
         ----------
@@ -1796,16 +1800,13 @@ class Task:
             the new primary predict function
         predict_function : callable
             the new predict function
-        """
 
+        """
         self.primary_predict_function = primary_predict_function
         self.predict_function = predict_function
 
     def _set_pseudolabels(self):
-        """
-        Set pseudolabels
-        """
-
+        """Set pseudolabels."""
         self.train_dataloader.dataset.set_unlabeled(True)
         predicted = self.predict(
             data=self.dataset("train"),
@@ -1816,10 +1817,7 @@ class Task:
         self.train_dataloader.dataset.set_annotation(predicted.detach())
 
     def _alpha(self, epoch):
-        """
-        Get the current pseudolabeling alpha parameter
-        """
-
+        """Get the current pseudolabeling alpha parameter."""
         if epoch <= self.T1:
             return 0
         elif epoch < self.T2:
@@ -1828,8 +1826,7 @@ class Task:
             return self.alpha_f
 
     def count_classes(self, bouts: bool = False) -> Dict:
-        """
-        Get a dictionary of class counts in different modes
+        """Get a dictionary of class counts in different modes.
 
         Parameters
         ----------
@@ -1841,8 +1838,8 @@ class Task:
         class_counts : dict
             a dictionary where first-level keys are "train", "val" and "test", second-level keys are
             class names and values are class counts (in frames)
-        """
 
+        """
         class_counts = {}
         for x in ["train", "val", "test"]:
             try:
@@ -1852,8 +1849,7 @@ class Task:
         return class_counts
 
     def behaviors_dict(self) -> Dict:
-        """
-        Get a behavior dictionary
+        """Get a behavior dictionary.
 
         Keys are label indices and values are label names.
 
@@ -1861,20 +1857,19 @@ class Task:
         -------
         behaviors_dict : dict
             behavior dictionary
-        """
 
+        """
         return self.dataset().behaviors_dict()
 
     def update_parameters(self, parameters: Dict) -> None:
-        """
-        Update training parameters from a dictionary
+        """Update training parameters from a dictionary.
 
         Parameters
         ----------
         parameters : dict
             the update dictionary
-        """
 
+        """
         self.lr = parameters.get("lr", self.lr)
         self.parallel = parameters.get("parallel", self.parallel)
         self.optimizer = self.optimizer_class(self.model.parameters(), lr=self.lr)
@@ -1911,8 +1906,7 @@ class Task:
         predicted: torch.Tensor = None,
         behaviors_dict: Dict = None,
     ) -> Dict:
-        """
-        Generate frame-wise scores for active learning
+        """Generate frame-wise scores for active learning.
 
         Parameters
         ----------
@@ -1925,14 +1919,18 @@ class Task:
         method : {"least_confidence", "entropy"}
             the method used to calculate the scores from the probability predictions (`"least_confidence"`: `1 - p_i` if
             `p_i > 0.5` or `p_i` if `p_i < 0.5`; `"entropy"`: `- p_i * log(p_i) - (1 - p_i) * log(1 - p_i)`)
+        predicted : torch.Tensor, default None
+            if not `None`, the predicted tensor to use instead of predicting from the model
+        behaviors_dict : dict, default None
+            if not `None`, the behaviors dictionary to use instead of the one from the dataset
 
         Returns
         -------
         score_dicts : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are score tensors
-        """
 
+        """
         dataset = self.dataset("train")
         if behaviors_dict is None:
             behaviors_dict = self.behaviors_dict()
@@ -1983,8 +1981,7 @@ class Task:
         num_models: int = 10,
         kernel_size: int = 11,
     ) -> Dict:
-        """
-        Generate frame-wise Bayesian Active Learning by Disagreement scores for active learning
+        """Generate frame-wise Bayesian Active Learning by Disagreement scores for active learning.
 
         Parameters
         ----------
@@ -2004,8 +2001,8 @@ class Task:
         score_dicts : dict
             a nested dictionary where first level keys are video ids, second level keys are clip ids and values
             are score tensors
-        """
 
+        """
         dataset = self.dataset("train")
         dataset = self._get_dataset(dataset)
         if not isinstance(dataset, BehaviorDataset):
@@ -2062,15 +2059,22 @@ class Task:
                 result[v_id][clip_id] = result[v_id][clip_id] * 2 / num_models
                 res = torch.zeros(result[v_id][clip_id].shape)
                 for i in range(len(classes)):
-                    res[
-                        i, floor(kernel_size // 2) : -floor(kernel_size // 2)
-                    ] = torch.nn.functional.conv1d(
-                        result[v_id][clip_id][i, :].unsqueeze(0).unsqueeze(0), kernel
-                    )[
-                        0, ...
-                    ]
+                    res[i, floor(kernel_size // 2) : -floor(kernel_size // 2)] = (
+                        torch.nn.functional.conv1d(
+                            result[v_id][clip_id][i, :].unsqueeze(0).unsqueeze(0),
+                            kernel,
+                        )[0, ...]
+                    )
                 result[v_id][clip_id] = res
         return result
 
     def get_normalization_stats(self) -> Optional[Dict]:
+        """Get the normalization statistics of the dataset.
+
+        Returns
+        -------
+        stats : dict
+            a dictionary containing the mean and standard deviation of the dataset
+
+        """
         return self.train_dataloader.dataset.stats

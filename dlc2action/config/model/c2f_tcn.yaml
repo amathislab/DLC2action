@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 num_f_maps: 128 # int; number of maps
 feature_dim: null # int; if not null, intermediate features are generated with this dimension and then passed to a 2-layer MLP for classification (useful for SSL)
 input_dims: "dataset_features" # int; number of input features (set to 'dataset_features' to get the number from BehaviorDataset.dataset_features())

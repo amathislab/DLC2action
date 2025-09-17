@@ -1,10 +1,10 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
-"""
-## Feature extraction
+"""Feature extraction.
 
 Feature extractors generate feature dictionaries that are then passed to SSL transformations
 (see `dlc2action.ssl`) and finally to
@@ -14,6 +14,7 @@ feature tensors. It is generally assumed that the tensors have shape `(F, ..., L
 number of features (per frame, keypoint, pixel...) and `L` is the length of the segment in frames. The `F`
 value can be different for every tensor in the dictionary and the rest of the shape should be constant.
 """
+
 import copy
 from typing import Dict, Tuple, List, Set
 import numpy as np
@@ -23,12 +24,11 @@ import math
 from itertools import combinations
 from matplotlib.cm import get_cmap
 from dlc2action.data.base_store import PoseInputStore
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 
 class FeatureExtractor(ABC):
-    """
-    The base class for feature extractors
+    """The base class for feature extractors.
 
     The `extract_features` method receives a data dictionary as input.
     We do not assume a specific
@@ -40,25 +40,24 @@ class FeatureExtractor(ABC):
     """
 
     input_store_class = None
-    """
-    The `dlc2action.data.base_Store.InputStore` child class paired with this feature extractor
-    """
+    """The `dlc2action.data.base_Store.InputStore` child class paired with this feature extractor."""
 
     @abstractmethod
     def __init__(self, ignored_clips: List = None, **kwargs):
-        """
+        """Initialize the feature extractor.
+
         Parameters
         ----------
         ignored_clips : list
             a list of string names of clip ids to ignore
+
         """
 
     @abstractmethod
     def extract_features(
         self, data_dict: Dict, video_id: str, one_clip: bool = False
     ) -> Dict:
-        """
-        Extract features from a data dictionary
+        """Extract features from a data dictionary.
 
         An input store will call this method while pre-computing a dataset. The data dictionary has to relate to one
         video id and have clip ids as keys. Read the documentation at `dlc2action.data` to find out more about video
@@ -80,12 +79,12 @@ class FeatureExtractor(ABC):
         features : dict
             a features dictionary where the keys are the feature names (e.g. 'coords', 'distances') and the
             values are numpy arrays of shape `(#features, ..., #frames)`
+
         """
 
 
 class PoseFeatureExtractor(FeatureExtractor):
-    """
-    The base class for pose feature extractors
+    """The base class for pose feature extractors.
 
     Pose feature extractors work with `dlc2action.data.base_store.InputStore` instances
     that inherit from `dlc2action.data.base_store.PoseInputStore`.
@@ -94,13 +93,14 @@ class PoseFeatureExtractor(FeatureExtractor):
     input_store_class = PoseInputStore
 
     def __init__(self, input_store: PoseInputStore, *args, **kwargs):
-        """
+        """Initialize the extractor.
+
         Parameters
         ----------
         input_store : PoseInputStore
             the input store object
-        """
 
+        """
         self.get_bodyparts = input_store.get_bodyparts
         self.get_coords = input_store.get_coords
         self.get_n_frames = input_store.get_n_frames
@@ -140,10 +140,10 @@ class PoseFeatureExtractor(FeatureExtractor):
 
 
 class KinematicExtractor(PoseFeatureExtractor):
-    """
-    A feature extractor for basic kinematic features: speeds, accelerations, distances.
+    """A feature extractor for basic kinematic features: speeds, accelerations, distances.
 
     The available keys are:
+
         - coords: the allocentric bodypart coordinates,
         - coord_diff: the egocentric bodypart coordinates,
         - center: the body center (mean of bodyparts) coordinates,
@@ -179,7 +179,8 @@ class KinematicExtractor(PoseFeatureExtractor):
         *args,
         **kwargs,
     ) -> None:
-        """
+        """Initialize the extractor.
+
         Parameters
         ----------
         input_store : PoseInputStore
@@ -215,8 +216,8 @@ class KinematicExtractor(PoseFeatureExtractor):
             a list of zone and bodypart name tuples to compute distances for (distance from the bodypart to the closest of the
             boundaries) (e.g. `[("main_area", "nose")]`); the zones should be defined in the `zone_vertices` parameter;
             this is only computed if `"zone_distances"` is in `keys`
-        """
 
+        """
         if keys is None:
             keys = [
                 "coord_diff",
@@ -239,7 +240,7 @@ class KinematicExtractor(PoseFeatureExtractor):
         self.keys = keys
         self.ignored_clips = ignored_clips
         self.interactive = interactive
-        self.w = averaging_window
+        self.averaging_window = int(averaging_window)
         self.distance_pairs = distance_pairs
         self.angle_pairs = angle_pairs
         self.area_vertices = area_vertices
@@ -253,7 +254,7 @@ class KinematicExtractor(PoseFeatureExtractor):
         """
         Compute the angle speed
         """
-
+        #2D coords
         if xy_coord_joint.shape[1] == 2:
             x_diff = np.diff(xy_coord_joint[:, 0])
             y_diff = np.diff(xy_coord_joint[:, 1])
@@ -265,6 +266,7 @@ class KinematicExtractor(PoseFeatureExtractor):
             angle_dir_radians = np.insert(
                 angle_dir_radians, 0, angle_dir_radians[0], axis=0
             )
+        #3D coords
         else:
             x_diff = np.diff(xy_coord_joint[:, 0])
             y_diff = np.diff(xy_coord_joint[:, 1])
@@ -282,13 +284,11 @@ class KinematicExtractor(PoseFeatureExtractor):
         return angle_dir_radians
 
     def _poly_area(self, x, y):
+        """Get polygon area."""
         return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
     def _cdist_keep_zeros(self, a: np.array, b: np.array) -> np.array:
-        """
-        Compute all distance combinations while setting the distance to zero if at least one of the elements is at zero
-        """
-
+        """Compute all distance combinations while setting the distance to zero if at least one of the elements is at zero."""
         dist = cdist(a, b, "euclidean")
         a_zero = np.sum(a == 0, axis=1) > 0
         b_zero = np.sum(b == 0, axis=1) > 0
@@ -301,10 +301,7 @@ class KinematicExtractor(PoseFeatureExtractor):
     def _distance(
         self, data_dict: Dict, clip1: str, clip2: str, name: str, centroid: bool = False
     ) -> Tuple:
-        """
-        Compute the distances between all keypoints
-        """
-
+        """Compute the distances between all keypoints."""
         if not isinstance(clip1, list):
             body_parts_1 = self.get_bodyparts()
         else:
@@ -316,29 +313,28 @@ class KinematicExtractor(PoseFeatureExtractor):
             raise RuntimeError(
                 f"The numbers of frames for {clip1} and {clip2} are not equal at {name}!"
             )
-
         # joint distances for single agent
         upper_indices = np.triu_indices(n_body_parts, 1)
 
         xy_coord_joints_1 = np.stack(
             [self.get_coords(data_dict, clip1, bp) for bp in body_parts_1], axis=1
         )
-        if self.w > 1:
+        if self.averaging_window > 1:
             for i in range(xy_coord_joints_1.shape[0]):
                 for j in range(xy_coord_joints_1.shape[1]):
                     xy_coord_joints_1[i, j, :] = np.convolve(
-                        xy_coord_joints_1[i, j, :], (1 / self.w) * np.ones(self.w)
-                    )[self.w // 2 : -self.w // 2 + (self.w + 1) % 2]
+                        xy_coord_joints_1[i, j, :], (1 / self.averaging_window) * np.ones(self.averaging_window)
+                    )[self.averaging_window // 2 : -self.averaging_window // 2 + (self.averaging_window + 1) % 2]
         if clip1 != clip2:
             xy_coord_joints_2 = np.stack(
                 [self.get_coords(data_dict, clip2, bp) for bp in body_parts_2], axis=1
             )
-            if self.w > 1:
+            if self.averaging_window > 1:
                 for i in range(xy_coord_joints_2.shape[0]):
                     for j in range(xy_coord_joints_2.shape[1]):
                         xy_coord_joints_2[i, j, :] = np.convolve(
-                            xy_coord_joints_2[i, j, :], (1 / self.w) * np.ones(self.w)
-                        )[self.w // 2 : -self.w // 2 + (self.w + 1) % 2]
+                            xy_coord_joints_2[i, j, :], (1 / self.averaging_window) * np.ones(self.averaging_window)
+                        )[self.averaging_window // 2 : -self.averaging_window // 2 + (self.averaging_window + 1) % 2]
         else:
             xy_coord_joints_2 = copy.copy(xy_coord_joints_1)
 
@@ -349,16 +345,19 @@ class KinematicExtractor(PoseFeatureExtractor):
             distance_2 = np.linalg.norm(xy_coord_joints_1 - centroid_2, axis=-1)
             intra_distance = np.concatenate([distance_1, distance_2], axis=-1)
         else:
-            if self.distance_pairs is None:
+            if self.distance_pairs is None or len(self.distance_pairs) == 0:
                 n_distances = n_body_parts * (n_body_parts - 1) // 2
-                intra_distance = np.asarray(
-                    [
-                        self._cdist_keep_zeros(
-                            xy_coord_joints_1[i], xy_coord_joints_2[i]
-                        )[upper_indices].reshape(-1, n_distances)
-                        for i in range(n_frames)
-                    ]
-                ).reshape(n_frames, n_distances)
+                if n_distances:
+                    intra_distance = np.asarray(
+                        [
+                            self._cdist_keep_zeros(
+                                xy_coord_joints_1[i], xy_coord_joints_2[i]
+                            )[upper_indices].reshape(-1, n_distances)
+                            for i in range(n_frames)
+                        ]
+                    ).reshape(n_frames, n_distances)
+                else:
+                    intra_distance = []
             else:
                 intra_distance = []
                 for x, y in self.distance_pairs:
@@ -514,10 +513,7 @@ class KinematicExtractor(PoseFeatureExtractor):
     def _kinematic_features_pair(
         self, data_dict: Dict, clip1: str, clip2: str, name: str
     ) -> Dict:
-        """
-        Compute features for a pair of clips
-        """
-
+        """Compute features for a pair of clips."""
         if clip1 == clip2:
             (
                 intra_distance,
@@ -613,8 +609,7 @@ class KinematicExtractor(PoseFeatureExtractor):
         prefix: str = None,
         one_clip: bool = False,
     ) -> Dict:
-        """
-        Extract features from a data dictionary
+        """Extract features from a data dictionary.
 
         An input store will call this method while pre-computing a dataset. We do not assume a specific
         structure in the data dictionary, so all necessary information (coordinates of a bodypart, number
@@ -636,8 +631,8 @@ class KinematicExtractor(PoseFeatureExtractor):
         features : dict
             a features dictionary where the keys are the feature names (e.g. 'coords', 'distances') and the
             values are numpy arrays of shape `(#features, #frames)`
-        """
 
+        """
         features = {}
         keys = [x for x in data_dict.keys() if x not in self.ignored_clips]
         if self.interactive:
@@ -694,4 +689,181 @@ class KinematicExtractor(PoseFeatureExtractor):
                             ].flatten()
                         )
                     features[key][clip_key] = np.stack(new_feature, axis=0)
+        return features
+
+
+class HeatmapExtractor(PoseFeatureExtractor):
+    """A heatmap feature extractor.
+
+    Creates an image for every frame with keypoints as blurred points on the image.
+    """
+
+    def __init__(
+        self,
+        input_store: PoseInputStore,
+        canvas_shape: List,
+        heatmap_width: int = 128,
+        keys: Set = None,
+        ignored_clips: List = None,
+        interactive: bool = False,
+        sigma: float = 0.1,
+        channel_policy: str = "color",
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the extractor.
+
+        Parameters
+        ----------
+        input_store : PoseInputStore
+            the input store object
+        canvas_shape : list
+            the shape of the input data canvas
+        heatmap_width : int, default 128
+            the width of the resulting images (in pixels)
+        keys : set, optional
+            a set of string keys to use (choose from `['coords_heatmap', 'motion_heatmap']`, by default all are used)
+        ignored_clips : set, optional
+            a set of string clip ids to ignore
+        interactive : bool, default False
+            if `True`, features are extracted for pairs of clips
+        sigma : float, default 0.7
+            the standard deviation of the gaussian kernel (0 for no smoothing)
+        channel_policy : {"color", "black&white", "bp"}
+            if "black&white" the heatmaps have one channel and all keypoints are
+            equivalent; if "color" each keypoint is assigned a unique color; if "bp" each keypoint has a separate channel
+
+        """
+        if ignored_clips is None:
+            ignored_clips = []
+        if keys is None:
+            keys = ["coords_heatmap", "motion_heatmap"]
+        self.keys = keys
+        self.ignored_clips = ignored_clips
+        self.interactive = interactive
+        self.sigma = sigma
+        self.canvas_shape = canvas_shape
+        self.heatmap_width = heatmap_width - 1
+        x, y = canvas_shape
+        self.image_shape = (heatmap_width, int(y * heatmap_width / x) + 1)
+        self.channel_policy = channel_policy
+        self.cmap = get_cmap("gist_rainbow")
+        super().__init__(input_store)
+
+    def _get_image(
+        self, data_dict: Dict, clip_id: str, n_frames: int, bodyparts: List
+    ) -> np.ndarray:
+        """Generate an array of images from coordinates for one clip."""
+        policy_dict = {"color": 3, "bp": len(bodyparts), "black&white": 1}
+        image = np.zeros(
+            (n_frames, policy_dict[self.channel_policy], *self.image_shape)
+        )
+        values = (
+            np.round(
+                np.stack(
+                    [self.get_coords(data_dict, clip_id, bp) for bp in bodyparts],
+                    axis=1,
+                )
+                * self.heatmap_width
+            )
+        ).astype(int)
+        sample = np.zeros((5, 5))
+        sample[3, 3] = 1
+        m = np.max(gaussian_filter(sample, sigma=self.sigma))
+        for i, frame_values in enumerate(values):
+            if self.channel_policy == "black&white":
+                image[i, 0, frame_values[:, 0], frame_values[:, 1]] = 1
+            elif self.channel_policy == "bp":
+                image[
+                    i,
+                    list(range(len(frame_values))),
+                    frame_values[:, 0],
+                    frame_values[:, 1],
+                ] = 1
+            elif self.channel_policy == "color":
+                arr = np.linspace(0, 1, frame_values.shape[0])
+                for j in range(frame_values.shape[0]):
+                    image[i, :, frame_values[j, 0], frame_values[j, 1]] = self.cmap(
+                        arr[j]
+                    )[:-1]
+            if self.sigma > 0:
+                for channel in range(image.shape[1]):
+                    image[i, channel] = gaussian_filter(
+                        image[i, channel], sigma=self.sigma
+                    )
+        image /= m
+        return image
+
+    def extract_features(
+        self,
+        data_dict: Dict,
+        video_id: str,
+        prefix: str = None,
+        one_clip: bool = False,
+    ) -> Dict:
+        """Extract features from a data dictionary.
+
+        An input store will call this method while pre-computing a dataset. The data dictionary has to relate to one
+        video id and have clip ids as keys. Read the documentation at `dlc2action.data` to find out more about video
+        and clip ids. We do not assume a specific
+        structure in the values, so all necessary information (coordinates of a bodypart, number
+        of frames, list of bodyparts) is inferred using input store methods.
+
+        Parameters
+        ----------
+        data_dict : dict
+            the data dictionary
+        video_id : str
+            the id of the video associated with the data dictionary
+        prefix : str, optional
+            a prefix to add to the feature names
+        one_clip : bool, default False
+            if `True`, all features will be concatenated and assigned to one clip named `'all'`
+
+        Returns
+        -------
+        features : dict
+            a features dictionary where the keys are the feature names (e.g. 'coords', 'distances') and the
+            values are numpy arrays of shape `(#features, ..., #frames)`
+
+        """
+        features = {}
+        keys = [x for x in data_dict.keys() if x not in self.ignored_clips]
+        if self.interactive:
+            if one_clip:
+                agents = [keys]
+            else:
+                agents = combinations(keys, 2)
+        else:
+            agents = [[x] for x in keys]
+        bodyparts = self.get_bodyparts()
+        for clip_ids in agents:
+            clip_features = {}
+            n_frames = self.get_n_frames(data_dict, clip_ids[0])
+            # n_frames = self.get_n_frames(data_dict, "+".join(sorted(clip_ids)))
+            policy_dict = {"color": 3, "bp": len(bodyparts), "black&white": 1}
+            image = np.zeros(
+                (n_frames, policy_dict[self.channel_policy], *self.image_shape)
+            )
+            for clip in clip_ids:
+                image += self._get_image(data_dict, clip, n_frames, bodyparts)
+            image = np.clip(image, 0, 1)
+            if "coords_heatmap" in self.keys:
+                name = "coords_heatmap"
+                if prefix is not None:
+                    name += "---"
+                    name += prefix
+                clip_features[name] = image
+            if "motion_heatmap" in self.keys:
+                name = "motion_heatmap"
+                if prefix is not None:
+                    name += "---"
+                    name += prefix
+                image = np.diff(image, axis=0)
+                clip_features[name] = np.pad(image, ((1, 0), (0, 0), (0, 0), (0, 0)))
+            if one_clip:
+                combo_name = "all"
+            else:
+                combo_name = "+".join(map(str, clip_ids))
+            features[video_id + "---" + combo_name] = clip_features
         return features

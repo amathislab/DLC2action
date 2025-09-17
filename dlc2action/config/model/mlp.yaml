@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 input_dims: "dataset_features" # int | str; the number of input features (leave as "dataset_features" to compute it automatically)
 f_maps_list: [128, 128] # list; a list of int numbers of feature maps per hidden layer
 dropout_rates: 0.5 # list | float; dropout rate (should be either a float or a list of floats with one value per hidden layer)

@@ -1,3 +1,9 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
 data_suffix: ??? # set; the data files should have the format of {video_id}{data_suffix}, e.g. video1_suffix.pickle, where video1 is the video is and _suffix.pickle is the suffix
 data_prefix: null # set; a set of prefixes used in file names for different views
 feature_suffix: null # str; the feature files should be stored in the data folder and named {video_id}{feature_suffix}

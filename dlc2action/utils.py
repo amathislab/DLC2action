@@ -1,7 +1,8 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
 """
 ## Utility functions
@@ -23,6 +24,8 @@ import os
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
+import pickle
+import re
 import math
 
 
@@ -155,7 +158,7 @@ def apply_threshold(
     masked_intervals: List = None,
 ):
     """
-    Apply a hard threshold to a tensor and return indices of the intervals that passed
+    Apply a hard threshold to a tensor and return indices of the intervals that passed.
 
     If `error_mask` is not `None`, the elements marked `False` are treated as if they did not pass the threshold.
     If `min_frames` is not 0, the intervals are additionally filtered by length.
@@ -166,10 +169,16 @@ def apply_threshold(
         the tensor to apply the threshold to
     threshold : float
         the threshold
+    low : bool, default True
+        whether to select the intervals below the threshold (if `True`) or above (if `False`)
     error_mask : torch.Tensor, optional
         a boolean real_lens to apply to the results
     min_frames : int, default 0
         the minimum number of frames in the resulting intervals (shorter intervals are discarded)
+    smooth_interval : int, default 0
+        the number of frames to smooth the tensor with before applying the threshold
+    masked_intervals : list, optional
+        a list of intervals to mask out
 
     Returns
     -------
@@ -177,8 +186,8 @@ def apply_threshold(
         a list of indices of the first frames of the chosen intervals
     indices_end : list
         a list of indices of the last frames of the chosen intervals
-    """
 
+    """
     if masked_intervals is None:
         masked_intervals = []
     if low:
@@ -214,7 +223,7 @@ def apply_threshold_hysteresis(
     masked_intervals: List = None,
 ):
     """
-    Apply a hysteresis threshold to a tensor and return indices of the intervals that passed
+    Apply a hysteresis threshold to a tensor and return indices of the intervals that passed.
 
     In the chosen intervals all values pass the soft threshold and at least one value passes the hard threshold.
     If `error_mask` is not `None`, the elements marked `False` are treated as if they did not pass the threshold.
@@ -228,10 +237,16 @@ def apply_threshold_hysteresis(
         the soft threshold
     hard_threshold : float
         the hard threshold
+    low : bool, default True
+        whether to select values below the threshold (`True`) or above (`False`)
     error_mask : torch.Tensor, optional
         a boolean real_lens to apply to the results
     min_frames : int, default 0
         the minimum number of frames in the resulting intervals (shorter intervals are discarded)
+    smooth_interval : int, default 0
+        the number of frames to smooth the tensor with
+    masked_intervals : list, default None
+        a list of intervals to mask out
 
     Returns
     -------
@@ -239,8 +254,8 @@ def apply_threshold_hysteresis(
         a list of indices of the first frames of the chosen intervals
     indices_end : list
         a list of indices of the last frames of the chosen intervals
-    """
 
+    """
     if masked_intervals is None:
         masked_intervals = []
     if low:
@@ -283,7 +298,7 @@ def apply_threshold_max(
     masked_intervals: List = None,
 ):
     """
-    Apply a max hysteresis threshold to a tensor and return indices of the intervals that passed
+    Apply a max hysteresis threshold to a tensor and return indices of the intervals that passed.
 
     In the chosen intervals the values at the `main_class` index are larger than the others everywhere
     and at least one value at the `main_class` index passes the threshold.
@@ -302,6 +317,10 @@ def apply_threshold_max(
         a boolean real_lens to apply to the results
     min_frames : int, default 0
         the minimum number of frames in the resulting intervals (shorter intervals are discarded)
+    smooth_interval : int, default 0
+        the number of frames to smooth the tensor with
+    masked_intervals : list, default None
+        a list of intervals to mask out
 
     Returns
     -------
@@ -309,8 +328,8 @@ def apply_threshold_max(
         a list of indices of the first frames of the chosen intervals (along dimension 1 of input tensor)
     indices_end : list
         a list of indices of the last frames of the chosen intervals (along dimension 1 of input tensor)
-    """
 
+    """
     if masked_intervals is None:
         masked_intervals = []
     _, indices = torch.max(tensor, dim=0)
@@ -484,15 +503,33 @@ def rotation_matrix_3d(alpha: torch.Tensor, beta: torch.Tensor, gamma: torch.Ten
 
 
 def correct_path(path, project_path):
+    """
+    Correct a path to a file or directory to be relative to the project path.
+
+    Parameters
+    ----------
+    path : str
+        the path to be corrected
+    project_path : str
+        the path to the project root directory
+
+    Returns
+    -------
+    corrected_path : str
+        the corrected path
+
+    """
     if not isinstance(path, str):
         return path
-    path = os.path.normpath(path).split(os.path.sep)
-    if "results" in path:
+    path_split = os.path.normpath(path).split(os.path.sep)
+    if "results" in path_split:
         name = "results"
-    else:
+    elif "saved_datasets" in path:
         name = "saved_datasets"
-    ind = path.index(name) + 1
-    return os.path.join(project_path, "results", *path[ind:])
+    else:
+        return os.path.sep.join(path_split)  # No need for correction
+    ind = path_split.index(name) + 1
+    return os.path.join(project_path, "results", *path_split[ind:])
 
 
 class TensorList(list):
@@ -501,6 +538,7 @@ class TensorList(list):
     """
 
     def to_device(self, device: torch.device):
+        """Send each element of the list to a `torch` device."""
         for i, x in enumerate(self):
             self[i] = x.to_device(device)
 
@@ -549,9 +587,9 @@ def smooth(tensor: torch.Tensor, smooth_interval: int = 0) -> torch.Tensor:
 
 
 class GaussianSmoothing(nn.Module):
-    """
-    Apply gaussian smoothing on a 1d tensor.
-    Filtering is performed seperately for each channel
+    """Apply gaussian smoothing on a 1d tensor.
+
+    Filtering is performed separately for each channel
     in the input using a depthwise convolution.
     Arguments:
         channels (int, sequence): Number of channels of the input tensors. Output will
@@ -581,10 +619,17 @@ class GaussianSmoothing(nn.Module):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         Apply gaussian filter to input.
-        Arguments:
-            input (torch.Tensor): Input to apply gaussian filter on.
-        Returns:
-            filtered (torch.Tensor): Filtered output.
+
+        Parameters
+        ----------
+        inputs : torch.Tensor
+            Input to apply gaussian filter on.
+
+        Returns
+        -------
+        filtered : torch.Tensor)
+            Filtered output.
+
         """
         _, c, _ = inputs.shape
         inputs = F.pad(
@@ -599,11 +644,19 @@ class GaussianSmoothing(nn.Module):
 def argrelmax(prob: np.ndarray, threshold: float = 0.7) -> List[int]:
     """
     Calculate arguments of relative maxima.
-    prob: np.array. boundary probability maps distributerd in [0, 1]
-    prob shape is (T)
-    ignore the peak whose value is under threshold
-    Return:
+
+    Parameters
+    ----------
+    prob : np.ndarray
+        boundary probability maps distributerd in [0, 1], shape is (T)
+    threshold : float, default 0.7
+        ignore the peak whose value is under threshold
+
+    Returns
+    -------
+    peak_idx : List[int]
         Index of peaks for each batch
+
     """
     # ignore the values under threshold
     prob[prob < threshold] = 0.0
@@ -818,3 +871,81 @@ class PostProcessor(object):
 
         preds = self.func[self.name](outputs, **kwargs)
         return preds
+
+
+def get_sentences_from_article(
+    pdf_filepath: str, max_symbols=77, min_symbols=15
+) -> List:
+    """
+    Read a pdf file, clean the text from references and split into sentences
+
+    Parameters
+    ----------
+    pdf_filepath : str
+        the path to the pdf file
+    max_symbols : int, default 77
+        sentences longer than this number of symbols will be omitted
+    min_symbols : int, default 15
+        sentences shorter than this number of symbols will be omitted
+
+    Returns
+    -------
+    sentences : list
+        a list of sentences
+    """
+
+    from tika import parser
+
+    rawText = parser.from_file(pdf_filepath)
+    text = rawText["content"].replace("-\n", "")
+    text = text.replace("\n", " ")
+    text = re.sub(r"(?<=\d),(?=\d)", "", text)
+    text = text.split("References")[0]
+    text = re.sub(r" \([\w&, ;]+\d{4}\)", "", text).strip()
+    text = re.sub(r" \[\d+\]", "", text).strip()
+    sentences = [x.strip() for x in text.split(".")]
+    sentences = [
+        x
+        for x in sentences
+        if not x.endswith(" al")
+        and len(x) <= max_symbols
+        and len(x) >= min_symbols
+        and sum(c.isdigit() for c in x) < len(x) * 0.2
+        and sum(len(w) < 2 for w in x.split()) < len(x) * 0.2
+    ]
+    return list(set(sentences))
+
+
+
+def load_pickle(file_path: str):
+    """
+    Load a pickle file
+
+    Parameters
+    ----------
+    file_path : str
+        the path to the pickle file
+
+    Returns
+    -------
+    obj : any
+        the loaded object
+    """
+
+    with open(file_path, "rb") as f:
+        obj = pickle.load(f)
+    return obj
+
+
+def binarize_data(data: list, max_frame: int = -1) -> np.array:
+    """Convert file in start, stop, confusion in to binary matrix of size (N_classes, N_timepoints)"""
+    data = data[3][0]
+    all_annot = [arr for arr in data if len(arr)]
+    all_annot = np.concatenate(all_annot, axis=0)
+    max_frame = np.max(all_annot) if max_frame == -1 else max_frame
+    label_array = np.zeros((len(data), max_frame))
+    for k, arr in enumerate(data):
+        for start, stop, confusion in arr:
+            if confusion < 0.5:
+                label_array[k, start:stop] = 1
+    return label_array

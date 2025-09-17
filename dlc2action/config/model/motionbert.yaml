@@ -1,0 +1,15 @@
+##
+## Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
+##
+## This project and all its files are licensed under GNU AGPLv3 or later version. 
+## A copy is included in dlc2action/LICENSE.AGPL.
+##
+dim_feat: 128 # dimension of the joint embedding
+#dim_rep: 256 # dimension of the feature representation
+dim_rep: "dim_feat" # dimension of the feature representation
+depth: 5 # number of layers in the transformer
+num_heads: 8 # number of heads in the transformer
+mlp_ratio: 4 # ratio of the hidden dimension of the MLP to the hidden dimension of the transformer
+len_segment: "dataset_len_segment" # length of the segment
+num_joints: ??? # number of joints in the skeleton
+input_dims: "dataset_features" # number of input features

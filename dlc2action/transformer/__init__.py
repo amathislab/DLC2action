@@ -1,7 +1,8 @@
 #
 # Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.
 #
-# This project and all its files are licensed under GNU AGPLv3 or later version. A copy is included in dlc2action/LICENSE.AGPL.
+# This project and all its files are licensed under GNU AGPLv3 or later version. 
+# A copy is included in dlc2action/LICENSE.AGPL.
 #
 """
 ## Augmentations and feature concatenation
@@ -16,3 +17,4 @@ can also perform augmentations before the merging.
 """
 
 from dlc2action.transformer.kinematic import KinematicTransformer
+from dlc2action.transformer.heatmap import HeatmapTransformer
