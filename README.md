@@ -15,12 +15,14 @@
 DLC2Action is an action segmentation package that makes running and tracking experiments easy.
 
 ## 🛠️ Installation
+
 You can simply install DLC2Action by typing:
+
 ```
 pip install dlc2action
 ```
 
-Or you can install DLC2Action for development by running this in your terminal.
+Or you can install the latest DLC2Action for development by running this in your terminal:
 ```
 git clone https://github.com/amathislab/DLC2Action
 cd DLC2Action
@@ -30,7 +32,9 @@ python -m pip install .
 ```
 
 ## 📖 Features
+
 The functionality of DLC2Action includes:
+ - a [GUI for annotation, visualization and active learning](https://github.com/amathislab/dlc2action_annotation)
  - compiling and updating project-specific configuration files,
  - filling in the configuration dictionaries automatically whenever possible,
  - saving training parameters and results,
@@ -45,8 +49,10 @@ The functionality of DLC2Action includes:
 and more.
 
 ## ⚡ A quick example
+
 You can start a new project, run an experiment, visualize it and use the trained model to make a prediction
-in a few lines of code.
+in a few lines of code:
+
 ```python
 project = Project("project", data_type="dlc_track", annotation_type="csv")
 project.update_parameters(...)
@@ -58,11 +64,13 @@ project.run_prediction("prediction", episode_names=["episode"], data_path="/path
 
 ## 📊 Benchmarks
 
-We provide standardized benchmarks on action segmentation to help you evaluate DLC2Action's performance. Check out the [benchmarks section](examples/benchmarks/README.md) for detailed results and comparisons.
+We provide standardize benchmarks on action segmentation to help you evaluate DLC2Action's performance.
+Check out the [benchmarks section](examples/benchmarks/README.md) for detailed results and comparisons.
 
-## 📚 How to get more information ?
+## 📚 How to get more information?
 
-Check out the [examples](/examples) or [read the documentation](html_docs/dlc2action/index.html) for a taste of what else you can do.
+Check out the [examples](/examples) or [read the documentation](html_docs/dlc2action/index.html)
+for a taste of what else you can do.
 
 ## 🙏 Acknowledgments
 
@@ -76,4 +84,4 @@ Note that the software is provided "as is", without warranty of any kind, expres
 
 ## 📑 Reference
 
-Stay tuned for our first publication -- any feedback on this release candidate for version 1 is welcome. Thanks for using DLC2Action. Please reach out if you want to collaborate!
+Stay tuned for our first publication -- any feedback on this beta release is welcome at this time. Thanks for using DLC2Action. Please reach out if you want to collaborate!
