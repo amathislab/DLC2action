@@ -23,6 +23,7 @@ from dlc2action.data.input_store import (
     LoadedFeaturesInputStore,
     Numpy3DInputStore,
     SIMBAInputStore,
+    ESKTrackStore,
 )
 from dlc2action.feature_extraction import HeatmapExtractor, KinematicExtractor
 from dlc2action.loss import MS_TCN_Loss
@@ -85,6 +86,8 @@ input_stores = {
     "np_3d": Numpy3DInputStore,
     "features": LoadedFeaturesInputStore,
     "simba": SIMBAInputStore,
+    "esk_track": ESKTrackStore,
+
 }
 
 annotation_stores = {
