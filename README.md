@@ -12,7 +12,8 @@
 </div>
 
 # 🌈 DLC2Action
-DLC2Action is an action segmentation package that makes running and tracking experiments easy.
+
+DLC2Action is an action segmentation package that makes running and tracking experiments easy. Check out the [preprint to see what DLC2action can do for you!](https://www.biorxiv.org/content/10.1101/2025.09.27.678941v1)
 
 ## 🛠️ Installation
 
@@ -31,7 +32,7 @@ conda activate DLC2Action
 python -m pip install .
 ```
 
-## 📖 Features
+## 📖 Features for users
 
 The functionality of DLC2Action includes:
  - a [GUI for annotation, visualization and active learning](https://github.com/amathislab/dlc2action_annotation)
@@ -48,6 +49,15 @@ The functionality of DLC2Action includes:
 
 and more.
 
+## 📖 Features for ML researchers 
+
+Lots of benchmarks & powerful [models](https://amathislab.github.io/DLC2action/html_docs/dlc2action/model.html#models)! 
+
+### 📊 Benchmarks
+
+We provide standardize benchmarks on action segmentation to help you evaluate DLC2Action's performance.
+Check out the [benchmarks section](examples/benchmarks/README.md) for detailed results and comparisons.
+
 ## ⚡ A quick example
 
 You can start a new project, run an experiment, visualize it and use the trained model to make a prediction
@@ -61,11 +71,6 @@ project.run_episode("episode", load_search="search")
 project.evaluate(["episode"])
 project.run_prediction("prediction", episode_names=["episode"], data_path="/path/to/new/data")
 ```
-
-## 📊 Benchmarks
-
-We provide standardize benchmarks on action segmentation to help you evaluate DLC2Action's performance.
-Check out the [benchmarks section](examples/benchmarks/README.md) for detailed results and comparisons.
 
 ## 📚 How to get more information?
 
@@ -84,4 +89,17 @@ Note that the software is provided "as is", without warranty of any kind, expres
 
 ## 📑 Reference
 
-Stay tuned for our first publication -- any feedback on this beta release is welcome at this time. Thanks for using DLC2Action. Please reach out if you want to collaborate!
+Please cite the [preprint](https://www.biorxiv.org/content/10.1101/2025.09.27.678941v1) if you use DLC2action! 
+
+```
+@article{kozlova2025dlc2action,
+  title={DLC2Action: A Deep Learning-based Toolbox for Automated Behavior Segmentation},
+  author={Kozlova, Elizaveta and Bonnetto, Andy and Mathis, Alexander},
+  journal={bioRxiv},
+  pages={2025--09},
+  year={2025},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
+Thanks for using DLC2Action. Please reach out if you want to collaborate!
