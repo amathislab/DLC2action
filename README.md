@@ -79,7 +79,7 @@ for a taste of what else you can do.
 
 ## 🙏 Acknowledgments
 
-DLC2Action is developed by members of the [A. Mathis Group](https://mathislab.org/) at EPFL. We are grateful to many people for feedback, alpha-testing, suggestions and contributions, in particular to Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider and Mackenzie Mathis.
+DLC2Action is developed by members of the [A. Mathis Group](https://mathislab.org/) at EPFL. We are grateful to many people for feedback, alpha-testing, suggestions and contributions, in particular to Lucas Stoffl, Margaret Lane, Marouane Jaakik, Steffen Schneider, Niels Poulsen and Mackenzie Mathis.
 
 We are also grateful to the creators of the different benchmarks, as well as models that were adapted in DLC2action. In particular, the MS-TCN, the C2F-TCN, the ASFormer, the EDTCN and the MotionBERT models, and the CalMS21, the SIMBA CRIM13 and SIMBA-RAT, the OFT and EPM, the SHOT7m2 and hBABEL, and the Atari-HEAD datasets. Please refer to the [benchmarks section](examples/benchmarks/README.md) for detailed references and consider citing these works when using them.
 
