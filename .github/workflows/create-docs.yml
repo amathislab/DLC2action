@@ -24,10 +24,11 @@ jobs:
         
     - name: Creating the docs
       run: |
-        pdoc --logo https://i.ibb.co/NstG5hz/03.png -o html_docs dlc2action
+        mkdir _public
+        pdoc --logo https://i.ibb.co/NstG5hz/03.png -o _public/html_docs dlc2action
 
     - name: GitHub Pages action
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./html_docs
+        publish_dir: ./_public

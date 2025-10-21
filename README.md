@@ -69,7 +69,7 @@ Check out the [benchmarks section](examples/benchmarks/README.md) for detailed r
 
 ## 📚 How to get more information?
 
-Check out the [examples](/examples) or [read the documentation](https://amathislab.github.io/DLC2action/dlc2action.html)
+Check out the [examples](/examples) or [read the documentation](https://amathislab.github.io/DLC2action/html_docs/dlc2action.html)
 for a taste of what else you can do.
 
 ## 🙏 Acknowledgments
