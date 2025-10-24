@@ -274,6 +274,33 @@
                 </ul>
 
             </li>
+            <li>
+                    <a class="class" href="#ESKTrackStore">ESKTrackStore</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#ESKTrackStore.__init__">ESKTrackStore</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#ESKTrackStore.keypoint_type">keypoint_type</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#ESKTrackStore.num_body_kpts">num_body_kpts</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#ESKTrackStore.num_hand_kpts">num_hand_kpts</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#ESKTrackStore.num_eye_kpts">num_eye_kpts</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ESKTrackStore.get_kpt_names">get_kpt_names</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ESKTrackStore.get_kpt_ind">get_kpt_ind</a>
+                        </li>
+                </ul>
+
+            </li>
     </ul>
 
 
@@ -300,7 +327,7 @@
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">   1</span></a><span class="c1">#</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos">   2</span></a><span class="c1"># Copyright 2020-present by A. Mathis Group and contributors. All rights reserved.</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos">   3</span></a><span class="c1">#</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos">   4</span></a><span class="c1"># This project and all its files are licensed under GNU AGPLv3 or later version. </span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">   4</span></a><span class="c1"># This project and all its files are licensed under GNU AGPLv3 or later version.</span>
 </span><span id="L-5"><a href="#L-5"><span class="linenos">   5</span></a><span class="c1"># A copy is included in dlc2action/LICENSE.AGPL.</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos">   6</span></a><span class="c1">#</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos">   7</span></a><span class="sd">&quot;&quot;&quot;Specific realisations of `dlc2action.data.base_store.InputStore` are defined here.&quot;&quot;&quot;</span>
@@ -2779,7 +2806,163 @@
 </span><span id="L-2480"><a href="#L-2480"><span class="linenos">2480</span></a>                <span class="o">.</span><span class="n">values</span>
 </span><span id="L-2481"><a href="#L-2481"><span class="linenos">2481</span></a>            <span class="p">)</span>
 </span><span id="L-2482"><a href="#L-2482"><span class="linenos">2482</span></a>        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="kc">None</span>
-</span><span id="L-2483"><a href="#L-2483"><span class="linenos">2483</span></a>    
+</span><span id="L-2483"><a href="#L-2483"><span class="linenos">2483</span></a>
+</span><span id="L-2484"><a href="#L-2484"><span class="linenos">2484</span></a>
+</span><span id="L-2485"><a href="#L-2485"><span class="linenos">2485</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ESKTrackStore</span><span class="p">(</span><span class="n">FileInputStore</span><span class="p">):</span>
+</span><span id="L-2486"><a href="#L-2486"><span class="linenos">2486</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;DLC track data from EPFL Smart Kitchen, allows to choose specific set of keypoints.</span>
+</span><span id="L-2487"><a href="#L-2487"><span class="linenos">2487</span></a>
+</span><span id="L-2488"><a href="#L-2488"><span class="linenos">2488</span></a><span class="sd">    Assumes the following file structure:</span>
+</span><span id="L-2489"><a href="#L-2489"><span class="linenos">2489</span></a><span class="sd">    ```</span>
+</span><span id="L-2490"><a href="#L-2490"><span class="linenos">2490</span></a><span class="sd">    data_path</span>
+</span><span id="L-2491"><a href="#L-2491"><span class="linenos">2491</span></a><span class="sd">    ├── video1DLC1000.pickle</span>
+</span><span id="L-2492"><a href="#L-2492"><span class="linenos">2492</span></a><span class="sd">    ├── video2DLC400.pickle</span>
+</span><span id="L-2493"><a href="#L-2493"><span class="linenos">2493</span></a><span class="sd">    ├── video1_features.npy</span>
+</span><span id="L-2494"><a href="#L-2494"><span class="linenos">2494</span></a><span class="sd">    └── video2_features.npy</span>
+</span><span id="L-2495"><a href="#L-2495"><span class="linenos">2495</span></a><span class="sd">    ```</span>
+</span><span id="L-2496"><a href="#L-2496"><span class="linenos">2496</span></a><span class="sd">    Here `data_suffix` is `{&#39;DLC1000.pickle&#39;, &#39;DLC400.pickle&#39;}` and `feature_suffix` (optional) is `&#39;_features.npy&#39;`.</span>
+</span><span id="L-2497"><a href="#L-2497"><span class="linenos">2497</span></a>
+</span><span id="L-2498"><a href="#L-2498"><span class="linenos">2498</span></a><span class="sd">    The feature files should to be dictionaries where keys are clip IDs (e.g. animal names) and values are</span>
+</span><span id="L-2499"><a href="#L-2499"><span class="linenos">2499</span></a><span class="sd">    feature values (arrays of shape `(#frames, #features)`). If the arrays are shaped as `(#features, #frames)`,</span>
+</span><span id="L-2500"><a href="#L-2500"><span class="linenos">2500</span></a><span class="sd">    set `transpose_features` to `True`.</span>
+</span><span id="L-2501"><a href="#L-2501"><span class="linenos">2501</span></a>
+</span><span id="L-2502"><a href="#L-2502"><span class="linenos">2502</span></a><span class="sd">    The files can be saved with `numpy.save()` (with `.npy` extension), `torch.save()` (with `.pt` extension) or</span>
+</span><span id="L-2503"><a href="#L-2503"><span class="linenos">2503</span></a><span class="sd">    with `pickle.dump()` (with `.pickle` or `.pkl` extension).</span>
+</span><span id="L-2504"><a href="#L-2504"><span class="linenos">2504</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-2505"><a href="#L-2505"><span class="linenos">2505</span></a>
+</span><span id="L-2506"><a href="#L-2506"><span class="linenos">2506</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="L-2507"><a href="#L-2507"><span class="linenos">2507</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="L-2508"><a href="#L-2508"><span class="linenos">2508</span></a>        <span class="n">keypoint_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;hand&quot;</span><span class="p">,</span>
+</span><span id="L-2509"><a href="#L-2509"><span class="linenos">2509</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="L-2510"><a href="#L-2510"><span class="linenos">2510</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="L-2511"><a href="#L-2511"><span class="linenos">2511</span></a>    <span class="p">):</span>
+</span><span id="L-2512"><a href="#L-2512"><span class="linenos">2512</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a store.&quot;&quot;&quot;</span>
+</span><span id="L-2513"><a href="#L-2513"><span class="linenos">2513</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="o">=</span> <span class="n">keypoint_type</span>
+</span><span id="L-2514"><a href="#L-2514"><span class="linenos">2514</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span> <span class="o">=</span> <span class="mi">17</span>
+</span><span id="L-2515"><a href="#L-2515"><span class="linenos">2515</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span id="L-2516"><a href="#L-2516"><span class="linenos">2516</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="L-2517"><a href="#L-2517"><span class="linenos">2517</span></a>
+</span><span id="L-2518"><a href="#L-2518"><span class="linenos">2518</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="L-2519"><a href="#L-2519"><span class="linenos">2519</span></a>            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="L-2520"><a href="#L-2520"><span class="linenos">2520</span></a>            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="L-2521"><a href="#L-2521"><span class="linenos">2521</span></a>        <span class="p">)</span>
+</span><span id="L-2522"><a href="#L-2522"><span class="linenos">2522</span></a>
+</span><span id="L-2523"><a href="#L-2523"><span class="linenos">2523</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-2524"><a href="#L-2524"><span class="linenos">2524</span></a>
+</span><span id="L-2525"><a href="#L-2525"><span class="linenos">2525</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-2526"><a href="#L-2526"><span class="linenos">2526</span></a>            <span class="s2">&quot;nose&quot;</span><span class="p">,</span>
+</span><span id="L-2527"><a href="#L-2527"><span class="linenos">2527</span></a>            <span class="s2">&quot;left_eye&quot;</span><span class="p">,</span>
+</span><span id="L-2528"><a href="#L-2528"><span class="linenos">2528</span></a>            <span class="s2">&quot;right_eye&quot;</span><span class="p">,</span>
+</span><span id="L-2529"><a href="#L-2529"><span class="linenos">2529</span></a>            <span class="s2">&quot;left_ear&quot;</span><span class="p">,</span>
+</span><span id="L-2530"><a href="#L-2530"><span class="linenos">2530</span></a>            <span class="s2">&quot;right_ear&quot;</span><span class="p">,</span>
+</span><span id="L-2531"><a href="#L-2531"><span class="linenos">2531</span></a>            <span class="s2">&quot;left_shoulder&quot;</span><span class="p">,</span>
+</span><span id="L-2532"><a href="#L-2532"><span class="linenos">2532</span></a>            <span class="s2">&quot;right_shoulder&quot;</span><span class="p">,</span>
+</span><span id="L-2533"><a href="#L-2533"><span class="linenos">2533</span></a>            <span class="s2">&quot;left_elbow&quot;</span><span class="p">,</span>
+</span><span id="L-2534"><a href="#L-2534"><span class="linenos">2534</span></a>            <span class="s2">&quot;right_elbow&quot;</span><span class="p">,</span>
+</span><span id="L-2535"><a href="#L-2535"><span class="linenos">2535</span></a>            <span class="s2">&quot;left_wrist&quot;</span><span class="p">,</span>
+</span><span id="L-2536"><a href="#L-2536"><span class="linenos">2536</span></a>            <span class="s2">&quot;right_wrist&quot;</span><span class="p">,</span>
+</span><span id="L-2537"><a href="#L-2537"><span class="linenos">2537</span></a>            <span class="s2">&quot;left_hip&quot;</span><span class="p">,</span>
+</span><span id="L-2538"><a href="#L-2538"><span class="linenos">2538</span></a>            <span class="s2">&quot;right_hip&quot;</span><span class="p">,</span>
+</span><span id="L-2539"><a href="#L-2539"><span class="linenos">2539</span></a>            <span class="s2">&quot;left_knee&quot;</span><span class="p">,</span>
+</span><span id="L-2540"><a href="#L-2540"><span class="linenos">2540</span></a>            <span class="s2">&quot;right_knee&quot;</span><span class="p">,</span>
+</span><span id="L-2541"><a href="#L-2541"><span class="linenos">2541</span></a>            <span class="s2">&quot;left_ankle&quot;</span><span class="p">,</span>
+</span><span id="L-2542"><a href="#L-2542"><span class="linenos">2542</span></a>            <span class="s2">&quot;right_ankle&quot;</span><span class="p">,</span>
+</span><span id="L-2543"><a href="#L-2543"><span class="linenos">2543</span></a>        <span class="p">]</span>
+</span><span id="L-2544"><a href="#L-2544"><span class="linenos">2544</span></a>
+</span><span id="L-2545"><a href="#L-2545"><span class="linenos">2545</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="L-2546"><a href="#L-2546"><span class="linenos">2546</span></a>            <span class="n">kpt_names</span>
+</span><span id="L-2547"><a href="#L-2547"><span class="linenos">2547</span></a>            <span class="o">+</span> <span class="p">[</span>
+</span><span id="L-2548"><a href="#L-2548"><span class="linenos">2548</span></a>                <span class="sa">f</span><span class="s2">&quot;hand_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="L-2549"><a href="#L-2549"><span class="linenos">2549</span></a>                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+</span><span id="L-2550"><a href="#L-2550"><span class="linenos">2550</span></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span>
+</span><span id="L-2551"><a href="#L-2551"><span class="linenos">2551</span></a>                <span class="p">)</span>
+</span><span id="L-2552"><a href="#L-2552"><span class="linenos">2552</span></a>            <span class="p">]</span>
+</span><span id="L-2553"><a href="#L-2553"><span class="linenos">2553</span></a>            <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;eye_gaze_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">)]</span>
+</span><span id="L-2554"><a href="#L-2554"><span class="linenos">2554</span></a>        <span class="p">)</span>
+</span><span id="L-2555"><a href="#L-2555"><span class="linenos">2555</span></a>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kpt_names</span><span class="p">)</span>
+</span><span id="L-2556"><a href="#L-2556"><span class="linenos">2556</span></a>
+</span><span id="L-2557"><a href="#L-2557"><span class="linenos">2557</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_num</span><span class="p">):</span>
+</span><span id="L-2558"><a href="#L-2558"><span class="linenos">2558</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the indices of the keypoints to be used.&quot;&quot;&quot;</span>
+</span><span id="L-2559"><a href="#L-2559"><span class="linenos">2559</span></a>        <span class="n">body_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">17</span><span class="p">))</span>
+</span><span id="L-2560"><a href="#L-2560"><span class="linenos">2560</span></a>        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">body_ind</span><span class="p">)</span>
+</span><span id="L-2561"><a href="#L-2561"><span class="linenos">2561</span></a>        <span class="n">hands_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span><span class="p">))</span>
+</span><span id="L-2562"><a href="#L-2562"><span class="linenos">2562</span></a>        <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hands_ind</span><span class="p">)</span>
+</span><span id="L-2563"><a href="#L-2563"><span class="linenos">2563</span></a>        <span class="n">eye_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">))</span>
+</span><span id="L-2564"><a href="#L-2564"><span class="linenos">2564</span></a>        <span class="n">body_wo_arm_ind</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span>
+</span><span id="L-2565"><a href="#L-2565"><span class="linenos">2565</span></a>        <span class="n">default_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">default_num</span><span class="p">))</span>
+</span><span id="L-2566"><a href="#L-2566"><span class="linenos">2566</span></a>        <span class="n">switcher</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="L-2567"><a href="#L-2567"><span class="linenos">2567</span></a>            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">body_ind</span><span class="p">,</span>
+</span><span id="L-2568"><a href="#L-2568"><span class="linenos">2568</span></a>            <span class="s2">&quot;hands&quot;</span><span class="p">:</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="L-2569"><a href="#L-2569"><span class="linenos">2569</span></a>            <span class="s2">&quot;eyes&quot;</span><span class="p">:</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="L-2570"><a href="#L-2570"><span class="linenos">2570</span></a>            <span class="s2">&quot;body_hands&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="L-2571"><a href="#L-2571"><span class="linenos">2571</span></a>            <span class="s2">&quot;body_eyes&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="L-2572"><a href="#L-2572"><span class="linenos">2572</span></a>            <span class="s2">&quot;hands_eyes&quot;</span><span class="p">:</span> <span class="n">hands_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="L-2573"><a href="#L-2573"><span class="linenos">2573</span></a>            <span class="s2">&quot;body_wo_arm&quot;</span><span class="p">:</span> <span class="n">body_wo_arm_ind</span><span class="p">,</span>
+</span><span id="L-2574"><a href="#L-2574"><span class="linenos">2574</span></a>        <span class="p">}</span>
+</span><span id="L-2575"><a href="#L-2575"><span class="linenos">2575</span></a>        <span class="k">return</span> <span class="p">(</span>
+</span><span id="L-2576"><a href="#L-2576"><span class="linenos">2576</span></a>            <span class="n">switcher</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span><span class="p">,</span> <span class="n">default_ind</span><span class="p">),</span>
+</span><span id="L-2577"><a href="#L-2577"><span class="linenos">2577</span></a>            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="ow">in</span> <span class="n">switcher</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+</span><span id="L-2578"><a href="#L-2578"><span class="linenos">2578</span></a>        <span class="p">)</span>
+</span><span id="L-2579"><a href="#L-2579"><span class="linenos">2579</span></a>
+</span><span id="L-2580"><a href="#L-2580"><span class="linenos">2580</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_open_data</span><span class="p">(</span>
+</span><span id="L-2581"><a href="#L-2581"><span class="linenos">2581</span></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_agent_name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="L-2582"><a href="#L-2582"><span class="linenos">2582</span></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]:</span>
+</span><span id="L-2583"><a href="#L-2583"><span class="linenos">2583</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the keypoints from filename and organize them in a dictionary.</span>
+</span><span id="L-2584"><a href="#L-2584"><span class="linenos">2584</span></a>
+</span><span id="L-2585"><a href="#L-2585"><span class="linenos">2585</span></a><span class="sd">        In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.</span>
+</span><span id="L-2586"><a href="#L-2586"><span class="linenos">2586</span></a><span class="sd">        The first level is the frame numbers and the second is the body part names. The dataframes should have from</span>
+</span><span id="L-2587"><a href="#L-2587"><span class="linenos">2587</span></a><span class="sd">        two to four columns labeled `&quot;x&quot;`, `&quot;y&quot;` and (optionally) `&quot;z&quot;` and `&quot;likelihood&quot;`. Each frame should have</span>
+</span><span id="L-2588"><a href="#L-2588"><span class="linenos">2588</span></a><span class="sd">        information on all the body parts. You don&#39;t have to filter the data in any way or fill the nans, it will</span>
+</span><span id="L-2589"><a href="#L-2589"><span class="linenos">2589</span></a><span class="sd">        be done automatically.</span>
+</span><span id="L-2590"><a href="#L-2590"><span class="linenos">2590</span></a>
+</span><span id="L-2591"><a href="#L-2591"><span class="linenos">2591</span></a><span class="sd">        Parameters</span>
+</span><span id="L-2592"><a href="#L-2592"><span class="linenos">2592</span></a><span class="sd">        ----------</span>
+</span><span id="L-2593"><a href="#L-2593"><span class="linenos">2593</span></a><span class="sd">        filename : str</span>
+</span><span id="L-2594"><a href="#L-2594"><span class="linenos">2594</span></a><span class="sd">            path to the pose file</span>
+</span><span id="L-2595"><a href="#L-2595"><span class="linenos">2595</span></a><span class="sd">        default_agent_name : str</span>
+</span><span id="L-2596"><a href="#L-2596"><span class="linenos">2596</span></a><span class="sd">            the default agent name</span>
+</span><span id="L-2597"><a href="#L-2597"><span class="linenos">2597</span></a>
+</span><span id="L-2598"><a href="#L-2598"><span class="linenos">2598</span></a><span class="sd">        Returns</span>
+</span><span id="L-2599"><a href="#L-2599"><span class="linenos">2599</span></a><span class="sd">        -------</span>
+</span><span id="L-2600"><a href="#L-2600"><span class="linenos">2600</span></a><span class="sd">        data dictionary : dict</span>
+</span><span id="L-2601"><a href="#L-2601"><span class="linenos">2601</span></a><span class="sd">            a dictionary where the keys are clip ids and the values are keypoint dataframes (see above for details)</span>
+</span><span id="L-2602"><a href="#L-2602"><span class="linenos">2602</span></a><span class="sd">        metadata_dictionary : dict</span>
+</span><span id="L-2603"><a href="#L-2603"><span class="linenos">2603</span></a><span class="sd">            a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,</span>
+</span><span id="L-2604"><a href="#L-2604"><span class="linenos">2604</span></a><span class="sd">            like the annotator tag; for no metadata pass `None`)</span>
+</span><span id="L-2605"><a href="#L-2605"><span class="linenos">2605</span></a>
+</span><span id="L-2606"><a href="#L-2606"><span class="linenos">2606</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-2607"><a href="#L-2607"><span class="linenos">2607</span></a>        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;h5&quot;</span><span class="p">):</span>
+</span><span id="L-2608"><a href="#L-2608"><span class="linenos">2608</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</span><span id="L-2609"><a href="#L-2609"><span class="linenos">2609</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;scorer&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="L-2610"><a href="#L-2610"><span class="linenos">2610</span></a>        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
+</span><span id="L-2611"><a href="#L-2611"><span class="linenos">2611</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</span><span id="L-2612"><a href="#L-2612"><span class="linenos">2612</span></a>            <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;bodyparts&quot;</span><span class="p">,</span> <span class="s2">&quot;coords&quot;</span><span class="p">]</span>
+</span><span id="L-2613"><a href="#L-2613"><span class="linenos">2613</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-2614"><a href="#L-2614"><span class="linenos">2614</span></a>            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid file type, please use .csv or .h5&quot;</span><span class="p">)</span>
+</span><span id="L-2615"><a href="#L-2615"><span class="linenos">2615</span></a>
+</span><span id="L-2616"><a href="#L-2616"><span class="linenos">2616</span></a>        <span class="k">if</span> <span class="s2">&quot;individuals&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+</span><span id="L-2617"><a href="#L-2617"><span class="linenos">2617</span></a>            <span class="n">old_idx</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+</span><span id="L-2618"><a href="#L-2618"><span class="linenos">2618</span></a>            <span class="n">old_idx</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;individuals&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_agent_name</span><span class="p">)</span>
+</span><span id="L-2619"><a href="#L-2619"><span class="linenos">2619</span></a>            <span class="n">temp</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">old_idx</span><span class="p">)</span>
+</span><span id="L-2620"><a href="#L-2620"><span class="linenos">2620</span></a>
+</span><span id="L-2621"><a href="#L-2621"><span class="linenos">2621</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="s2">&quot;individuals&quot;</span><span class="p">,</span> <span class="s2">&quot;bodyparts&quot;</span><span class="p">],</span> <span class="n">future_stack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="L-2622"><a href="#L-2622"><span class="linenos">2622</span></a>        <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+</span><span id="L-2623"><a href="#L-2623"><span class="linenos">2623</span></a>            <span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+</span><span id="L-2624"><a href="#L-2624"><span class="linenos">2624</span></a>            <span class="n">names</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+</span><span id="L-2625"><a href="#L-2625"><span class="linenos">2625</span></a>        <span class="p">)</span>
+</span><span id="L-2626"><a href="#L-2626"><span class="linenos">2626</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="L-2627"><a href="#L-2627"><span class="linenos">2627</span></a>        <span class="n">animals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</span><span id="L-2628"><a href="#L-2628"><span class="linenos">2628</span></a>        <span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="L-2629"><a href="#L-2629"><span class="linenos">2629</span></a>        <span class="n">default_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span id="L-2630"><a href="#L-2630"><span class="linenos">2630</span></a>        <span class="n">kpt_ind</span><span class="p">,</span> <span class="n">is_special</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kpt_ind</span><span class="p">(</span><span class="n">default_num</span><span class="p">)</span>
+</span><span id="L-2631"><a href="#L-2631"><span class="linenos">2631</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kpt_names</span><span class="p">()</span>
+</span><span id="L-2632"><a href="#L-2632"><span class="linenos">2632</span></a>        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">animals</span><span class="p">:</span>
+</span><span id="L-2633"><a href="#L-2633"><span class="linenos">2633</span></a>            <span class="n">coord</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="L-2634"><a href="#L-2634"><span class="linenos">2634</span></a>            <span class="n">coord</span> <span class="o">=</span> <span class="n">coord</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;likelihood&quot;</span><span class="p">]]</span>
+</span><span id="L-2635"><a href="#L-2635"><span class="linenos">2635</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_special</span><span class="p">:</span>
+</span><span id="L-2636"><a href="#L-2636"><span class="linenos">2636</span></a>                <span class="n">coord</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">kpt_names</span><span class="p">[</span><span class="n">kpt_ind</span><span class="p">]),</span> <span class="p">:]</span>
+</span><span id="L-2637"><a href="#L-2637"><span class="linenos">2637</span></a>            <span class="n">dic</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">coord</span>
+</span><span id="L-2638"><a href="#L-2638"><span class="linenos">2638</span></a>
+</span><span id="L-2639"><a href="#L-2639"><span class="linenos">2639</span></a>        <span class="k">return</span> <span class="n">dic</span><span class="p">,</span> <span class="kc">None</span>
 </span></pre></div>
 
 
@@ -8757,6 +8940,436 @@ use_features : bool, default False
             <div><dt><a href="base_store.html#Store">dlc2action.data.base_store.Store</a></dt>
                                 <dd id="SIMBAInputStore.get_parameters" class="function"><a href="base_store.html#Store.get_parameters">get_parameters</a></dd>
                 <dd id="SIMBAInputStore.new" class="function"><a href="base_store.html#Store.new">new</a></dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
+                <section id="ESKTrackStore">
+                            <input id="ESKTrackStore-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">ESKTrackStore</span><wbr>(<span class="base"><a href="#FileInputStore">FileInputStore</a></span>):
+
+                <label class="view-source-button" for="ESKTrackStore-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ESKTrackStore"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ESKTrackStore-2486"><a href="#ESKTrackStore-2486"><span class="linenos">2486</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ESKTrackStore</span><span class="p">(</span><span class="n">FileInputStore</span><span class="p">):</span>
+</span><span id="ESKTrackStore-2487"><a href="#ESKTrackStore-2487"><span class="linenos">2487</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;DLC track data from EPFL Smart Kitchen, allows to choose specific set of keypoints.</span>
+</span><span id="ESKTrackStore-2488"><a href="#ESKTrackStore-2488"><span class="linenos">2488</span></a>
+</span><span id="ESKTrackStore-2489"><a href="#ESKTrackStore-2489"><span class="linenos">2489</span></a><span class="sd">    Assumes the following file structure:</span>
+</span><span id="ESKTrackStore-2490"><a href="#ESKTrackStore-2490"><span class="linenos">2490</span></a><span class="sd">    ```</span>
+</span><span id="ESKTrackStore-2491"><a href="#ESKTrackStore-2491"><span class="linenos">2491</span></a><span class="sd">    data_path</span>
+</span><span id="ESKTrackStore-2492"><a href="#ESKTrackStore-2492"><span class="linenos">2492</span></a><span class="sd">    ├── video1DLC1000.pickle</span>
+</span><span id="ESKTrackStore-2493"><a href="#ESKTrackStore-2493"><span class="linenos">2493</span></a><span class="sd">    ├── video2DLC400.pickle</span>
+</span><span id="ESKTrackStore-2494"><a href="#ESKTrackStore-2494"><span class="linenos">2494</span></a><span class="sd">    ├── video1_features.npy</span>
+</span><span id="ESKTrackStore-2495"><a href="#ESKTrackStore-2495"><span class="linenos">2495</span></a><span class="sd">    └── video2_features.npy</span>
+</span><span id="ESKTrackStore-2496"><a href="#ESKTrackStore-2496"><span class="linenos">2496</span></a><span class="sd">    ```</span>
+</span><span id="ESKTrackStore-2497"><a href="#ESKTrackStore-2497"><span class="linenos">2497</span></a><span class="sd">    Here `data_suffix` is `{&#39;DLC1000.pickle&#39;, &#39;DLC400.pickle&#39;}` and `feature_suffix` (optional) is `&#39;_features.npy&#39;`.</span>
+</span><span id="ESKTrackStore-2498"><a href="#ESKTrackStore-2498"><span class="linenos">2498</span></a>
+</span><span id="ESKTrackStore-2499"><a href="#ESKTrackStore-2499"><span class="linenos">2499</span></a><span class="sd">    The feature files should to be dictionaries where keys are clip IDs (e.g. animal names) and values are</span>
+</span><span id="ESKTrackStore-2500"><a href="#ESKTrackStore-2500"><span class="linenos">2500</span></a><span class="sd">    feature values (arrays of shape `(#frames, #features)`). If the arrays are shaped as `(#features, #frames)`,</span>
+</span><span id="ESKTrackStore-2501"><a href="#ESKTrackStore-2501"><span class="linenos">2501</span></a><span class="sd">    set `transpose_features` to `True`.</span>
+</span><span id="ESKTrackStore-2502"><a href="#ESKTrackStore-2502"><span class="linenos">2502</span></a>
+</span><span id="ESKTrackStore-2503"><a href="#ESKTrackStore-2503"><span class="linenos">2503</span></a><span class="sd">    The files can be saved with `numpy.save()` (with `.npy` extension), `torch.save()` (with `.pt` extension) or</span>
+</span><span id="ESKTrackStore-2504"><a href="#ESKTrackStore-2504"><span class="linenos">2504</span></a><span class="sd">    with `pickle.dump()` (with `.pickle` or `.pkl` extension).</span>
+</span><span id="ESKTrackStore-2505"><a href="#ESKTrackStore-2505"><span class="linenos">2505</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore-2506"><a href="#ESKTrackStore-2506"><span class="linenos">2506</span></a>
+</span><span id="ESKTrackStore-2507"><a href="#ESKTrackStore-2507"><span class="linenos">2507</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="ESKTrackStore-2508"><a href="#ESKTrackStore-2508"><span class="linenos">2508</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2509"><a href="#ESKTrackStore-2509"><span class="linenos">2509</span></a>        <span class="n">keypoint_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;hand&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2510"><a href="#ESKTrackStore-2510"><span class="linenos">2510</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2511"><a href="#ESKTrackStore-2511"><span class="linenos">2511</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2512"><a href="#ESKTrackStore-2512"><span class="linenos">2512</span></a>    <span class="p">):</span>
+</span><span id="ESKTrackStore-2513"><a href="#ESKTrackStore-2513"><span class="linenos">2513</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a store.&quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore-2514"><a href="#ESKTrackStore-2514"><span class="linenos">2514</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="o">=</span> <span class="n">keypoint_type</span>
+</span><span id="ESKTrackStore-2515"><a href="#ESKTrackStore-2515"><span class="linenos">2515</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span> <span class="o">=</span> <span class="mi">17</span>
+</span><span id="ESKTrackStore-2516"><a href="#ESKTrackStore-2516"><span class="linenos">2516</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span id="ESKTrackStore-2517"><a href="#ESKTrackStore-2517"><span class="linenos">2517</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="ESKTrackStore-2518"><a href="#ESKTrackStore-2518"><span class="linenos">2518</span></a>
+</span><span id="ESKTrackStore-2519"><a href="#ESKTrackStore-2519"><span class="linenos">2519</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="ESKTrackStore-2520"><a href="#ESKTrackStore-2520"><span class="linenos">2520</span></a>            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2521"><a href="#ESKTrackStore-2521"><span class="linenos">2521</span></a>            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2522"><a href="#ESKTrackStore-2522"><span class="linenos">2522</span></a>        <span class="p">)</span>
+</span><span id="ESKTrackStore-2523"><a href="#ESKTrackStore-2523"><span class="linenos">2523</span></a>
+</span><span id="ESKTrackStore-2524"><a href="#ESKTrackStore-2524"><span class="linenos">2524</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="ESKTrackStore-2525"><a href="#ESKTrackStore-2525"><span class="linenos">2525</span></a>
+</span><span id="ESKTrackStore-2526"><a href="#ESKTrackStore-2526"><span class="linenos">2526</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="ESKTrackStore-2527"><a href="#ESKTrackStore-2527"><span class="linenos">2527</span></a>            <span class="s2">&quot;nose&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2528"><a href="#ESKTrackStore-2528"><span class="linenos">2528</span></a>            <span class="s2">&quot;left_eye&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2529"><a href="#ESKTrackStore-2529"><span class="linenos">2529</span></a>            <span class="s2">&quot;right_eye&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2530"><a href="#ESKTrackStore-2530"><span class="linenos">2530</span></a>            <span class="s2">&quot;left_ear&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2531"><a href="#ESKTrackStore-2531"><span class="linenos">2531</span></a>            <span class="s2">&quot;right_ear&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2532"><a href="#ESKTrackStore-2532"><span class="linenos">2532</span></a>            <span class="s2">&quot;left_shoulder&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2533"><a href="#ESKTrackStore-2533"><span class="linenos">2533</span></a>            <span class="s2">&quot;right_shoulder&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2534"><a href="#ESKTrackStore-2534"><span class="linenos">2534</span></a>            <span class="s2">&quot;left_elbow&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2535"><a href="#ESKTrackStore-2535"><span class="linenos">2535</span></a>            <span class="s2">&quot;right_elbow&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2536"><a href="#ESKTrackStore-2536"><span class="linenos">2536</span></a>            <span class="s2">&quot;left_wrist&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2537"><a href="#ESKTrackStore-2537"><span class="linenos">2537</span></a>            <span class="s2">&quot;right_wrist&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2538"><a href="#ESKTrackStore-2538"><span class="linenos">2538</span></a>            <span class="s2">&quot;left_hip&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2539"><a href="#ESKTrackStore-2539"><span class="linenos">2539</span></a>            <span class="s2">&quot;right_hip&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2540"><a href="#ESKTrackStore-2540"><span class="linenos">2540</span></a>            <span class="s2">&quot;left_knee&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2541"><a href="#ESKTrackStore-2541"><span class="linenos">2541</span></a>            <span class="s2">&quot;right_knee&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2542"><a href="#ESKTrackStore-2542"><span class="linenos">2542</span></a>            <span class="s2">&quot;left_ankle&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2543"><a href="#ESKTrackStore-2543"><span class="linenos">2543</span></a>            <span class="s2">&quot;right_ankle&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2544"><a href="#ESKTrackStore-2544"><span class="linenos">2544</span></a>        <span class="p">]</span>
+</span><span id="ESKTrackStore-2545"><a href="#ESKTrackStore-2545"><span class="linenos">2545</span></a>
+</span><span id="ESKTrackStore-2546"><a href="#ESKTrackStore-2546"><span class="linenos">2546</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="ESKTrackStore-2547"><a href="#ESKTrackStore-2547"><span class="linenos">2547</span></a>            <span class="n">kpt_names</span>
+</span><span id="ESKTrackStore-2548"><a href="#ESKTrackStore-2548"><span class="linenos">2548</span></a>            <span class="o">+</span> <span class="p">[</span>
+</span><span id="ESKTrackStore-2549"><a href="#ESKTrackStore-2549"><span class="linenos">2549</span></a>                <span class="sa">f</span><span class="s2">&quot;hand_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="ESKTrackStore-2550"><a href="#ESKTrackStore-2550"><span class="linenos">2550</span></a>                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+</span><span id="ESKTrackStore-2551"><a href="#ESKTrackStore-2551"><span class="linenos">2551</span></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span>
+</span><span id="ESKTrackStore-2552"><a href="#ESKTrackStore-2552"><span class="linenos">2552</span></a>                <span class="p">)</span>
+</span><span id="ESKTrackStore-2553"><a href="#ESKTrackStore-2553"><span class="linenos">2553</span></a>            <span class="p">]</span>
+</span><span id="ESKTrackStore-2554"><a href="#ESKTrackStore-2554"><span class="linenos">2554</span></a>            <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;eye_gaze_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">)]</span>
+</span><span id="ESKTrackStore-2555"><a href="#ESKTrackStore-2555"><span class="linenos">2555</span></a>        <span class="p">)</span>
+</span><span id="ESKTrackStore-2556"><a href="#ESKTrackStore-2556"><span class="linenos">2556</span></a>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kpt_names</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2557"><a href="#ESKTrackStore-2557"><span class="linenos">2557</span></a>
+</span><span id="ESKTrackStore-2558"><a href="#ESKTrackStore-2558"><span class="linenos">2558</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_num</span><span class="p">):</span>
+</span><span id="ESKTrackStore-2559"><a href="#ESKTrackStore-2559"><span class="linenos">2559</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the indices of the keypoints to be used.&quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore-2560"><a href="#ESKTrackStore-2560"><span class="linenos">2560</span></a>        <span class="n">body_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">17</span><span class="p">))</span>
+</span><span id="ESKTrackStore-2561"><a href="#ESKTrackStore-2561"><span class="linenos">2561</span></a>        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">body_ind</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2562"><a href="#ESKTrackStore-2562"><span class="linenos">2562</span></a>        <span class="n">hands_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span><span class="p">))</span>
+</span><span id="ESKTrackStore-2563"><a href="#ESKTrackStore-2563"><span class="linenos">2563</span></a>        <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hands_ind</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2564"><a href="#ESKTrackStore-2564"><span class="linenos">2564</span></a>        <span class="n">eye_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">))</span>
+</span><span id="ESKTrackStore-2565"><a href="#ESKTrackStore-2565"><span class="linenos">2565</span></a>        <span class="n">body_wo_arm_ind</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span>
+</span><span id="ESKTrackStore-2566"><a href="#ESKTrackStore-2566"><span class="linenos">2566</span></a>        <span class="n">default_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">default_num</span><span class="p">))</span>
+</span><span id="ESKTrackStore-2567"><a href="#ESKTrackStore-2567"><span class="linenos">2567</span></a>        <span class="n">switcher</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="ESKTrackStore-2568"><a href="#ESKTrackStore-2568"><span class="linenos">2568</span></a>            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">body_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2569"><a href="#ESKTrackStore-2569"><span class="linenos">2569</span></a>            <span class="s2">&quot;hands&quot;</span><span class="p">:</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2570"><a href="#ESKTrackStore-2570"><span class="linenos">2570</span></a>            <span class="s2">&quot;eyes&quot;</span><span class="p">:</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2571"><a href="#ESKTrackStore-2571"><span class="linenos">2571</span></a>            <span class="s2">&quot;body_hands&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2572"><a href="#ESKTrackStore-2572"><span class="linenos">2572</span></a>            <span class="s2">&quot;body_eyes&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2573"><a href="#ESKTrackStore-2573"><span class="linenos">2573</span></a>            <span class="s2">&quot;hands_eyes&quot;</span><span class="p">:</span> <span class="n">hands_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2574"><a href="#ESKTrackStore-2574"><span class="linenos">2574</span></a>            <span class="s2">&quot;body_wo_arm&quot;</span><span class="p">:</span> <span class="n">body_wo_arm_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2575"><a href="#ESKTrackStore-2575"><span class="linenos">2575</span></a>        <span class="p">}</span>
+</span><span id="ESKTrackStore-2576"><a href="#ESKTrackStore-2576"><span class="linenos">2576</span></a>        <span class="k">return</span> <span class="p">(</span>
+</span><span id="ESKTrackStore-2577"><a href="#ESKTrackStore-2577"><span class="linenos">2577</span></a>            <span class="n">switcher</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span><span class="p">,</span> <span class="n">default_ind</span><span class="p">),</span>
+</span><span id="ESKTrackStore-2578"><a href="#ESKTrackStore-2578"><span class="linenos">2578</span></a>            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="ow">in</span> <span class="n">switcher</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+</span><span id="ESKTrackStore-2579"><a href="#ESKTrackStore-2579"><span class="linenos">2579</span></a>        <span class="p">)</span>
+</span><span id="ESKTrackStore-2580"><a href="#ESKTrackStore-2580"><span class="linenos">2580</span></a>
+</span><span id="ESKTrackStore-2581"><a href="#ESKTrackStore-2581"><span class="linenos">2581</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_open_data</span><span class="p">(</span>
+</span><span id="ESKTrackStore-2582"><a href="#ESKTrackStore-2582"><span class="linenos">2582</span></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default_agent_name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="ESKTrackStore-2583"><a href="#ESKTrackStore-2583"><span class="linenos">2583</span></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]:</span>
+</span><span id="ESKTrackStore-2584"><a href="#ESKTrackStore-2584"><span class="linenos">2584</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the keypoints from filename and organize them in a dictionary.</span>
+</span><span id="ESKTrackStore-2585"><a href="#ESKTrackStore-2585"><span class="linenos">2585</span></a>
+</span><span id="ESKTrackStore-2586"><a href="#ESKTrackStore-2586"><span class="linenos">2586</span></a><span class="sd">        In `data_dictionary`, the keys are clip ids and the values are `pandas` dataframes with two-level indices.</span>
+</span><span id="ESKTrackStore-2587"><a href="#ESKTrackStore-2587"><span class="linenos">2587</span></a><span class="sd">        The first level is the frame numbers and the second is the body part names. The dataframes should have from</span>
+</span><span id="ESKTrackStore-2588"><a href="#ESKTrackStore-2588"><span class="linenos">2588</span></a><span class="sd">        two to four columns labeled `&quot;x&quot;`, `&quot;y&quot;` and (optionally) `&quot;z&quot;` and `&quot;likelihood&quot;`. Each frame should have</span>
+</span><span id="ESKTrackStore-2589"><a href="#ESKTrackStore-2589"><span class="linenos">2589</span></a><span class="sd">        information on all the body parts. You don&#39;t have to filter the data in any way or fill the nans, it will</span>
+</span><span id="ESKTrackStore-2590"><a href="#ESKTrackStore-2590"><span class="linenos">2590</span></a><span class="sd">        be done automatically.</span>
+</span><span id="ESKTrackStore-2591"><a href="#ESKTrackStore-2591"><span class="linenos">2591</span></a>
+</span><span id="ESKTrackStore-2592"><a href="#ESKTrackStore-2592"><span class="linenos">2592</span></a><span class="sd">        Parameters</span>
+</span><span id="ESKTrackStore-2593"><a href="#ESKTrackStore-2593"><span class="linenos">2593</span></a><span class="sd">        ----------</span>
+</span><span id="ESKTrackStore-2594"><a href="#ESKTrackStore-2594"><span class="linenos">2594</span></a><span class="sd">        filename : str</span>
+</span><span id="ESKTrackStore-2595"><a href="#ESKTrackStore-2595"><span class="linenos">2595</span></a><span class="sd">            path to the pose file</span>
+</span><span id="ESKTrackStore-2596"><a href="#ESKTrackStore-2596"><span class="linenos">2596</span></a><span class="sd">        default_agent_name : str</span>
+</span><span id="ESKTrackStore-2597"><a href="#ESKTrackStore-2597"><span class="linenos">2597</span></a><span class="sd">            the default agent name</span>
+</span><span id="ESKTrackStore-2598"><a href="#ESKTrackStore-2598"><span class="linenos">2598</span></a>
+</span><span id="ESKTrackStore-2599"><a href="#ESKTrackStore-2599"><span class="linenos">2599</span></a><span class="sd">        Returns</span>
+</span><span id="ESKTrackStore-2600"><a href="#ESKTrackStore-2600"><span class="linenos">2600</span></a><span class="sd">        -------</span>
+</span><span id="ESKTrackStore-2601"><a href="#ESKTrackStore-2601"><span class="linenos">2601</span></a><span class="sd">        data dictionary : dict</span>
+</span><span id="ESKTrackStore-2602"><a href="#ESKTrackStore-2602"><span class="linenos">2602</span></a><span class="sd">            a dictionary where the keys are clip ids and the values are keypoint dataframes (see above for details)</span>
+</span><span id="ESKTrackStore-2603"><a href="#ESKTrackStore-2603"><span class="linenos">2603</span></a><span class="sd">        metadata_dictionary : dict</span>
+</span><span id="ESKTrackStore-2604"><a href="#ESKTrackStore-2604"><span class="linenos">2604</span></a><span class="sd">            a dictionary where the keys are clip ids and the values are metadata objects (can be any additional information,</span>
+</span><span id="ESKTrackStore-2605"><a href="#ESKTrackStore-2605"><span class="linenos">2605</span></a><span class="sd">            like the annotator tag; for no metadata pass `None`)</span>
+</span><span id="ESKTrackStore-2606"><a href="#ESKTrackStore-2606"><span class="linenos">2606</span></a>
+</span><span id="ESKTrackStore-2607"><a href="#ESKTrackStore-2607"><span class="linenos">2607</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore-2608"><a href="#ESKTrackStore-2608"><span class="linenos">2608</span></a>        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;h5&quot;</span><span class="p">):</span>
+</span><span id="ESKTrackStore-2609"><a href="#ESKTrackStore-2609"><span class="linenos">2609</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2610"><a href="#ESKTrackStore-2610"><span class="linenos">2610</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;scorer&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2611"><a href="#ESKTrackStore-2611"><span class="linenos">2611</span></a>        <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
+</span><span id="ESKTrackStore-2612"><a href="#ESKTrackStore-2612"><span class="linenos">2612</span></a>            <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</span><span id="ESKTrackStore-2613"><a href="#ESKTrackStore-2613"><span class="linenos">2613</span></a>            <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;bodyparts&quot;</span><span class="p">,</span> <span class="s2">&quot;coords&quot;</span><span class="p">]</span>
+</span><span id="ESKTrackStore-2614"><a href="#ESKTrackStore-2614"><span class="linenos">2614</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="ESKTrackStore-2615"><a href="#ESKTrackStore-2615"><span class="linenos">2615</span></a>            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid file type, please use .csv or .h5&quot;</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2616"><a href="#ESKTrackStore-2616"><span class="linenos">2616</span></a>
+</span><span id="ESKTrackStore-2617"><a href="#ESKTrackStore-2617"><span class="linenos">2617</span></a>        <span class="k">if</span> <span class="s2">&quot;individuals&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+</span><span id="ESKTrackStore-2618"><a href="#ESKTrackStore-2618"><span class="linenos">2618</span></a>            <span class="n">old_idx</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+</span><span id="ESKTrackStore-2619"><a href="#ESKTrackStore-2619"><span class="linenos">2619</span></a>            <span class="n">old_idx</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;individuals&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_agent_name</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2620"><a href="#ESKTrackStore-2620"><span class="linenos">2620</span></a>            <span class="n">temp</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">old_idx</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2621"><a href="#ESKTrackStore-2621"><span class="linenos">2621</span></a>
+</span><span id="ESKTrackStore-2622"><a href="#ESKTrackStore-2622"><span class="linenos">2622</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="s2">&quot;individuals&quot;</span><span class="p">,</span> <span class="s2">&quot;bodyparts&quot;</span><span class="p">],</span> <span class="n">future_stack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2623"><a href="#ESKTrackStore-2623"><span class="linenos">2623</span></a>        <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+</span><span id="ESKTrackStore-2624"><a href="#ESKTrackStore-2624"><span class="linenos">2624</span></a>            <span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+</span><span id="ESKTrackStore-2625"><a href="#ESKTrackStore-2625"><span class="linenos">2625</span></a>            <span class="n">names</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+</span><span id="ESKTrackStore-2626"><a href="#ESKTrackStore-2626"><span class="linenos">2626</span></a>        <span class="p">)</span>
+</span><span id="ESKTrackStore-2627"><a href="#ESKTrackStore-2627"><span class="linenos">2627</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2628"><a href="#ESKTrackStore-2628"><span class="linenos">2628</span></a>        <span class="n">animals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</span><span id="ESKTrackStore-2629"><a href="#ESKTrackStore-2629"><span class="linenos">2629</span></a>        <span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="ESKTrackStore-2630"><a href="#ESKTrackStore-2630"><span class="linenos">2630</span></a>        <span class="n">default_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span id="ESKTrackStore-2631"><a href="#ESKTrackStore-2631"><span class="linenos">2631</span></a>        <span class="n">kpt_ind</span><span class="p">,</span> <span class="n">is_special</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kpt_ind</span><span class="p">(</span><span class="n">default_num</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2632"><a href="#ESKTrackStore-2632"><span class="linenos">2632</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kpt_names</span><span class="p">()</span>
+</span><span id="ESKTrackStore-2633"><a href="#ESKTrackStore-2633"><span class="linenos">2633</span></a>        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">animals</span><span class="p">:</span>
+</span><span id="ESKTrackStore-2634"><a href="#ESKTrackStore-2634"><span class="linenos">2634</span></a>            <span class="n">coord</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="ESKTrackStore-2635"><a href="#ESKTrackStore-2635"><span class="linenos">2635</span></a>            <span class="n">coord</span> <span class="o">=</span> <span class="n">coord</span><span class="p">[[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;likelihood&quot;</span><span class="p">]]</span>
+</span><span id="ESKTrackStore-2636"><a href="#ESKTrackStore-2636"><span class="linenos">2636</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_special</span><span class="p">:</span>
+</span><span id="ESKTrackStore-2637"><a href="#ESKTrackStore-2637"><span class="linenos">2637</span></a>                <span class="n">coord</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">kpt_names</span><span class="p">[</span><span class="n">kpt_ind</span><span class="p">]),</span> <span class="p">:]</span>
+</span><span id="ESKTrackStore-2638"><a href="#ESKTrackStore-2638"><span class="linenos">2638</span></a>            <span class="n">dic</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">coord</span>
+</span><span id="ESKTrackStore-2639"><a href="#ESKTrackStore-2639"><span class="linenos">2639</span></a>
+</span><span id="ESKTrackStore-2640"><a href="#ESKTrackStore-2640"><span class="linenos">2640</span></a>        <span class="k">return</span> <span class="n">dic</span><span class="p">,</span> <span class="kc">None</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>DLC track data from EPFL Smart Kitchen, allows to choose specific set of keypoints.</p>
+
+<p>Assumes the following file structure:</p>
+
+<pre><code>data_path
+├── video1DLC1000.pickle
+├── video2DLC400.pickle
+├── video1_features.npy
+└── video2_features.npy
+</code></pre>
+
+<p>Here <code><a href="#ESKTrackStore.data_suffix">data_suffix</a></code> is <code>{'DLC1000.pickle', 'DLC400.pickle'}</code> and <code><a href="#ESKTrackStore.feature_suffix">feature_suffix</a></code> (optional) is <code>'_features.npy'</code>.</p>
+
+<p>The feature files should to be dictionaries where keys are clip IDs (e.g. animal names) and values are
+feature values (arrays of shape <code>(#frames, #features)</code>). If the arrays are shaped as <code>(#features, #frames)</code>,
+set <code>transpose_features</code> to <code>True</code>.</p>
+
+<p>The files can be saved with <code>numpy.save()</code> (with <code>.npy</code> extension), <code>torch.save()</code> (with <code>.pt</code> extension) or
+with <code>pickle.dump()</code> (with <code>.pickle</code> or <code>.pkl</code> extension).</p>
+</div>
+
+
+                            <div id="ESKTrackStore.__init__" class="classattr">
+                                        <input id="ESKTrackStore.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="name">ESKTrackStore</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">keypoint_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;hand&#39;</span>, </span><span class="param"><span class="o">*</span><span class="n">args</span>, </span><span class="param"><span class="o">**</span><span class="n">kwargs</span></span>)</span>
+
+                <label class="view-source-button" for="ESKTrackStore.__init__-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.__init__"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ESKTrackStore.__init__-2507"><a href="#ESKTrackStore.__init__-2507"><span class="linenos">2507</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="ESKTrackStore.__init__-2508"><a href="#ESKTrackStore.__init__-2508"><span class="linenos">2508</span></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2509"><a href="#ESKTrackStore.__init__-2509"><span class="linenos">2509</span></a>        <span class="n">keypoint_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;hand&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2510"><a href="#ESKTrackStore.__init__-2510"><span class="linenos">2510</span></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2511"><a href="#ESKTrackStore.__init__-2511"><span class="linenos">2511</span></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2512"><a href="#ESKTrackStore.__init__-2512"><span class="linenos">2512</span></a>    <span class="p">):</span>
+</span><span id="ESKTrackStore.__init__-2513"><a href="#ESKTrackStore.__init__-2513"><span class="linenos">2513</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a store.&quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore.__init__-2514"><a href="#ESKTrackStore.__init__-2514"><span class="linenos">2514</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="o">=</span> <span class="n">keypoint_type</span>
+</span><span id="ESKTrackStore.__init__-2515"><a href="#ESKTrackStore.__init__-2515"><span class="linenos">2515</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span> <span class="o">=</span> <span class="mi">17</span>
+</span><span id="ESKTrackStore.__init__-2516"><a href="#ESKTrackStore.__init__-2516"><span class="linenos">2516</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span id="ESKTrackStore.__init__-2517"><a href="#ESKTrackStore.__init__-2517"><span class="linenos">2517</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="ESKTrackStore.__init__-2518"><a href="#ESKTrackStore.__init__-2518"><span class="linenos">2518</span></a>
+</span><span id="ESKTrackStore.__init__-2519"><a href="#ESKTrackStore.__init__-2519"><span class="linenos">2519</span></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="ESKTrackStore.__init__-2520"><a href="#ESKTrackStore.__init__-2520"><span class="linenos">2520</span></a>            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2521"><a href="#ESKTrackStore.__init__-2521"><span class="linenos">2521</span></a>            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span id="ESKTrackStore.__init__-2522"><a href="#ESKTrackStore.__init__-2522"><span class="linenos">2522</span></a>        <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Initialize a store.</p>
+</div>
+
+
+                            </div>
+                            <div id="ESKTrackStore.keypoint_type" class="classattr">
+                                <div class="attr variable">
+            <span class="name">keypoint_type</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.keypoint_type"></a>
+    
+    
+
+                            </div>
+                            <div id="ESKTrackStore.num_body_kpts" class="classattr">
+                                <div class="attr variable">
+            <span class="name">num_body_kpts</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.num_body_kpts"></a>
+    
+    
+
+                            </div>
+                            <div id="ESKTrackStore.num_hand_kpts" class="classattr">
+                                <div class="attr variable">
+            <span class="name">num_hand_kpts</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.num_hand_kpts"></a>
+    
+    
+
+                            </div>
+                            <div id="ESKTrackStore.num_eye_kpts" class="classattr">
+                                <div class="attr variable">
+            <span class="name">num_eye_kpts</span>
+
+        
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.num_eye_kpts"></a>
+    
+    
+
+                            </div>
+                            <div id="ESKTrackStore.get_kpt_names" class="classattr">
+                                        <input id="ESKTrackStore.get_kpt_names-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_kpt_names</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ESKTrackStore.get_kpt_names-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.get_kpt_names"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ESKTrackStore.get_kpt_names-2524"><a href="#ESKTrackStore.get_kpt_names-2524"><span class="linenos">2524</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="ESKTrackStore.get_kpt_names-2525"><a href="#ESKTrackStore.get_kpt_names-2525"><span class="linenos">2525</span></a>
+</span><span id="ESKTrackStore.get_kpt_names-2526"><a href="#ESKTrackStore.get_kpt_names-2526"><span class="linenos">2526</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="ESKTrackStore.get_kpt_names-2527"><a href="#ESKTrackStore.get_kpt_names-2527"><span class="linenos">2527</span></a>            <span class="s2">&quot;nose&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2528"><a href="#ESKTrackStore.get_kpt_names-2528"><span class="linenos">2528</span></a>            <span class="s2">&quot;left_eye&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2529"><a href="#ESKTrackStore.get_kpt_names-2529"><span class="linenos">2529</span></a>            <span class="s2">&quot;right_eye&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2530"><a href="#ESKTrackStore.get_kpt_names-2530"><span class="linenos">2530</span></a>            <span class="s2">&quot;left_ear&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2531"><a href="#ESKTrackStore.get_kpt_names-2531"><span class="linenos">2531</span></a>            <span class="s2">&quot;right_ear&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2532"><a href="#ESKTrackStore.get_kpt_names-2532"><span class="linenos">2532</span></a>            <span class="s2">&quot;left_shoulder&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2533"><a href="#ESKTrackStore.get_kpt_names-2533"><span class="linenos">2533</span></a>            <span class="s2">&quot;right_shoulder&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2534"><a href="#ESKTrackStore.get_kpt_names-2534"><span class="linenos">2534</span></a>            <span class="s2">&quot;left_elbow&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2535"><a href="#ESKTrackStore.get_kpt_names-2535"><span class="linenos">2535</span></a>            <span class="s2">&quot;right_elbow&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2536"><a href="#ESKTrackStore.get_kpt_names-2536"><span class="linenos">2536</span></a>            <span class="s2">&quot;left_wrist&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2537"><a href="#ESKTrackStore.get_kpt_names-2537"><span class="linenos">2537</span></a>            <span class="s2">&quot;right_wrist&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2538"><a href="#ESKTrackStore.get_kpt_names-2538"><span class="linenos">2538</span></a>            <span class="s2">&quot;left_hip&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2539"><a href="#ESKTrackStore.get_kpt_names-2539"><span class="linenos">2539</span></a>            <span class="s2">&quot;right_hip&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2540"><a href="#ESKTrackStore.get_kpt_names-2540"><span class="linenos">2540</span></a>            <span class="s2">&quot;left_knee&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2541"><a href="#ESKTrackStore.get_kpt_names-2541"><span class="linenos">2541</span></a>            <span class="s2">&quot;right_knee&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2542"><a href="#ESKTrackStore.get_kpt_names-2542"><span class="linenos">2542</span></a>            <span class="s2">&quot;left_ankle&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2543"><a href="#ESKTrackStore.get_kpt_names-2543"><span class="linenos">2543</span></a>            <span class="s2">&quot;right_ankle&quot;</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_names-2544"><a href="#ESKTrackStore.get_kpt_names-2544"><span class="linenos">2544</span></a>        <span class="p">]</span>
+</span><span id="ESKTrackStore.get_kpt_names-2545"><a href="#ESKTrackStore.get_kpt_names-2545"><span class="linenos">2545</span></a>
+</span><span id="ESKTrackStore.get_kpt_names-2546"><a href="#ESKTrackStore.get_kpt_names-2546"><span class="linenos">2546</span></a>        <span class="n">kpt_names</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="ESKTrackStore.get_kpt_names-2547"><a href="#ESKTrackStore.get_kpt_names-2547"><span class="linenos">2547</span></a>            <span class="n">kpt_names</span>
+</span><span id="ESKTrackStore.get_kpt_names-2548"><a href="#ESKTrackStore.get_kpt_names-2548"><span class="linenos">2548</span></a>            <span class="o">+</span> <span class="p">[</span>
+</span><span id="ESKTrackStore.get_kpt_names-2549"><a href="#ESKTrackStore.get_kpt_names-2549"><span class="linenos">2549</span></a>                <span class="sa">f</span><span class="s2">&quot;hand_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="ESKTrackStore.get_kpt_names-2550"><a href="#ESKTrackStore.get_kpt_names-2550"><span class="linenos">2550</span></a>                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+</span><span id="ESKTrackStore.get_kpt_names-2551"><a href="#ESKTrackStore.get_kpt_names-2551"><span class="linenos">2551</span></a>                    <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_body_kpts</span>
+</span><span id="ESKTrackStore.get_kpt_names-2552"><a href="#ESKTrackStore.get_kpt_names-2552"><span class="linenos">2552</span></a>                <span class="p">)</span>
+</span><span id="ESKTrackStore.get_kpt_names-2553"><a href="#ESKTrackStore.get_kpt_names-2553"><span class="linenos">2553</span></a>            <span class="p">]</span>
+</span><span id="ESKTrackStore.get_kpt_names-2554"><a href="#ESKTrackStore.get_kpt_names-2554"><span class="linenos">2554</span></a>            <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;eye_gaze_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">)]</span>
+</span><span id="ESKTrackStore.get_kpt_names-2555"><a href="#ESKTrackStore.get_kpt_names-2555"><span class="linenos">2555</span></a>        <span class="p">)</span>
+</span><span id="ESKTrackStore.get_kpt_names-2556"><a href="#ESKTrackStore.get_kpt_names-2556"><span class="linenos">2556</span></a>        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kpt_names</span><span class="p">)</span>
+</span></pre></div>
+
+
+    
+
+                            </div>
+                            <div id="ESKTrackStore.get_kpt_ind" class="classattr">
+                                        <input id="ESKTrackStore.get_kpt_ind-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_kpt_ind</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">default_num</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ESKTrackStore.get_kpt_ind-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ESKTrackStore.get_kpt_ind"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ESKTrackStore.get_kpt_ind-2558"><a href="#ESKTrackStore.get_kpt_ind-2558"><span class="linenos">2558</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpt_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_num</span><span class="p">):</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2559"><a href="#ESKTrackStore.get_kpt_ind-2559"><span class="linenos">2559</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the indices of the keypoints to be used.&quot;&quot;&quot;</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2560"><a href="#ESKTrackStore.get_kpt_ind-2560"><span class="linenos">2560</span></a>        <span class="n">body_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">17</span><span class="p">))</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2561"><a href="#ESKTrackStore.get_kpt_ind-2561"><span class="linenos">2561</span></a>        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">body_ind</span><span class="p">)</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2562"><a href="#ESKTrackStore.get_kpt_ind-2562"><span class="linenos">2562</span></a>        <span class="n">hands_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_hand_kpts</span><span class="p">))</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2563"><a href="#ESKTrackStore.get_kpt_ind-2563"><span class="linenos">2563</span></a>        <span class="n">count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hands_ind</span><span class="p">)</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2564"><a href="#ESKTrackStore.get_kpt_ind-2564"><span class="linenos">2564</span></a>        <span class="n">eye_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_eye_kpts</span><span class="p">))</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2565"><a href="#ESKTrackStore.get_kpt_ind-2565"><span class="linenos">2565</span></a>        <span class="n">body_wo_arm_ind</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2566"><a href="#ESKTrackStore.get_kpt_ind-2566"><span class="linenos">2566</span></a>        <span class="n">default_ind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">default_num</span><span class="p">))</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2567"><a href="#ESKTrackStore.get_kpt_ind-2567"><span class="linenos">2567</span></a>        <span class="n">switcher</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2568"><a href="#ESKTrackStore.get_kpt_ind-2568"><span class="linenos">2568</span></a>            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">body_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2569"><a href="#ESKTrackStore.get_kpt_ind-2569"><span class="linenos">2569</span></a>            <span class="s2">&quot;hands&quot;</span><span class="p">:</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2570"><a href="#ESKTrackStore.get_kpt_ind-2570"><span class="linenos">2570</span></a>            <span class="s2">&quot;eyes&quot;</span><span class="p">:</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2571"><a href="#ESKTrackStore.get_kpt_ind-2571"><span class="linenos">2571</span></a>            <span class="s2">&quot;body_hands&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">hands_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2572"><a href="#ESKTrackStore.get_kpt_ind-2572"><span class="linenos">2572</span></a>            <span class="s2">&quot;body_eyes&quot;</span><span class="p">:</span> <span class="n">body_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2573"><a href="#ESKTrackStore.get_kpt_ind-2573"><span class="linenos">2573</span></a>            <span class="s2">&quot;hands_eyes&quot;</span><span class="p">:</span> <span class="n">hands_ind</span> <span class="o">+</span> <span class="n">eye_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2574"><a href="#ESKTrackStore.get_kpt_ind-2574"><span class="linenos">2574</span></a>            <span class="s2">&quot;body_wo_arm&quot;</span><span class="p">:</span> <span class="n">body_wo_arm_ind</span><span class="p">,</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2575"><a href="#ESKTrackStore.get_kpt_ind-2575"><span class="linenos">2575</span></a>        <span class="p">}</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2576"><a href="#ESKTrackStore.get_kpt_ind-2576"><span class="linenos">2576</span></a>        <span class="k">return</span> <span class="p">(</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2577"><a href="#ESKTrackStore.get_kpt_ind-2577"><span class="linenos">2577</span></a>            <span class="n">switcher</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span><span class="p">,</span> <span class="n">default_ind</span><span class="p">),</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2578"><a href="#ESKTrackStore.get_kpt_ind-2578"><span class="linenos">2578</span></a>            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keypoint_type</span> <span class="ow">in</span> <span class="n">switcher</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+</span><span id="ESKTrackStore.get_kpt_ind-2579"><a href="#ESKTrackStore.get_kpt_ind-2579"><span class="linenos">2579</span></a>        <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Get the indices of the keypoints to be used.</p>
+</div>
+
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#GeneralInputStore">GeneralInputStore</a></dt>
+                                <dd id="ESKTrackStore.data_suffix" class="variable"><a href="#GeneralInputStore.data_suffix">data_suffix</a></dd>
+                <dd id="ESKTrackStore.loaded_max" class="variable"><a href="#GeneralInputStore.loaded_max">loaded_max</a></dd>
+                <dd id="ESKTrackStore.bodyparts" class="variable"><a href="#GeneralInputStore.bodyparts">bodyparts</a></dd>
+                <dd id="ESKTrackStore.visibility" class="variable"><a href="#GeneralInputStore.visibility">visibility</a></dd>
+                <dd id="ESKTrackStore.normalize" class="variable"><a href="#GeneralInputStore.normalize">normalize</a></dd>
+                <dd id="ESKTrackStore.video_order" class="variable"><a href="#GeneralInputStore.video_order">video_order</a></dd>
+                <dd id="ESKTrackStore.centered" class="variable"><a href="#GeneralInputStore.centered">centered</a></dd>
+                <dd id="ESKTrackStore.feature_extraction" class="variable"><a href="#GeneralInputStore.feature_extraction">feature_extraction</a></dd>
+                <dd id="ESKTrackStore.len_segment" class="variable"><a href="#GeneralInputStore.len_segment">len_segment</a></dd>
+                <dd id="ESKTrackStore.data_suffices" class="variable"><a href="#GeneralInputStore.data_suffices">data_suffices</a></dd>
+                <dd id="ESKTrackStore.data_prefixes" class="variable"><a href="#GeneralInputStore.data_prefixes">data_prefixes</a></dd>
+                <dd id="ESKTrackStore.feature_suffix" class="variable"><a href="#GeneralInputStore.feature_suffix">feature_suffix</a></dd>
+                <dd id="ESKTrackStore.convert_int_indices" class="variable"><a href="#GeneralInputStore.convert_int_indices">convert_int_indices</a></dd>
+                <dd id="ESKTrackStore.overlap" class="variable"><a href="#GeneralInputStore.overlap">overlap</a></dd>
+                <dd id="ESKTrackStore.canvas_shape" class="variable"><a href="#GeneralInputStore.canvas_shape">canvas_shape</a></dd>
+                <dd id="ESKTrackStore.default_agent_name" class="variable"><a href="#GeneralInputStore.default_agent_name">default_agent_name</a></dd>
+                <dd id="ESKTrackStore.feature_save_path" class="variable"><a href="#GeneralInputStore.feature_save_path">feature_save_path</a></dd>
+                <dd id="ESKTrackStore.likelihood_threshold" class="variable"><a href="#GeneralInputStore.likelihood_threshold">likelihood_threshold</a></dd>
+                <dd id="ESKTrackStore.num_cpus" class="variable"><a href="#GeneralInputStore.num_cpus">num_cpus</a></dd>
+                <dd id="ESKTrackStore.frame_limit" class="variable"><a href="#GeneralInputStore.frame_limit">frame_limit</a></dd>
+                <dd id="ESKTrackStore.transpose" class="variable"><a href="#GeneralInputStore.transpose">transpose</a></dd>
+                <dd id="ESKTrackStore.ram" class="variable"><a href="#GeneralInputStore.ram">ram</a></dd>
+                <dd id="ESKTrackStore.min_frames" class="variable"><a href="#GeneralInputStore.min_frames">min_frames</a></dd>
+                <dd id="ESKTrackStore.original_coordinates" class="variable"><a href="#GeneralInputStore.original_coordinates">original_coordinates</a></dd>
+                <dd id="ESKTrackStore.file_paths" class="variable"><a href="#GeneralInputStore.file_paths">file_paths</a></dd>
+                <dd id="ESKTrackStore.extractor" class="variable"><a href="#GeneralInputStore.extractor">extractor</a></dd>
+                <dd id="ESKTrackStore.canvas_center" class="variable"><a href="#GeneralInputStore.canvas_center">canvas_center</a></dd>
+                <dd id="ESKTrackStore.step" class="variable"><a href="#GeneralInputStore.step">step</a></dd>
+                <dd id="ESKTrackStore.get_folder" class="function"><a href="#GeneralInputStore.get_folder">get_folder</a></dd>
+                <dd id="ESKTrackStore.remove" class="function"><a href="#GeneralInputStore.remove">remove</a></dd>
+                <dd id="ESKTrackStore.key_objects" class="function"><a href="#GeneralInputStore.key_objects">key_objects</a></dd>
+                <dd id="ESKTrackStore.load_from_key_objects" class="function"><a href="#GeneralInputStore.load_from_key_objects">load_from_key_objects</a></dd>
+                <dd id="ESKTrackStore.to_ram" class="function"><a href="#GeneralInputStore.to_ram">to_ram</a></dd>
+                <dd id="ESKTrackStore.get_original_coordinates" class="function"><a href="#GeneralInputStore.get_original_coordinates">get_original_coordinates</a></dd>
+                <dd id="ESKTrackStore.create_subsample" class="function"><a href="#GeneralInputStore.create_subsample">create_subsample</a></dd>
+                <dd id="ESKTrackStore.get_video_id" class="function"><a href="#GeneralInputStore.get_video_id">get_video_id</a></dd>
+                <dd id="ESKTrackStore.get_clip_id" class="function"><a href="#GeneralInputStore.get_clip_id">get_clip_id</a></dd>
+                <dd id="ESKTrackStore.get_clip_length" class="function"><a href="#GeneralInputStore.get_clip_length">get_clip_length</a></dd>
+                <dd id="ESKTrackStore.get_clip_start_end" class="function"><a href="#GeneralInputStore.get_clip_start_end">get_clip_start_end</a></dd>
+                <dd id="ESKTrackStore.get_clip_start" class="function"><a href="#GeneralInputStore.get_clip_start">get_clip_start</a></dd>
+                <dd id="ESKTrackStore.get_visibility" class="function"><a href="#GeneralInputStore.get_visibility">get_visibility</a></dd>
+                <dd id="ESKTrackStore.get_annotation_objects" class="function"><a href="#GeneralInputStore.get_annotation_objects">get_annotation_objects</a></dd>
+                <dd id="ESKTrackStore.get_file_ids" class="function"><a href="#GeneralInputStore.get_file_ids">get_file_ids</a></dd>
+                <dd id="ESKTrackStore.get_bodyparts" class="function"><a href="#GeneralInputStore.get_bodyparts">get_bodyparts</a></dd>
+                <dd id="ESKTrackStore.get_coords" class="function"><a href="#GeneralInputStore.get_coords">get_coords</a></dd>
+                <dd id="ESKTrackStore.get_n_frames" class="function"><a href="#GeneralInputStore.get_n_frames">get_n_frames</a></dd>
+                <dd id="ESKTrackStore.get_likelihood" class="function"><a href="#GeneralInputStore.get_likelihood">get_likelihood</a></dd>
+                <dd id="ESKTrackStore.get_indices" class="function"><a href="#GeneralInputStore.get_indices">get_indices</a></dd>
+                <dd id="ESKTrackStore.get_tags" class="function"><a href="#GeneralInputStore.get_tags">get_tags</a></dd>
+                <dd id="ESKTrackStore.get_tag" class="function"><a href="#GeneralInputStore.get_tag">get_tag</a></dd>
+
+            </div>
+            <div><dt><a href="base_store.html#InputStore">dlc2action.data.base_store.InputStore</a></dt>
+                                <dd id="ESKTrackStore.get_clip_length_from_coords" class="function"><a href="base_store.html#InputStore.get_clip_length_from_coords">get_clip_length_from_coords</a></dd>
+                <dd id="ESKTrackStore.get_folder_order" class="function"><a href="base_store.html#InputStore.get_folder_order">get_folder_order</a></dd>
+                <dd id="ESKTrackStore.get_video_id_order" class="function"><a href="base_store.html#InputStore.get_video_id_order">get_video_id_order</a></dd>
+
+            </div>
+            <div><dt><a href="base_store.html#Store">dlc2action.data.base_store.Store</a></dt>
+                                <dd id="ESKTrackStore.get_parameters" class="function"><a href="base_store.html#Store.get_parameters">get_parameters</a></dd>
+                <dd id="ESKTrackStore.new" class="function"><a href="base_store.html#Store.new">new</a></dd>
 
             </div>
                                 </dl>
