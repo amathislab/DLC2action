@@ -3738,6 +3738,7 @@ class Project:
         )
         yaml = YAML()
         data_param_path = os.path.join(default_path, "data", f"{data_type}.yaml")
+        data_params = None
         if os.path.exists(data_param_path):
             with open(data_param_path, encoding="utf-8") as f:
                 data_params = yaml.load(f)

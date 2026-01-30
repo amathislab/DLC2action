@@ -448,7 +448,11 @@ class KinematicTransformer(Transformer):
                     x[key][mask] = 10
                     min_x = x[key][:, :, 0, :].min(1)[0].unsqueeze(1)
                     min_y = x[key][:, :, 1, :].min(1)[0].unsqueeze(1)
-                    center = torch.stack([min_x, min_y], dim=2)
+                    if x[key].shape[2] == 2:
+                        center = torch.stack([min_x, min_y], dim=2)
+                    if x[key].shape[2] == 3:
+                        min_z = x[key][:, :, 2, :].min(1)[0].unsqueeze(1)
+                        center = torch.stack([min_x, min_y, min_z], dim=2)
                     coords = (x[key] - center) * zoom + center
                     x[key] = coords
                     x[key][mask] = self.blank
