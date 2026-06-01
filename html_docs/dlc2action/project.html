@@ -118,11 +118,11 @@ exist. You can always safely clean the datasets to save space with the remove_da
 <p>Everything else is stored in the <em>results</em> folder. The text training log files go into the <strong>logs</strong> subfolder. Model
 checkpoints (with <code>'model_state_dict'</code>, <code>'optimizer_state_dict'</code> and <code>'epoch'</code> keys) are saved in the <strong>models</strong>
 subfolder. The main results of hyperparameter searches (best parameters and best values) are kept in the meta files
-but they also generate html_docs plots that can be accessed in the **searches** subfolder. Split text files can be found
-in the **splits** subfolder. They are also checked every time you create a task and if a split with the same
-parameters already exists it will be loaded. Active learning files are saved in the **suggestions** subfolder.
-Suggestions for each video are named *{video_id}_suggestion.pickle* and the active learning file is always
-*al_points.pickle*. Finally, prediction files (pickled dictionaries) are stored in the <strong>predictions</strong> subfolder.</p>
+but they also generate html_docs plots that can be accessed in the <strong>searches</strong> subfolder. Split text files can be found
+in the <strong>splits</strong> subfolder. They are also checked every time you create a task and if a split with the same
+parameters already exists it will be loaded. Active learning files are saved in the <strong>suggestions</strong> subfolder.
+Suggestions for each video are named <em>{video_id}_suggestion.pickle</em> and the active learning file is always
+<em>al_points.pickle</em>. Finally, prediction files (pickled dictionaries) are stored in the <strong>predictions</strong> subfolder.</p>
 </div>
 
                         <input id="mod-project-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
