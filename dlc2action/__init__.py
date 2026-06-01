@@ -999,5 +999,6 @@ No parameters
 """
 
 from dlc2action.version import __version__, VERSION
+from dlc2action.preprocessing import get_visual_features
 
-__pdoc__ = {"options": False, "version": False, "scripts": False}
+__pdoc__ = {"options": False, "version": False, "scripts": False, "preprocessing": False}
